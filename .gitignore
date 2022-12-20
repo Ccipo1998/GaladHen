@@ -1,0 +1,9 @@
+# ignore .vscode dir
+.vscode/
+
+# ignore bin e build dirs
+bin/
+build/
+
+#ignore build script
+build.sh
