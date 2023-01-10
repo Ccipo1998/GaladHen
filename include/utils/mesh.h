@@ -88,7 +88,7 @@ class Mesh
     {
         // skip if we are trying to assign an object to itself
         if (this == &other)
-            return;
+            return *this;
 
         // calls the function which will delete (if needed) the GPU resources for this instance
         this->freeGPUresources();
@@ -116,6 +116,13 @@ class Mesh
     {
         // calls the function which will delete (if needed) the GPU resources
         this->freeGPUresources();
+    }
+
+    void draw()
+    {
+        glBindVertexArray(this->VAO);
+        glDrawElements(GL_TRIANGLES, this->Indices.size(), GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
     }
 
     private:

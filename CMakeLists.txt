@@ -13,6 +13,12 @@ set_target_properties(ezengine
 PROPERTIES
 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
+# initially those were for assimp
+#set(BUILD_SHARED_LIBS OFF)
+#set(INJECT_DEBUG_POSTFIX OFF)
+#set(ASSIMP_INSTALL OFF)
+#set(ASSIMP_BUILD_TESTS OFF)
+
 add_subdirectory("libs/linux/glfw")
 add_subdirectory("libs/linux/gl3w")
 add_subdirectory("include/glm")
@@ -20,4 +26,5 @@ target_link_libraries(ezengine
     PUBLIC
     glfw
     gl3w
-    glm)
+    glm
+    "${CMAKE_SOURCE_DIR}/libs/linux/assimp/libassimp.so")
