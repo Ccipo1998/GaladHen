@@ -8,12 +8,17 @@
 
 #include "include/utils/shader.h"
 #include "include/utils/model.h"
+#include "include/utils/camera.h"
 
 #include "include/glm/glm.hpp"
 #include "include/glm/gtx/transform.hpp" // for lookat() and perspective()
 #include "include/glm/gtc/type_ptr.hpp" // for value_ptr()
 
 #define BUFFER_OFFSET(offset) (void*)(offset) // MACRO
+
+// we initialize an array of booleans for each keybord key
+bool keys[1024];
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
 using namespace std;
 using namespace glm;
@@ -44,54 +49,40 @@ GLFWwindow* initContext(int width, int height, const char* name)
 int main()
 {
     GLFWwindow* window = initContext(600, 400, "EzEngine");
-
     glfwMakeContextCurrent(window);
-
-    /*
-    vector<Vertex> vertices;
-    Vertex v0 = Vertex { vec3(1.0f, .0f, .0f), vec3(.0f, .0f, .0f), vec2(.0f, .0f), vec3(.0f, .0f, .0f), vec3(.0f, .0f, .0f) };
-    Vertex v1 = Vertex { vec3(-1.0f, .0f, .0f), vec3(.0f, .0f, .0f), vec2(.0f, .0f), vec3(.0f, .0f, .0f), vec3(.0f, .0f, .0f) };
-    Vertex v2 = Vertex { vec3(.0f, 1.0f, .0f), vec3(.0f, .0f, .0f), vec2(.0f, .0f), vec3(.0f, .0f, .0f), vec3(.0f, .0f, .0f) };
-    vertices.push_back(v0);
-    vertices.push_back(v1);
-    vertices.push_back(v2);
-
-    vector<GLuint> indices = { 0, 1, 2 };
-    
-    Mesh cube = Mesh(vertices, indices);
-    */
+    glfwSetKeyCallback(window, key_callback);
 
     Model cube = Model("prefabs/cube.obj");
-    /*
-    GLuint VAO;
-    glCreateVertexArrays(1, &VAO);
-
-    GLuint Buffer;
-    glCreateBuffers(1, &Buffer);
-    glNamedBufferStorage(Buffer, sizeof(vertices), vertices, 0);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, Buffer);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
-    glEnableVertexAttribArray(0);
-    */
 
     Shader testShader = Shader("shaders/VertexShader.vert", "shaders/FragmentShader.frag");
     
-    mat4 viewMatrix = lookAt(vec3(.0f, .0f, -1.0f), vec3(.0f, .0f, 3.0f), vec3(.0f, 1.0f, .0f));
-    mat4 projectionMatrix = perspective(radians(170.0f), 600.0f/400.0f, .1f, 100.0f);
-    
-    glProgramUniformMatrix4fv(testShader.Program, glGetUniformLocation(testShader.Program, "projectionMatrix"), 1, GL_FALSE, value_ptr(projectionMatrix));
-    glProgramUniformMatrix4fv(testShader.Program, glGetUniformLocation(testShader.Program, "viewMatrix"), 1, GL_FALSE, value_ptr(viewMatrix));
+    Camera camera = Camera(vec3(-5.0f, .0f, 0.0f), .0f, .0f, .0f, radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
 
+    //mat4 viewMatrix = lookAt(vec3(.0f, .0f, -1.0f), vec3(.0f, .0f, 3.0f), vec3(.0f, 1.0f, .0f));
+    //mat4 projectionMatrix = perspective(radians(170.0f), 600.0f/400.0f, .1f, 100.0f);
+    
     testShader.use();
     
+    GLfloat lastTime = .0f;
+    GLfloat deltaTime = .0f;
     while (!glfwWindowShouldClose(window))
     {
         //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         static const float black[] = { .0f, .0f, .0f, .0f };
         glClearBufferfv(GL_COLOR, 0, black);
+
+        // time counter
+        GLfloat currentTime = glfwGetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        // camera movements
+        camera.applyMovements(keys, deltaTime);
+
+        // send camera data to shaders
+        glProgramUniformMatrix4fv(testShader.Program, glGetUniformLocation(testShader.Program, "projectionMatrix"), 1, GL_FALSE, value_ptr(camera.getProjectionMatrix()));
+        glProgramUniformMatrix4fv(testShader.Program, glGetUniformLocation(testShader.Program, "viewMatrix"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
 
         /*
         glBindVertexArray(cube.VAO);
@@ -108,5 +99,17 @@ int main()
     glfwTerminate();
 
     return 0;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+    // we keep trace of the pressed keys
+    // with this method, we can manage 2 keys pressed at the same time:
+    // many I/O managers often consider only 1 key pressed at the time (the first pressed, until it is released)
+    // using a boolean array, we can then check and manage all the keys pressed at the same time
+    if(action == GLFW_PRESS)
+        keys[key] = true;
+    else if(action == GLFW_RELEASE)
+        keys[key] = false;
 }
 

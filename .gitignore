@@ -5,5 +5,8 @@
 bin/
 build/
 
-#ignore build script
+# ignore build script
 build.sh
+
+# ignore prefabs for now
+prefabs/
