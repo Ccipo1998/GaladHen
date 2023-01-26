@@ -40,15 +40,13 @@ class Camera
     }
     */
 
-    Camera(vec3 position, GLfloat roll, GLfloat pitch, GLfloat yaw, GLfloat fovy, GLfloat aspectRatio, GLfloat near, GLfloat far)
+    Camera(vec3 position, GLfloat pitch, GLfloat yaw, GLfloat roll, GLfloat fovy, GLfloat aspectRatio, GLfloat near, GLfloat far)
     {
         this->Position = position;
 
-        this->Roll = roll;
         this->Pitch = pitch;
         this->Yaw = yaw;
-
-        updateRotationMatrix();
+        this->Roll = roll;
 
         updateReferenceSystem();
 
@@ -89,8 +87,6 @@ class Camera
     {
         this->Roll = value;
 
-        updateRotationMatrix();
-
         updateReferenceSystem();
 
         updateViewMatrix();
@@ -101,8 +97,6 @@ class Camera
     {
         this->Pitch = value;
 
-        updateRotationMatrix();
-
         updateReferenceSystem();
 
         updateViewMatrix();
@@ -112,8 +106,6 @@ class Camera
     void setYaw(GLfloat value)
     {
         this->Yaw = value;
-
-        updateRotationMatrix();
 
         updateReferenceSystem();
 
@@ -189,11 +181,6 @@ class Camera
         return this->Right;
     }
 
-    mat4 getRotationMatrix()
-    {
-        return this->RotationMatrix;
-    }
-
     mat4 getViewMatrix()
     {
         return this->ViewMatrix;
@@ -231,17 +218,15 @@ class Camera
     vec3 Position;
 
     // roll is the rotation around X axis
-    GLfloat Roll;
-    // pitch is the rotation around Y axis
     GLfloat Pitch;
-    // yaw is the rotation around Z axis
+    // pitch is the rotation around Y axis
     GLfloat Yaw;
+    // yaw is the rotation around Z axis
+    GLfloat Roll;
 
     vec3 Front;
     vec3 Up;
     vec3 Right;
-
-    mat4 RotationMatrix;
 
     GLfloat FovY;
     GLfloat AspectRatio;
@@ -251,22 +236,16 @@ class Camera
     mat4 ProjectionMatrix;
     mat4 ViewMatrix;
 
-    // calculate new rotation matrix from euler angles
-    void updateRotationMatrix()
-    {
-        vec4 row0 = vec4(cos(this->Yaw) * cos(this->Pitch), cos(this->Yaw) * sin(this->Pitch) * sin(this->Roll) - sin(this->Yaw) * cos(this->Roll), cos(this->Yaw) * sin(this->Pitch) * cos(this->Roll) + sin(this->Yaw) * sin(this->Roll), .0f);
-        vec4 row1 = vec4(sin(this->Yaw) * cos(this->Pitch), sin(this->Yaw) * sin(this->Pitch) * sin(this->Roll) + cos(this->Yaw) * cos(this->Roll), sin(this->Yaw) * sin(this->Pitch) * cos(this->Roll) - cos(this->Yaw) * sin(this->Roll), .0f);
-        vec4 row2 = vec4(-sin(this->Pitch), cos(this->Pitch) * sin(this->Roll), cos(this->Pitch) * cos(this->Roll), .0f);
-        vec4 row3 = vec4(.0f, .0f, .0f, 1.0f);
-        this->RotationMatrix = mat4(row0, row1, row2, row3);
-    }
-
     // calculate new reference system from rotation matrix
     void updateReferenceSystem()
     {
-        this->Front = this->RotationMatrix[0];
-        this->Up = this->RotationMatrix[1];
-        this->Right = this->RotationMatrix[2];
+        this->Front = vec3(cos(radians(this->Yaw)) * cos(radians(this->Pitch)), sin(radians(this->Yaw)) * cos(radians(this->Pitch)), -sin(radians(this->Pitch)));
+        this->Up = vec3(cos(radians(this->Yaw)) * sin(radians(this->Pitch)) * sin(radians(this->Roll)) - sin(radians(this->Yaw)) * cos(radians(this->Roll)),
+            sin(radians(this->Yaw)) * sin(radians(this->Pitch)) * sin(radians(this->Roll)) + cos(radians(this->Yaw)) * cos(radians(this->Roll)),
+            cos(radians(this->Pitch)) * sin(radians(this->Roll)));
+        this->Right = vec3(cos(radians(this->Yaw)) * sin(radians(this->Pitch)) * cos(radians(this->Roll)) + sin(radians(this->Yaw)) * sin(radians(this->Roll)),
+            sin(radians(this->Yaw)) * sin(radians(this->Pitch)) * cos(radians(this->Roll)) - cos(radians(this->Yaw)) * sin(radians(this->Roll)),
+            cos(radians(this->Pitch)) * cos(radians(this->Roll)));
     }
 
     // calculating new euler angles from local reference system

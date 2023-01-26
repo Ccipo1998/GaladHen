@@ -52,25 +52,29 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
 
-    Model cube = Model("prefabs/cube.obj");
+    glClearColor(.0f, .0f, .0f, .0f);
+    // we enable Z test
+    glEnable(GL_DEPTH_TEST);
 
-    Shader testShader = Shader("shaders/VertexShader.vert", "shaders/FragmentShader.frag");
+    Model cube = Model("prefabs/bunny.obj");
+
+    Shader testShader = Shader("shaders/stylized/Stylized.vert", "shaders/stylized/Stylized.frag");
     
-    Camera camera = Camera(vec3(-5.0f, .0f, 0.0f), .0f, .0f, .0f, radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
+    Camera camera = Camera(vec3(.0f, .0f, 10.0f), 90.0f, .0f, .0f, radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
 
     //mat4 viewMatrix = lookAt(vec3(.0f, .0f, -1.0f), vec3(.0f, .0f, 3.0f), vec3(.0f, 1.0f, .0f));
     //mat4 projectionMatrix = perspective(radians(170.0f), 600.0f/400.0f, .1f, 100.0f);
     
+    vec3 lightPos = vec3(10.0f, 10.0f, 10.0f);
+
     testShader.use();
     
     GLfloat lastTime = .0f;
     GLfloat deltaTime = .0f;
     while (!glfwWindowShouldClose(window))
     {
-        //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        static const float black[] = { .0f, .0f, .0f, .0f };
-        glClearBufferfv(GL_COLOR, 0, black);
+        // we "clear" the frame and z buffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // time counter
         GLfloat currentTime = glfwGetTime();
@@ -83,6 +87,7 @@ int main()
         // send camera data to shaders
         glProgramUniformMatrix4fv(testShader.Program, glGetUniformLocation(testShader.Program, "projectionMatrix"), 1, GL_FALSE, value_ptr(camera.getProjectionMatrix()));
         glProgramUniformMatrix4fv(testShader.Program, glGetUniformLocation(testShader.Program, "viewMatrix"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
+        glProgramUniform3fv(testShader.Program, glGetUniformLocation(testShader.Program, "lightPos"), 1, value_ptr(lightPos));
 
         /*
         glBindVertexArray(cube.VAO);
