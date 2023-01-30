@@ -10,7 +10,10 @@ The camera class could have only few parameters, because many can be calculated 
 #include <GL/gl3w.h>
 
 #include <glm/glm.hpp>
-#include "include/glm/gtx/transform.hpp" // for lookat() and perspective()
+#include <glm/gtx/transform.hpp> // for lookat() and perspective()
+#include <glm/gtx/quaternion.hpp>
+#include <glm/ext/quaternion_trigonometric.hpp>
+#include <glm/ext/quaternion_float.hpp>
 
 using namespace std;
 using namespace glm;
@@ -20,7 +23,7 @@ class Camera
     public:
 
     // movement parameters
-    GLfloat LinearSpeed = 1.5f;
+    GLfloat LinearSpeed = 2.5f;
     GLfloat AngularSpeed = 1.0f;
     /*
     Camera(vec3 position, vec3 front, vec3 up, GLfloat fovy, GLfloat aspectRatio, GLfloat near, GLfloat far)
@@ -40,15 +43,16 @@ class Camera
     }
     */
 
-    Camera(vec3 position, GLfloat pitch, GLfloat yaw, GLfloat roll, GLfloat fovy, GLfloat aspectRatio, GLfloat near, GLfloat far)
+    Camera(vec3 position, GLfloat fovy, GLfloat aspectRatio, GLfloat near, GLfloat far)
     {
         this->Position = position;
 
-        this->Pitch = pitch;
-        this->Yaw = yaw;
-        this->Roll = roll;
-
-        updateReferenceSystem();
+        this->Pitch = .0f;
+        this->Yaw = .0f;
+        this->Roll = .0f;
+        this->Front = vec3(1.0f, .0f, .0f);
+        this->Up = vec3(.0f, 1.0f, .0f);
+        this->Right = vec3(.0f, .0f, 1.0f);
 
         updateViewMatrix();
 
@@ -72,6 +76,23 @@ class Camera
             setPosition(this->Position - this->Right * this->LinearSpeed * deltaTime);
     }
 
+    // change the orientation to look at the specified position
+    void lookAt(vec3 position_front, vec3 up_direction)
+    {
+        this->Front = normalize(position_front - this->Position);
+        this->Right = cross(this->Front, up_direction);
+        this->Up = cross(this->Right, this->Front);
+        
+        updateViewMatrix();
+
+        quat rotQuat = conjugate(toQuat(this->ViewMatrix));
+        vec3 eulers = eulerAngles(rotQuat);
+        this->Pitch = degrees(eulers.x);
+        this->Yaw = degrees(eulers.y) + 90.0f; // adding 90 degrees (1,5708 radians) because of the opengl standard orientation
+        this->Roll = degrees(eulers.z);
+        
+    }
+
     // setting functions
 
     // set a new position for the camera
@@ -82,22 +103,15 @@ class Camera
         updateViewMatrix();
     }
 
-    // set a new value for Roll angle
-    void setRoll(GLfloat value)
-    {
-        this->Roll = value;
-
-        updateReferenceSystem();
-
-        updateViewMatrix();
-    }
-
     // set a new value for Pitch angle
     void setPitch(GLfloat value)
     {
+        value = fmod(value, 360.0f);
+        quat rotQuat = angleAxis(radians(value - this->Pitch), vec3(1.0f, .0f, .0f));
+        this->Front = rotQuat * this->Front;
+        this->Up = rotQuat * this->Up;
+        this->Right = cross(this->Front, this->Up);
         this->Pitch = value;
-
-        updateReferenceSystem();
 
         updateViewMatrix();
     }
@@ -105,9 +119,25 @@ class Camera
     // set a new value for Yaw angle
     void setYaw(GLfloat value)
     {
+        value = fmod(value, 360.0f);
+        quat rotQuat = angleAxis(radians(value - this->Yaw), vec3(.0f, 1.0f, .0f));
+        this->Front = rotQuat * this->Front;
+        this->Up = rotQuat * this->Up;
+        this->Right = cross(this->Front, this->Up);
         this->Yaw = value;
 
-        updateReferenceSystem();
+        updateViewMatrix();
+    }
+
+    // set a new value for Roll angle
+    void setRoll(GLfloat value)
+    {
+        value = fmod(value, 360.0f);
+        quat rotQuat = angleAxis(radians(value - this->Roll), vec3(.0f, .0f, 1.0f));
+        this->Front = rotQuat * this->Front;
+        this->Up = rotQuat * this->Up;
+        this->Right = cross(this->Front, this->Up);
+        this->Roll = value;
 
         updateViewMatrix();
     }
@@ -236,28 +266,6 @@ class Camera
     mat4 ProjectionMatrix;
     mat4 ViewMatrix;
 
-    // calculate new reference system from rotation matrix
-    void updateReferenceSystem()
-    {
-        this->Front = vec3(cos(radians(this->Yaw)) * cos(radians(this->Pitch)), sin(radians(this->Yaw)) * cos(radians(this->Pitch)), -sin(radians(this->Pitch)));
-        this->Up = vec3(cos(radians(this->Yaw)) * sin(radians(this->Pitch)) * sin(radians(this->Roll)) - sin(radians(this->Yaw)) * cos(radians(this->Roll)),
-            sin(radians(this->Yaw)) * sin(radians(this->Pitch)) * sin(radians(this->Roll)) + cos(radians(this->Yaw)) * cos(radians(this->Roll)),
-            cos(radians(this->Pitch)) * sin(radians(this->Roll)));
-        this->Right = vec3(cos(radians(this->Yaw)) * sin(radians(this->Pitch)) * cos(radians(this->Roll)) + sin(radians(this->Yaw)) * sin(radians(this->Roll)),
-            sin(radians(this->Yaw)) * sin(radians(this->Pitch)) * cos(radians(this->Roll)) - cos(radians(this->Yaw)) * sin(radians(this->Roll)),
-            cos(radians(this->Pitch)) * cos(radians(this->Roll)));
-    }
-
-    // calculating new euler angles from local reference system
-    void updateEulerAngles()
-    {
-        GLfloat x1_first_x = this->Right.y * this->Front.x - this->Right.x * this->Front.y;
-        GLfloat x1_first_y = this->Right.y * this->Up.x - this->Right.x * this->Up.y;
-        GLfloat alpha = atan2(x1_first_y, x1_first_x);
-        // TODO: finire -> http://geom3d.com/data/documents/Calculation=20of=20Euler=20angles.pdf
-        // non sono sicuro che sia l'agoritmo giusto
-    }
-
     // calculate new projection matrix from perspective parameters
     void updateProjectionMatrix()
     {
@@ -267,6 +275,6 @@ class Camera
     // calculate new view matrix from orientation parameters
     void updateViewMatrix()
     {
-        this->ViewMatrix = lookAt(this->Position, this->Position + this->Front, this->Up);
+        this->ViewMatrix = glm::lookAt(this->Position, this->Position + this->Front, this->Up);
     }
 };

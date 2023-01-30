@@ -56,18 +56,20 @@ int main()
     // we enable Z test
     glEnable(GL_DEPTH_TEST);
 
-    Model cube = Model("prefabs/bunny.obj");
+    Model model = Model("prefabs/bunny.obj");
 
-    Shader testShader = Shader("shaders/stylized/Stylized.vert", "shaders/stylized/Stylized.frag");
+    Shader shader = Shader("shaders/stylized/Stylized.vert", "shaders/stylized/Stylized.frag");
     
-    Camera camera = Camera(vec3(.0f, .0f, 10.0f), 90.0f, .0f, .0f, radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
+    Camera camera = Camera(vec3(.0f, .0f, 15.0f), radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
+    camera.setYaw(90.0f);
+    //camera.lookAt(vec3(.0f, .0f, .0f), vec3(.0f, 1.0f, .0f));
 
     //mat4 viewMatrix = lookAt(vec3(.0f, .0f, -1.0f), vec3(.0f, .0f, 3.0f), vec3(.0f, 1.0f, .0f));
     //mat4 projectionMatrix = perspective(radians(170.0f), 600.0f/400.0f, .1f, 100.0f);
     
     vec3 lightPos = vec3(10.0f, 10.0f, 10.0f);
 
-    testShader.use();
+    shader.use();
     
     GLfloat lastTime = .0f;
     GLfloat deltaTime = .0f;
@@ -85,16 +87,16 @@ int main()
         camera.applyMovements(keys, deltaTime);
 
         // send camera data to shaders
-        glProgramUniformMatrix4fv(testShader.Program, glGetUniformLocation(testShader.Program, "projectionMatrix"), 1, GL_FALSE, value_ptr(camera.getProjectionMatrix()));
-        glProgramUniformMatrix4fv(testShader.Program, glGetUniformLocation(testShader.Program, "viewMatrix"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
-        glProgramUniform3fv(testShader.Program, glGetUniformLocation(testShader.Program, "lightPos"), 1, value_ptr(lightPos));
+        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "projectionMatrix"), 1, GL_FALSE, value_ptr(camera.getProjectionMatrix()));
+        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "viewMatrix"), 1, GL_FALSE, value_ptr(camera.getViewMatrix()));
+        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "lightPos"), 1, value_ptr(lightPos));
 
         /*
         glBindVertexArray(cube.VAO);
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawArrays(GL_TRIANGLES, 0, cube.Vertices.size());
         */
-        cube.draw();
+        model.draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
