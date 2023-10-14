@@ -6,15 +6,15 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-#include "include/utils/shader.h"
-#include "include/utils/model.h"
-#include "include/utils/camera.h"
-#include "include/utils/light.h"
-#include "include/utils/material.h"
+#include "include/shader.h"
+#include "include/model.h"
+#include "include/camera.h"
+#include "include/light.h"
+#include "include/material.h"
 
-#include "include/glm/glm.hpp"
-#include "include/glm/gtx/transform.hpp" // for lookat() and perspective()
-#include "include/glm/gtc/type_ptr.hpp" // for value_ptr()
+#include <glm.hpp>
+#include <gtx/transform.hpp> // for lookat() and perspective()
+#include <gtc/type_ptr.hpp> // for value_ptr()
 
 // imgui
 #include <imgui.h>

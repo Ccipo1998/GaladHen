@@ -1,0 +1,9 @@
+[submodule "libs/assimp"]
+	path = libs/assimp
+	url = https://github.com/assimp/assimp
+[submodule "glfw"]
+	path = libs/glfw
+	url = https://github.com/glfw/glfw
+[submodule "libs/imgui/imgui"]
+	path = libs/imgui
+	url = https://github.com/ocornut/imgui
