@@ -9,6 +9,7 @@ The camera class could have only few parameters, because many can be calculated 
 // gl3w MUST be included before any other OpenGL-related header
 #include <GL/gl3w.h>
 
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp> // for lookat() and perspective()
 #include <glm/gtx/quaternion.hpp>
@@ -43,7 +44,7 @@ class Camera
     }
     */
 
-    Camera(vec3 position, GLfloat fovy, GLfloat aspectRatio, GLfloat near, GLfloat far)
+    Camera(vec3 position, GLfloat fovy, GLfloat aspectRatio, GLfloat nearDistance, GLfloat farDistance)
     {
         this->Position = position;
 
@@ -58,14 +59,15 @@ class Camera
 
         this->FovY = fovy;
         this->AspectRatio = aspectRatio;
-        this->Near = near;
-        this->Far = far;
+        this->Near = nearDistance;
+        this->Far = farDistance;
 
         updateProjectionMatrix();
     }
 
-    void applyMovements(bool* keys, GLfloat deltaTime)
+    void applyMovements(bool* keys, bool* mouse_keys, double deltaX, double deltaY, GLfloat deltaTime)
     {
+        // keys
         if (keys[GLFW_KEY_UP])
             setPosition(this->Position + this->Front * this->LinearSpeed * deltaTime);
         if(keys[GLFW_KEY_DOWN])
@@ -74,6 +76,26 @@ class Camera
             setPosition(this->Position + this->Right * this->LinearSpeed * deltaTime);
         if(keys[GLFW_KEY_LEFT])
             setPosition(this->Position - this->Right * this->LinearSpeed * deltaTime);
+
+        // mouse position
+        if (mouse_keys[GLFW_MOUSE_BUTTON_RIGHT])
+        {
+            // rotations
+            quat rotQuatX = angleAxis(GLfloat(this->AngularSpeed * deltaTime * deltaX), this->Up);
+            quat rotQuatY = angleAxis(GLfloat(this->AngularSpeed * deltaTime * deltaY), this->Right);
+            quat rotQuat = rotQuatX * rotQuatY;
+            this->Front = rotQuat * this->Front;
+            this->Up = rotQuat * this->Up;
+            this->Right = cross(this->Front, this->Up);
+
+            // update yaw, pitch and roll
+            vec3 eulers = eulerAngles(rotQuat);
+            this->Pitch = degrees(eulers.x);
+            this->Yaw = degrees(eulers.y) + 90.0f; // adding 90 degrees (1,5708 radians) because of the opengl standard orientation
+            this->Roll = degrees(eulers.z);
+
+            updateViewMatrix();
+        }
     }
 
     // change the orientation to look at the specified position

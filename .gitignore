@@ -10,3 +10,6 @@ build.sh
 
 # ignore prefabs for now
 prefabs/
+
+# imgui settings
+imgui.ini

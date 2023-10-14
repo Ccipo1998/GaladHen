@@ -133,6 +133,7 @@ class Mesh
     // https://learnopengl.com/#!Getting-started/Hello-Triangle
     void initGPUmemory()
     {
+        gl3wInit(); // -> only on windows, i dont know why (otherwise the program crashes)
         // we create the buffers
         glGenVertexArrays(1, &this->VAO);
         glGenBuffers(1, &this->VBO);
