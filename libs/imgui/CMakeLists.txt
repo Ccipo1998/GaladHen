@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.0)
 
 project(imgui)
 
-add_library(imgui SHARED 
+add_library(imgui STATIC 
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
   imgui/backends/imgui_impl_glfw.cpp
