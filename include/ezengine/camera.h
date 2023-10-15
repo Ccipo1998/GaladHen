@@ -6,6 +6,8 @@ The camera class could have only few parameters, because many can be calculated 
     perform the same calculations each time, especially for view and projection matrices)
 */
 
+#pragma once
+
 // gl3w MUST be included before any other OpenGL-related header
 #include <GL/gl3w.h>
 
@@ -16,7 +18,6 @@ The camera class could have only few parameters, because many can be calculated 
 #include <ext/quaternion_trigonometric.hpp>
 #include <ext/quaternion_float.hpp>
 
-using namespace std;
 using namespace glm;
 
 class Camera

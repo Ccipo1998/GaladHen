@@ -3,23 +3,25 @@
 // gl3w MUST be included before any other OpenGL-related header
 #include <GL/gl3w.h>
 
+// glfw
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-#include "include/shader.h"
-#include "include/model.h"
-#include "include/camera.h"
-#include "include/light.h"
-#include "include/material.h"
+#include <ezengine/shader.h>
+#include <ezengine/model.h>
+#include <ezengine/camera.h>
+#include <ezengine/light.h>
+#include <ezengine/material.h>
 
+// glm
 #include <glm.hpp>
 #include <gtx/transform.hpp> // for lookat() and perspective()
 #include <gtc/type_ptr.hpp> // for value_ptr()
 
 // imgui
-#include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_opengl3.h>
+#include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
 
 #define BUFFER_OFFSET(offset) (void*)(offset) // MACRO
 
@@ -35,9 +37,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 GLFWwindow* initContext(int width, int height, const char* name);
 void initImGui(GLFWwindow* window, const char* glsl_version);
-
-using namespace std;
-using namespace glm;
 
 int main()
 {
@@ -160,7 +159,7 @@ Initialization of the OpenGL context (glfw & gl3w) and of the window
 GLFWwindow* initContext(int width, int height, const char* name)
 {
     if (!glfwInit())
-        throw runtime_error("Error: GLFW failed to initialize the context");
+        throw std::runtime_error("Error: GLFW failed to initialize the context");
 
     // setting the minimum required version of OpenGL
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -171,11 +170,11 @@ GLFWwindow* initContext(int width, int height, const char* name)
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     if (!gl3wInit())
-        throw runtime_error("Error: GL3W failed to initialize the context");
+        throw std::runtime_error("Error: GL3W failed to initialize the context");
 
     GLFWwindow* window = glfwCreateWindow(width, height, name, nullptr, nullptr);
     if (window == nullptr)
-        throw runtime_error("Error: GLFW failed to create the window");
+        throw std::runtime_error("Error: GLFW failed to create the window");
 
     return window;
 }

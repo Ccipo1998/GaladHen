@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5.0)
 
 project(imgui)
 
-add_library(imgui SHARED 
+add_library(imgui STATIC 
   imgui/imgui_demo.cpp
   imgui/imgui_draw.cpp
   imgui/backends/imgui_impl_glfw.cpp
@@ -12,7 +12,8 @@ add_library(imgui SHARED
   imgui/imgui.cpp
 )
 
-target_include_directories(imgui PUBLIC
+# include directories inside imgui sources files
+target_include_directories(imgui PRIVATE
   ${CMAKE_SOURCE_DIR}/libs/imgui/imgui/
   ${CMAKE_SOURCE_DIR}/libs/imgui/imgui/backends/
   ${CMAKE_SOURCE_DIR}/libs/glfw/include/

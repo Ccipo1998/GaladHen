@@ -2,12 +2,13 @@
 Light classes for different light types
 */
 
+#pragma once
+
 // gl3w MUST be included before any other OpenGL-related header
 #include <GL/gl3w.h>
 
 #include <glm.hpp>
 
-using namespace std;
 using namespace glm;
 
 class Light

@@ -2,6 +2,8 @@
 Shaders creation and management for the rendering pipeline
 */
 
+#pragma once
+
 // gl3w MUST be included before any other OpenGL-related header
 #include <GL/gl3w.h>
 
@@ -13,7 +15,7 @@ Shaders creation and management for the rendering pipeline
 #include <sstream>
 #include <iostream>
 
-using namespace std;
+#include <utils/dblog.h>
 
 class Shader
 {
@@ -26,19 +28,19 @@ class Shader
     Shader(const char* vertexShaderPath, const char* fragmentShaderPath)
     {
         // Step 1: we retrieve shaders source code from provided filepaths
-        string vertexCode;
-        string fragmentCode;
-        ifstream vShaderFile;
-        ifstream fShaderFile;
+        std::string vertexCode;
+        std::string fragmentCode;
+        std::ifstream vShaderFile;
+        std::ifstream fShaderFile;
 
         // ensure ifstream objects can throw exceptions:
-        vShaderFile.exceptions (ifstream::failbit | ifstream::badbit);
-        fShaderFile.exceptions (ifstream::failbit | ifstream::badbit);
+        vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+        fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
         try
         {
             // Open file
             vShaderFile.open(vertexShaderPath);
-            stringstream vShaderStream;
+            std::stringstream vShaderStream;
             // Read file's buffer contents into streams
             vShaderStream << vShaderFile.rdbuf();
             // close file handlers
@@ -46,18 +48,17 @@ class Shader
             // Convert stream into string
             vertexCode = vShaderStream.str();
         }
-        catch (ifstream::failure e)
+        catch (std::ifstream::failure e)
         {
-            string path = vertexShaderPath;
-            string description = " not succesfully read";
-            printError(path + description, e.what());
+            std::string description = (std::string)vertexShaderPath + " not succesfully read";
+            dblog::error("Shader", e.what());
         }
 
         try
         {
             // Open file
             fShaderFile.open(fragmentShaderPath);
-            stringstream fShaderStream;
+            std::stringstream fShaderStream;
             // Read file's buffer contents into streams
             fShaderStream << fShaderFile.rdbuf();
             // close file handlers
@@ -65,11 +66,10 @@ class Shader
             // Convert stream into string
             fragmentCode = fShaderStream.str();
         }
-        catch (ifstream::failure e)
+        catch (std::ifstream::failure e)
         {
-            string path = fragmentShaderPath;
-            string description = " not succesfully read";
-            printError(path + description, e.what());
+            std::string description = (std::string)fragmentShaderPath + " not succesfully read";
+            dblog::error("Shader", description);
         }
 
         // Convert strings to char pointers
@@ -116,16 +116,6 @@ class Shader
 
     private:
 
-    void printError(const char* description, const char* log)
-    {
-        cout << "\nError: " << description << "\n" << log << "\n\n--------------------" << endl;
-    }
-
-    void printError(string description, const char* log)
-    {
-        cout << "\nError: " << description << "\n" << log << "\n\n--------------------" << endl;
-    }
-
     // Check shader compilation errors
     void checkShaderCompilation(GLuint shader, const char* shaderType)
     {
@@ -136,9 +126,9 @@ class Shader
         if(!success)
         {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            string type = shaderType;
-            string description = " Shader compilation failed";
-            printError(type + description, infoLog);
+            std::string type = shaderType;
+            std::string description = " Shader compilation failed";
+            dblog::error("Shader", (char*)infoLog);
         }
     }
 
@@ -151,7 +141,7 @@ class Shader
         if(!success)
         {
             glGetProgramInfoLog(program, 1024, NULL, infoLog);
-            printError("Shader linking failed", infoLog);
+            dblog::error("Shader", (char*)infoLog);
         }
     }
 };

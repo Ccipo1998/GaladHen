@@ -11,6 +11,8 @@ it is a "move-only" class. A move-only class ensures that you always have a 1:1 
 Moreover, we want to have, CPU-side, a Mesh instance, with associated GPU resources, which is responsible of their life cycle (RAII), and which could be "moved" in memory keeping the ownership of its resources
 */
 
+#pragma once
+
 #include <vector>
 
 // gl3w MUST be included before any other OpenGL-related header
@@ -22,7 +24,6 @@ Moreover, we want to have, CPU-side, a Mesh instance, with associated GPU resour
 #include <glm.hpp>
 
 using namespace glm;
-using namespace std;
 
 struct Vertex
 {
@@ -38,8 +39,8 @@ class Mesh
 {
     public:
 
-    vector<Vertex> Vertices;
-    vector<GLuint> Indices;
+    std::vector<Vertex> Vertices;
+    std::vector<GLuint> Indices;
     GLuint VAO;
 
     // Constructors
@@ -56,7 +57,7 @@ class Mesh
 
     // We use initializer list and std::move in order to avoid a copy of the arguments
     // This constructor empties the source vectors (vertices and indices)
-    Mesh(vector<Vertex>& vertices, vector<GLuint>& indices) noexcept
+    Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices) noexcept
         : Vertices(move(vertices)), Indices(move(indices))
     {
         this->initGPUmemory();
