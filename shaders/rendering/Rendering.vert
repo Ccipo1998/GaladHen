@@ -27,7 +27,7 @@ void main()
     ViewLightDir = normalize((viewLightPos - viewPosition)).xyz;
 
     // point of view direction in view coords
-    ViewDirection = -(viewPosition).xyz;
+    ViewDirection = normalize(-(viewPosition).xyz);
 
     // transformed vertex position
     gl_Position = Projection * viewPosition;
