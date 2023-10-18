@@ -13,6 +13,9 @@ struct Material
 {
     // enum type -> the type of shading model
 
+    // diffuse reflection
+    GLfloat Kd;
+
     // colors for the diffuse term and for the dielectric reflection
     glm::vec3 DiffuseColor;
     //GLfloat Specular;

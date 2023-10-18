@@ -47,15 +47,15 @@ int main()
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-    glClearColor(.0f, .0f, .0f, .0f);
+    glClearColor(.2f, .2f, .2f, .0f);
     // we enable Z test
     glEnable(GL_DEPTH_TEST);
     
     initImGui(window, "#version 450 core");
 
-    Model model = Model("prefabs/cube.obj");
+    Model model = Model("prefabs/bunny.obj");
 
-    Shader shader = Shader("shaders/pbr/GGX.vert", "shaders/pbr/GGX.frag");
+    Shader shader = Shader("shaders/rendering/Rendering.vert", "shaders/rendering/Rendering.frag");
     
     //mainCamera = Camera(vec3(.0f, .0f, 15.0f), radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
     mainCamera.setYaw(90.0f);
@@ -64,9 +64,10 @@ int main()
     //mat4 viewMatrix = lookAt(vec3(.0f, .0f, -1.0f), vec3(.0f, .0f, 3.0f), vec3(.0f, 1.0f, .0f));
     //mat4 projectionMatrix = perspective(radians(170.0f), 600.0f/400.0f, .1f, 100.0f);
     
-    PointLight pointLight = PointLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(3.0f, .0f, 3.0f));
+    PointLight pointLight = PointLight(vec3(.0f, .0f, .0f), 1.f, vec3(0.0f, .0f, 10.0f));
 
     Material mat;
+    mat.Kd = 1.0f;
     mat.DiffuseColor = vec3(1.0f, .0f, .0f);
     //mat.Specular = .0f;
     mat.Metallic = 1.0f;
@@ -106,6 +107,7 @@ int main()
         ImGui::Begin("Material parameters");
         ImGui::ColorPicker3("Diffuse Color", &mat.DiffuseColor.x);
         //ImGui::SliderFloat("Specular", &mat.Specular, .0f, 1.f);
+        ImGui::SliderFloat("Kd", &mat.Kd, .0f, 1.0f);
         ImGui::SliderFloat("Metallic", &mat.Metallic, .0f, 1.0f);
         ImGui::SliderFloat("Roughness", &mat.Roughness, .0f, 1.f);
         ImGui::End();
@@ -116,13 +118,20 @@ int main()
         mainCamera.applyMovements(keys, mouse_keys, mouseX - mouseLastX, mouseY - mouseLastY, deltaTime);
 
         // send camera data to shaders
-        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "projectionMatrix"), 1, GL_FALSE, value_ptr(mainCamera.getProjectionMatrix()));
-        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "viewMatrix"), 1, GL_FALSE, value_ptr(mainCamera.getViewMatrix()));
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "lightPos"), 1, value_ptr(pointLight.Position));
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "DiffuseColor"), 1, value_ptr(mat.DiffuseColor));
+        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "Projection"), 1, GL_FALSE, value_ptr(mainCamera.getProjectionMatrix()));
+        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "View"), 1, GL_FALSE, value_ptr(mainCamera.getViewMatrix()));
+        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "LightPos"), 1, value_ptr(pointLight.Position));
+        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "LightColor"), 1, value_ptr(pointLight.Color));
+        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "LightIntensity"), pointLight.Intensity);
+        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Kd"), mat.Kd);
+        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Diffuse"), 1, value_ptr(mat.DiffuseColor));
         //glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Specular"), mat.Specular);
         glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Metallic"), mat.Metallic);
         glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Roughness"), mat.Roughness);
+
+        // select current rendering subroutine (shading type)
+        GLuint phongDiffuseIndex = glGetSubroutineIndex(shader.Program, GL_FRAGMENT_SHADER, "PhongDiffuseReflection");
+        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &phongDiffuseIndex);
 
         /*
         glBindVertexArray(cube.VAO);
