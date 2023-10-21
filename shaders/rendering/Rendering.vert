@@ -12,14 +12,16 @@ uniform mat4 Projection;
 uniform vec3 LightPos;
 
 // output
-out vec3 ViewNormal;
+out vec3 SmoothViewNormal;
+flat out vec3 FlatViewNormal;
 out vec3 ViewLightDir;
 out vec3 ViewDirection;
 
 void main()
 {
     // normal remains the same
-    ViewNormal = Normal;
+    SmoothViewNormal = Normal;
+    FlatViewNormal = Normal;
 
     // light position and vertex position in view coords
     vec4 viewLightPos = View * vec4(LightPos, 1.0);

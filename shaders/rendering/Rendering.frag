@@ -2,13 +2,21 @@
 // Fragment shader for rendering.
 // This shader offers many types of rendering
 
-#version 450 core
+#version 460 core
 
-// fragment color as output
-layout (location = 0) out vec4 color;
+// subroutine declarations
+
+subroutine vec3 ShadingMode();
+layout (location = 0) subroutine uniform ShadingMode CurrentShadingMode;
+subroutine vec3 ShadingType(vec3 viewNormal);
+layout (location = 1) subroutine uniform ShadingType CurrentShadingType;
+
+// outputs
+out vec4 color;
 
 // inputs
-in vec3 ViewNormal;
+in vec3 SmoothViewNormal;
+flat in vec3 FlatViewNormal;
 in vec3 ViewLightDir;
 in vec3 ViewDirection;
 
@@ -33,27 +41,42 @@ vec3 PhongAmbient()
     return Ka * LightIntensity;
 }
 
-vec3 PhongDiffuse()
+vec3 PhongDiffuse(vec3 viewNormal)
 {
     // diffuse reflection equation
-    return Kd * LightIntensity * max(dot(ViewNormal, ViewLightDir), 0.0); // WARNING: if Kd is 1, it means that with colors that saturate an rgb channel the diffuse will behave like specular
+    return Kd * LightIntensity * max(dot(viewNormal, ViewLightDir), 0.0); // WARNING: if Kd is 1, it means that with colors that saturate an rgb channel the diffuse will behave like specular
 }
 
-vec3 PhongSpecular()
+vec3 PhongSpecular(vec3 viewNormal)
 {
-    vec3 specularDir = normalize(-ViewLightDir + 2 * max(dot(ViewLightDir, ViewNormal), 0.0) * ViewNormal);
+    vec3 specularDir = normalize(-ViewLightDir + 2 * max(dot(ViewLightDir, viewNormal), 0.0) * viewNormal);
     return Ks * LightIntensity * pow(max(dot(specularDir, ViewDirection), 0.0), SpecularFalloff);
 }
 
-// subroutines to run current selected shading type
-subroutine vec3 ShadingType();
-subroutine uniform ShadingType CurrentShadingType;
+// functions
 
+// subroutines
+
+layout (index = 0)
+subroutine(ShadingMode)
+vec3 SmoothShading()
+{
+    return SmoothViewNormal;
+}
+
+layout (index = 1)
+subroutine(ShadingMode)
+vec3 FlatShading()
+{
+    return FlatViewNormal;
+}
+
+layout (index = 2)
 subroutine(ShadingType)
-vec3 PhongDiffuseReflection()
+vec3 PhongDiffuseReflection(vec3 viewNormal)
 {
     // diffuse reflection equation
-    vec3 diffuseReflection = Kd * LightIntensity * max(dot(ViewNormal, ViewLightDir), 0.0);
+    vec3 diffuseReflection = Kd * LightIntensity * max(dot(viewNormal, ViewLightDir), 0.0);
 
     // add color
     vec3 color = (Diffuse + LightColor) * diffuseReflection;
@@ -61,11 +84,12 @@ vec3 PhongDiffuseReflection()
     return color;
 }
 
+layout (index = 3)
 subroutine(ShadingType)
-vec3 PhongShadingModel()
+vec3 PhongShadingModel(vec3 viewNormal)
 {
     // add ambient, diffuse and specular
-    vec3 ads = PhongAmbient() + PhongDiffuse() + PhongSpecular();
+    vec3 ads = PhongAmbient() + PhongDiffuse(viewNormal) + PhongSpecular(viewNormal);
 
     // add color
     vec3 color = (Diffuse + LightColor) * ads;
@@ -73,8 +97,11 @@ vec3 PhongShadingModel()
     return color;
 }
 
+// subroutines
+
 void main()
 {
-    vec3 diffuseColor = CurrentShadingType();
+    vec3 viewNormal = CurrentShadingMode();
+    vec3 diffuseColor = CurrentShadingType(viewNormal);
     color = vec4(diffuseColor, 1.0);
 }

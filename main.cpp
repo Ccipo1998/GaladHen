@@ -135,9 +135,13 @@ int main()
         glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Metallic"), mat.Metallic);
         glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Roughness"), mat.Roughness);
 
-        // select current rendering subroutine (shading type)
-        GLuint phongDiffuseIndex = glGetSubroutineIndex(shader.Program, GL_FRAGMENT_SHADER, "PhongShadingModel");
-        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &phongDiffuseIndex);
+        // select shading subroutines
+
+        GLuint subroutinesIndices[2];
+        // IMPORTANT: subroutine uniform location (array index) <-> subroutine function index (value)
+        subroutinesIndices[0] = 0;
+        subroutinesIndices[1] = 3;
+        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 2, subroutinesIndices);
 
         /*
         glBindVertexArray(cube.VAO);
