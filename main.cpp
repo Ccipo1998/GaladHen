@@ -12,16 +12,12 @@
 #include <ezengine/camera.h>
 #include <ezengine/light.h>
 #include <ezengine/material.h>
+#include <ezengine/ui.h>
 
 // glm
 #include <glm.hpp>
 #include <gtx/transform.hpp> // for lookat() and perspective()
 #include <gtc/type_ptr.hpp> // for value_ptr()
-
-// imgui
-#include <imgui/imgui.h>
-#include <imgui/backends/imgui_impl_glfw.h>
-#include <imgui/backends/imgui_impl_opengl3.h>
 
 #define BUFFER_OFFSET(offset) (void*)(offset) // MACRO
 
@@ -36,7 +32,6 @@ bool keys[1024];
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 GLFWwindow* initContext(int width, int height, const char* name);
-void initImGui(GLFWwindow* window, const char* glsl_version);
 
 int main()
 {
@@ -51,7 +46,8 @@ int main()
     // we enable Z test
     glEnable(GL_DEPTH_TEST);
     
-    initImGui(window, "#version 450 core");
+    // init ui
+    UI::InitImGui(window, "#version 450 core");
 
     Model model = Model("prefabs/bunny.obj");
 
@@ -102,20 +98,8 @@ int main()
         mouseLastY = mouseY;
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-        ImGui::Begin("Material parameters");
-        ImGui::ColorPicker3("Diffuse Color", &mat.DiffuseColor.x);
-        //ImGui::SliderFloat("Specular", &mat.Specular, .0f, 1.f);
-        //ImGui::SliderFloat("Kd", &mat.Kd, .0f, 1.0f);
-        ImGui::SliderFloat("Metallic", &mat.Metallic, .0f, 1.0f);
-        ImGui::SliderFloat("Roughness", &mat.Roughness, .0f, 1.f);
-        ImGui::End();
-
-        ImGui::Render();
+        // ui update
+        UI::Update(mat);
 
         // camera movements
         mainCamera.applyMovements(keys, mouse_keys, mouseX - mouseLastX, mouseY - mouseLastY, deltaTime);
@@ -139,8 +123,8 @@ int main()
 
         GLuint subroutinesIndices[2];
         // IMPORTANT: subroutine uniform location (array index) <-> subroutine function index (value)
-        subroutinesIndices[0] = 0;
-        subroutinesIndices[1] = 3;
+        subroutinesIndices[0] = UI::ShadingModesValues[UI::ShadingModeSelected];
+        subroutinesIndices[1] = UI::ShadingTypesValues[UI::ShadingTypeSelected];
         glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 2, subroutinesIndices);
 
         /*
@@ -150,17 +134,15 @@ int main()
         */
         model.draw();
 
-        // gui cleaning
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // ui clear
+        UI::Clear();
         
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    // gui delete
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    // ui delete
+    UI::DestroyAndFree();
 
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -196,24 +178,6 @@ GLFWwindow* initContext(int width, int height, const char* name)
         throw std::runtime_error("Error: GLFW failed to create the window");
 
     return window;
-}
-
-void initImGui(GLFWwindow* window, const char* glsl_version)
-{
-     // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-    //ImGui::StyleColorsLight();
-
-    // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
 /*
