@@ -13,6 +13,7 @@
 #include <ezengine/light.h>
 #include <ezengine/material.h>
 #include <ezengine/ui.h>
+#include <ezengine/input.h>
 
 // glm
 #include <glm.hpp>
@@ -21,16 +22,9 @@
 
 #define BUFFER_OFFSET(offset) (void*)(offset) // MACRO
 
-// array for mouse buttons
-bool mouse_keys[12];
-
 // main camera
 Camera mainCamera = Camera(vec3(.0f, .0f, 15.0f), radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
 
-// we initialize an array of booleans for each keybord key
-bool keys[1024];
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 GLFWwindow* initContext(int width, int height, const char* name);
 
 int main()
@@ -39,8 +33,7 @@ int main()
     glfwMakeContextCurrent(window);
 
     // callbacks
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    Input::LinkInputCallbacks(window);
 
     glClearColor(.1f, .1f, .1f, .0f);
     // we enable Z test
@@ -73,12 +66,6 @@ int main()
     mat.Roughness = .0f;
 
     shader.use();
-
-    // mouse positions for delta
-    double mouseLastX = 0.f;
-    double mouseLastY = 0.f;
-    double mouseX = 0.f;
-    double mouseY = 0.f;
     
     GLfloat lastTime = .0f;
     GLfloat deltaTime = .0f;
@@ -92,17 +79,13 @@ int main()
         deltaTime = currentTime - lastTime;
         lastTime = currentTime;
 
-        // mouse position update
-        // position update
-        mouseLastX = mouseX;
-        mouseLastY = mouseY;
-        glfwGetCursorPos(window, &mouseX, &mouseY);
-
+        // input update
+        Input::Update();
         // ui update
         UI::Update(mat);
 
         // camera movements
-        mainCamera.applyMovements(keys, mouse_keys, mouseX - mouseLastX, mouseY - mouseLastY, deltaTime);
+        mainCamera.applyMovements(Input::GetKeys(), Input::GetMouseKeys(), Input::GetDeltaMouseX(), Input::GetDeltaMouseY(), deltaTime);
 
         // send camera data to shaders
         glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "Projection"), 1, GL_FALSE, value_ptr(mainCamera.getProjectionMatrix()));
@@ -179,31 +162,3 @@ GLFWwindow* initContext(int width, int height, const char* name)
 
     return window;
 }
-
-/*
-@brief
-Keys callbacks responses
-@param window: pointer to the GLFWwindow created when the context was initialized
-@param key: integer representing the activated key
-@param action: integer representing the action on the key
-*/
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-    // we keep trace of the pressed keys
-    // with this method, we can manage 2 keys pressed at the same time:
-    // many I/O managers often consider only 1 key pressed at the time (the first pressed, until it is released)
-    // using a boolean array, we can then check and manage all the keys pressed at the same time
-    if(action == GLFW_PRESS)
-        keys[key] = true;
-    else if(action == GLFW_RELEASE)
-        keys[key] = false;
-}
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-    if(action == GLFW_PRESS)
-        mouse_keys[button] = true;
-    else if(action == GLFW_RELEASE)
-        mouse_keys[button] = false;
-}
-

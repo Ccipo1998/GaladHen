@@ -9,6 +9,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 add_executable(ezengine
 ${CMAKE_SOURCE_DIR}/src/ui.cpp
+${CMAKE_SOURCE_DIR}/src/input.cpp
 main.cpp)
 target_include_directories(ezengine PRIVATE
     ${CMAKE_SOURCE_DIR}/libs/assimp/include

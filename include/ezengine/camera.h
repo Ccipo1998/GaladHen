@@ -27,23 +27,6 @@ class Camera
     // movement parameters
     GLfloat LinearSpeed = 2.5f;
     GLfloat AngularSpeed = 1.0f;
-    /*
-    Camera(vec3 position, vec3 front, vec3 up, GLfloat fovy, GLfloat aspectRatio, GLfloat near, GLfloat far)
-    {
-        this->Position = position;
-
-        this->Front = normalize(front);
-        this->Right = normalize(cross(front, up));
-        this->Up = cross(this->Front, this->Right);
-
-        UpdateEulerAngles();
-
-        this->FovY = .0f;
-        this->AspectRatio = .0f;
-        this->Near = .0f;
-        this->Far = .0f;
-    }
-    */
 
     Camera(vec3 position, GLfloat fovy, GLfloat aspectRatio, GLfloat nearDistance, GLfloat farDistance)
     {
@@ -66,7 +49,7 @@ class Camera
         updateProjectionMatrix();
     }
 
-    void applyMovements(bool* keys, bool* mouse_keys, double deltaX, double deltaY, GLfloat deltaTime)
+    void applyMovements(const bool* keys, const bool* mouse_keys, double deltaX, double deltaY, GLfloat deltaTime)
     {
         // keys
         if (keys[GLFW_KEY_UP])
