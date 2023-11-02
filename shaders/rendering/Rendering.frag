@@ -17,7 +17,7 @@ out vec4 color;
 // inputs
 in vec3 SmoothViewNormal;
 flat in vec3 FlatViewNormal;
-in vec3 ViewLightDir;
+in vec3 LightDir;
 in vec3 ViewDirection;
 
 // uniforms
@@ -44,12 +44,12 @@ vec3 PhongAmbient()
 vec3 PhongDiffuse(vec3 viewNormal)
 {
     // diffuse reflection equation
-    return Kd * LightIntensity * max(dot(viewNormal, ViewLightDir), 0.0); // WARNING: if Kd is 1, it means that with colors that saturate an rgb channel the diffuse will behave like specular
+    return Kd * LightIntensity * max(dot(viewNormal, LightDir), 0.0); // WARNING: if Kd is 1, it means that with colors that saturate an rgb channel the diffuse will behave like specular
 }
 
 vec3 PhongSpecular(vec3 viewNormal)
 {
-    vec3 specularDir = normalize(-ViewLightDir + 2 * max(dot(ViewLightDir, viewNormal), 0.0) * viewNormal);
+    vec3 specularDir = normalize(-LightDir + 2 * max(dot(LightDir, viewNormal), 0.0) * viewNormal);
     return Ks * LightIntensity * pow(max(dot(specularDir, ViewDirection), 0.0), SpecularFalloff);
 }
 
@@ -76,7 +76,7 @@ subroutine(ShadingType)
 vec3 PhongDiffuseReflection(vec3 viewNormal)
 {
     // diffuse reflection equation
-    vec3 diffuseReflection = Kd * LightIntensity * max(dot(viewNormal, ViewLightDir), 0.0);
+    vec3 diffuseReflection = Kd * LightIntensity * max(dot(viewNormal, LightDir), 0.0);
 
     // add color
     vec3 color = (Diffuse + LightColor) * diffuseReflection;

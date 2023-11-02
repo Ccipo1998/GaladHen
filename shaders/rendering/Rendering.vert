@@ -14,7 +14,7 @@ uniform vec3 LightPos;
 // output
 out vec3 SmoothViewNormal;
 flat out vec3 FlatViewNormal;
-out vec3 ViewLightDir;
+out vec3 LightDir;
 out vec3 ViewDirection;
 
 void main()
@@ -24,9 +24,8 @@ void main()
     FlatViewNormal = Normal;
 
     // light position and vertex position in view coords
-    vec4 viewLightPos = View * vec4(LightPos, 1.0);
     vec4 viewPosition = View * vec4(Position, 1.0);
-    ViewLightDir = normalize((viewLightPos - viewPosition)).xyz;
+    LightDir = normalize((LightPos - Position));
 
     // point of view direction in view coords
     ViewDirection = normalize(-(viewPosition).xyz);
