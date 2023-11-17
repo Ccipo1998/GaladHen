@@ -53,7 +53,7 @@ int main()
     //mat4 viewMatrix = lookAt(vec3(.0f, .0f, -1.0f), vec3(.0f, .0f, 3.0f), vec3(.0f, 1.0f, .0f));
     //mat4 projectionMatrix = perspective(radians(170.0f), 600.0f/400.0f, .1f, 100.0f);
     
-    PointLight pointLight = PointLight(vec3(.0f, .0f, .0f), 1.f, vec3(.0f, .0f, 5.0f));
+    PointLight pointLight = PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, 5.0f));
 
     Material mat;
     mat.Ka = vec3(.1f, .1f, .1f);
