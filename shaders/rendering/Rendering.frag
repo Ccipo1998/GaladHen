@@ -75,13 +75,7 @@ layout (index = 2)
 subroutine(ShadingType)
 vec3 PhongDiffuseReflection(vec3 viewNormal)
 {
-    // diffuse reflection equation
-    vec3 diffuseReflection = Kd * LightIntensity * max(dot(viewNormal, LightDir), 0.0);
-
-    // add color
-    vec3 color = (Diffuse + LightColor) * diffuseReflection;
-
-    return color;
+    return Diffuse * PhongDiffuse(viewNormal);
 }
 
 layout (index = 3)
@@ -89,10 +83,12 @@ subroutine(ShadingType)
 vec3 PhongShadingModel(vec3 viewNormal)
 {
     // add ambient, diffuse and specular
-    vec3 ads = PhongAmbient() + PhongDiffuse(viewNormal) + PhongSpecular(viewNormal);
+    vec3 ambient = Diffuse * PhongAmbient();
+    vec3 diffuse = Diffuse * PhongDiffuse(viewNormal);
+    vec3 specular = LightColor * PhongSpecular(viewNormal); // specular doesnt take diffuse color because all the light is reflected in specular component -> it is not mixed with object color
 
-    // add color
-    vec3 color = (Diffuse + LightColor) * ads;
+    // create color
+    vec3 color = ambient + diffuse + specular;
 
     return color;
 }
