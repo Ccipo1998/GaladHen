@@ -76,7 +76,10 @@ int main()
     unsigned int pointLightsNumber = (unsigned int)currentScene.PointLights.size();
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + pointLightsNumber * sizeof(PointLight), nullptr, GL_STATIC_DRAW);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &pointLightsNumber);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), pointLightsNumber * sizeof(PointLight), currentScene.PointLights[0]);
+    for (unsigned int i = 0; i < pointLightsNumber; ++i)
+    {
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(PointLight) * i, sizeof(PointLight), currentScene.PointLights[i]);
+    }
     
     GLfloat lastTime = .0f;
     GLfloat deltaTime = .0f;
