@@ -50,7 +50,7 @@ int main()
     mat->Ka = vec3(.1f, .1f, .1f);
     mat->Kd = vec3(.6f, .6f, .6f);
     mat->Ks = vec3(.8f, .8f, .8f);
-    mat->SpecularFalloff = 30.0f;
+    mat->SpecularFalloff = 100.0f;
     mat->DiffuseColor = vec3(1.0f, .0f, .0f);
     //mat.Specular = .0f;
     mat->Metallic = 1.0f;
@@ -61,10 +61,12 @@ int main()
     currentScene.GameObjects.push_back(object);
 
     // lights
-    PointLight* pLight1 = new PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, 5.0f));
-    PointLight* pLight2 = new PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, -5.0f));
+    PointLight* pLight1 = new PointLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(.0f, .0f, 5.0f));
+    PointLight* pLight2 = new PointLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(.0f, .0f, -5.0f));
     currentScene.PointLights.push_back(pLight1);
     currentScene.PointLights.push_back(pLight2);
+    DirectionalLight* dirLight = new DirectionalLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(1.0f, .0f, .0f));
+    currentScene.DirectionalLights.push_back(dirLight);
 
     Shader shader = Shader("shaders/rendering/Rendering.vert", "shaders/rendering/Rendering.frag");
     shader.use();
@@ -74,11 +76,23 @@ int main()
     glGenBuffers(1, &ssbo);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
     unsigned int pointLightsNumber = (unsigned int)currentScene.PointLights.size();
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + pointLightsNumber * sizeof(PointLight), nullptr, GL_STATIC_DRAW);
+    GLsizeiptr pointLightsSize = sizeof(GLuint) + pointLightsNumber * sizeof(PointLight);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, pointLightsSize, nullptr, GL_STATIC_DRAW);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &pointLightsNumber);
     for (unsigned int i = 0; i < pointLightsNumber; ++i)
     {
         glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(PointLight) * i, sizeof(PointLight), currentScene.PointLights[i]);
+    }
+    GLuint ssbo1;
+    glGenBuffers(1, &ssbo1);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo1);
+    unsigned int directionalLightsNumber = (unsigned int)currentScene.DirectionalLights.size();
+    GLsizeiptr directionalLightsSize = sizeof(GLuint) + directionalLightsNumber * sizeof(DirectionalLight);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, directionalLightsSize, nullptr, GL_STATIC_DRAW);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &directionalLightsNumber);
+    for (unsigned int i = 0; i < directionalLightsNumber; ++i)
+    {
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(DirectionalLight) * i, sizeof(DirectionalLight), currentScene.DirectionalLights[i]);
     }
     
     GLfloat lastTime = .0f;

@@ -29,11 +29,25 @@ struct PointLight
     float FallOffDistance;
 };
 
+struct DirectionalLight
+{
+    float[3] Color;
+    float Intensity;
+    float[3] Direction;
+};
+
 // buffers
 layout(std430, binding = 0) buffer PointLightsBuffer
 {
     uint PointLightsNumber;
     PointLight PointLights[];
+};
+
+layout(std430, binding = 1) buffer DirectionalLightsBuffer
+{
+    // directional lights
+    uint DirectionalLightsNumber;
+    DirectionalLight DirectionalLights[];
 };
 
 // uniforms
@@ -48,6 +62,7 @@ uniform vec3 Ks;
 uniform float SpecularFalloff;
 // matrix
 uniform mat4 ViewMatrix;
+uniform mat4 NormalMatrix;
 
 // functions
 
@@ -93,12 +108,22 @@ vec3 PhongDiffuseReflection(vec3 viewNormal)
     // compute diffuse reflection adding contribution from all the lights
     vec3 phongDiffuse = vec3(0.0);
     vec3 viewLightPos = vec3(0.0);
-    vec3 lightDir = vec3(0.0);
+    vec3 viewLightDir = vec3(0.0);
+
+    // point lights
     for (uint i = 0; i < PointLightsNumber; ++i)
     {
         viewLightPos = (ViewMatrix * vec4(PointLights[i].Position[0], PointLights[i].Position[1], PointLights[i].Position[2], 1.0)).xyz;
-        lightDir = normalize(viewLightPos - ViewPosition);
-        phongDiffuse += PhongDiffuse(viewNormal, PointLights[i].Intensity, lightDir);
+        viewLightDir = normalize(viewLightPos - ViewPosition);
+        phongDiffuse += PhongDiffuse(viewNormal, PointLights[i].Intensity, viewLightDir);
+    }
+
+    // directional lights
+    for (uint i = 0; i < DirectionalLightsNumber; ++i)
+    {
+        viewLightDir = vec3(DirectionalLights[i].Direction[0], DirectionalLights[i].Direction[1], DirectionalLights[i].Direction[2]);
+        viewLightDir = (NormalMatrix * vec4(viewLightDir, 1.0)).xyz;
+        phongDiffuse += PhongDiffuse(viewNormal, DirectionalLights[i].Intensity, viewLightDir);
     }
 
     return Diffuse * phongDiffuse;
@@ -113,7 +138,9 @@ vec3 PhongShadingModel(vec3 viewNormal)
     vec3 phongDiffuse = vec3(0.0);
     vec3 phongSpecular = vec3(0.0);
     vec3 viewLightPos = vec3(0.0);
-    vec3 lightDir = vec3(0.0);
+    vec3 viewLightDir = vec3(0.0);
+
+    // point lights
     for (uint i = 0; i < PointLightsNumber; ++i)
     {
         // ambient
@@ -121,11 +148,25 @@ vec3 PhongShadingModel(vec3 viewNormal)
 
         // diffuse
         viewLightPos = (ViewMatrix * vec4(PointLights[i].Position[0], PointLights[i].Position[1], PointLights[i].Position[2], 1.0)).xyz;
-        lightDir = normalize(viewLightPos - ViewPosition);
-        phongDiffuse += PhongDiffuse(viewNormal, PointLights[i].Intensity, lightDir);
+        viewLightDir = normalize(viewLightPos - ViewPosition);
+        phongDiffuse += PhongDiffuse(viewNormal, PointLights[i].Intensity, viewLightDir);
 
         // specular
-        phongSpecular += PhongSpecular(viewNormal, PointLights[i].Intensity, lightDir);
+        phongSpecular += PhongSpecular(viewNormal, PointLights[i].Intensity, viewLightDir);
+    }
+
+    // directional lights
+    for (uint i = 0; i < DirectionalLightsNumber; ++i)
+    {
+        // ambient
+        phongAmbient += PhongAmbient(DirectionalLights[i].Intensity);
+        
+        viewLightDir = vec3(DirectionalLights[i].Direction[0], DirectionalLights[i].Direction[1], DirectionalLights[i].Direction[2]);
+        viewLightDir = (NormalMatrix * vec4(viewLightDir, 1.0)).xyz;
+        phongDiffuse += PhongDiffuse(viewNormal, DirectionalLights[i].Intensity, viewLightDir);
+
+        // specular
+        phongSpecular += PhongSpecular(viewNormal, DirectionalLights[i].Intensity, viewLightDir);
     }
     
     // create color

@@ -18,6 +18,7 @@ public:
 
     Camera MainCamera;
     std::vector<PointLight*> PointLights;
+    std::vector<DirectionalLight*> DirectionalLights;
 
     std::vector<GameObject*> GameObjects;
 
