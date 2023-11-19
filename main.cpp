@@ -14,6 +14,7 @@
 #include <ezengine/material.h>
 #include <ezengine/ui.h>
 #include <ezengine/input.h>
+#include <ezengine/scene.h>
 
 // glm
 #include <glm.hpp>
@@ -22,8 +23,8 @@
 
 #define BUFFER_OFFSET(offset) (void*)(offset) // MACRO
 
-// main camera
-Camera mainCamera = Camera(vec3(.0f, .0f, 15.0f), radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
+// current scene
+Scene currentScene;
 
 GLFWwindow* initContext(int width, int height, const char* name);
 
@@ -45,27 +46,41 @@ int main()
     Model model = Model("prefabs/bunny.obj");
 
     Shader shader = Shader("shaders/rendering/Rendering.vert", "shaders/rendering/Rendering.frag");
-    
-    //mainCamera = Camera(vec3(.0f, .0f, 15.0f), radians(45.0f), 600.0f/400.0f, .1f, 100.0f);
-    mainCamera.setYaw(90.0f);
-    //camera.lookAt(vec3(.0f, .0f, .0f), vec3(.0f, 1.0f, .0f));
 
-    //mat4 viewMatrix = lookAt(vec3(.0f, .0f, -1.0f), vec3(.0f, .0f, 3.0f), vec3(.0f, 1.0f, .0f));
-    //mat4 projectionMatrix = perspective(radians(170.0f), 600.0f/400.0f, .1f, 100.0f);
-    
-    PointLight pointLight = PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, 5.0f));
+    // lights
+    currentScene.PointLights.push_back(PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, 5.0f)));
+    currentScene.PointLights.push_back(PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, -5.0f)));
 
     Material mat;
     mat.Ka = vec3(.1f, .1f, .1f);
-    mat.Kd = vec3(.8f, .8f, .8f);
+    mat.Kd = vec3(.6f, .6f, .6f);
     mat.Ks = vec3(.8f, .8f, .8f);
-    mat.SpecularFalloff = 100.0f;
+    mat.SpecularFalloff = 30.0f;
     mat.DiffuseColor = vec3(1.0f, .0f, .0f);
     //mat.Specular = .0f;
     mat.Metallic = 1.0f;
     mat.Roughness = .0f;
 
     shader.use();
+
+    // send light data to shader
+    GLuint ssbo;
+    glGenBuffers(1, &ssbo);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
+    unsigned int pointLightsNumber = (unsigned int)currentScene.PointLights.size();
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + pointLightsNumber * sizeof(PointLight), nullptr, GL_STATIC_DRAW);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &pointLightsNumber);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), pointLightsNumber * sizeof(PointLight), &(currentScene.PointLights[0]));
+
+    // send material data to shader
+    glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ka"), 1, value_ptr(mat.Ka));
+    glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Kd"), 1, value_ptr(mat.Kd));
+    glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ks"), 1, value_ptr(mat.Ks));
+    glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "SpecularFalloff"), mat.SpecularFalloff);
+    glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Diffuse"), 1, value_ptr(mat.DiffuseColor));
+    //glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Specular"), mat.Specular);
+    glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Metallic"), mat.Metallic);
+    glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Roughness"), mat.Roughness);
     
     GLfloat lastTime = .0f;
     GLfloat deltaTime = .0f;
@@ -85,22 +100,12 @@ int main()
         UI::Update(mat);
 
         // camera movements
-        mainCamera.applyMovements(Input::GetKeys(), Input::GetMouseKeys(), Input::GetDeltaMouseX(), Input::GetDeltaMouseY(), deltaTime);
+        currentScene.MainCamera.applyMovements(Input::GetKeys(), Input::GetMouseKeys(), Input::GetDeltaMouseX(), Input::GetDeltaMouseY(), deltaTime);
 
-        // send camera data to shaders
-        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "Projection"), 1, GL_FALSE, value_ptr(mainCamera.getProjectionMatrix()));
-        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "View"), 1, GL_FALSE, value_ptr(mainCamera.getViewMatrix()));
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "LightPos"), 1, value_ptr(pointLight.Position));
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "LightColor"), 1, value_ptr(pointLight.Color));
-        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "LightIntensity"), pointLight.Intensity);
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ka"), 1, value_ptr(mat.Ka));
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Kd"), 1, value_ptr(mat.Kd));
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ks"), 1, value_ptr(mat.Ks));
-        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "SpecularFalloff"), mat.SpecularFalloff);
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Diffuse"), 1, value_ptr(mat.DiffuseColor));
-        //glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Specular"), mat.Specular);
-        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Metallic"), mat.Metallic);
-        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Roughness"), mat.Roughness);
+        // send camera data to shaders -> may vary between frames
+        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(currentScene.MainCamera.getViewMatrix()))));
+        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(currentScene.MainCamera.getProjectionMatrix()));
+        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "ViewMatrix"), 1, GL_FALSE, value_ptr(currentScene.MainCamera.getViewMatrix()));
 
         // select shading subroutines
 
