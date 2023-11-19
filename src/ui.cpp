@@ -32,7 +32,7 @@ void UI::InitImGui(GLFWwindow* window, const char* glsl_version)
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-void UI::Update(Material& mat)
+void UI::Update(Material* mat)
 {
     // ImGui
 
@@ -80,11 +80,11 @@ void UI::Update(Material& mat)
     ImGui::End();
 
     ImGui::Begin("Material parameters");
-    ImGui::ColorPicker3("Diffuse Color", &mat.DiffuseColor.x);
+    ImGui::ColorPicker3("Diffuse Color", &mat->DiffuseColor.x);
     //ImGui::SliderFloat("Specular", &mat.Specular, .0f, 1.f);
     //ImGui::SliderFloat("Kd", &mat.Kd, .0f, 1.0f);
-    ImGui::SliderFloat("Metallic", &mat.Metallic, .0f, 1.0f);
-    ImGui::SliderFloat("Roughness", &mat.Roughness, .0f, 1.f);
+    ImGui::SliderFloat("Metallic", &mat->Metallic, .0f, 1.0f);
+    ImGui::SliderFloat("Roughness", &mat->Roughness, .0f, 1.f);
     ImGui::End();
 
     ImGui::Render();

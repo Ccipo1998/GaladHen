@@ -34,7 +34,7 @@ namespace UI
     @brief
     Create the new frame of the imgui UI
     */
-    void Update(Material& mat);
+    void Update(Material* mat);
 
     /*
     @brief

@@ -11,6 +11,7 @@ add_executable(ezengine
 ${CMAKE_SOURCE_DIR}/src/ui.cpp
 ${CMAKE_SOURCE_DIR}/src/input.cpp
 ${CMAKE_SOURCE_DIR}/src/scene.cpp
+${CMAKE_SOURCE_DIR}/src/gameobject.cpp
 main.cpp)
 target_include_directories(ezengine PRIVATE
     ${CMAKE_SOURCE_DIR}/libs/assimp/include

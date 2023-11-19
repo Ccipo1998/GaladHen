@@ -1,0 +1,2 @@
+
+#include <ezengine/gameobject.h>

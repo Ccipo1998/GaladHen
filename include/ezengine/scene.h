@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include <ezengine/gameobject.h>
 #include <ezengine/camera.h>
 #include <ezengine/light.h>
 
@@ -13,8 +14,12 @@ public:
 
     Scene();
 
+    void Draw();
+
     Camera MainCamera;
-    std::vector<PointLight> PointLights;
+    std::vector<PointLight*> PointLights;
+
+    std::vector<GameObject*> GameObjects;
 
 private:
 

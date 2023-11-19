@@ -15,6 +15,7 @@
 #include <ezengine/ui.h>
 #include <ezengine/input.h>
 #include <ezengine/scene.h>
+#include <ezengine/gameobject.h>
 
 // glm
 #include <glm.hpp>
@@ -43,24 +44,29 @@ int main()
     // init ui
     UI::InitImGui(window, "#version 450 core");
 
-    Model model = Model("prefabs/bunny.obj");
-
-    Shader shader = Shader("shaders/rendering/Rendering.vert", "shaders/rendering/Rendering.frag");
+    // game object
+    Model* model = new Model("prefabs/bunny.obj");
+    Material* mat = new Material();
+    mat->Ka = vec3(.1f, .1f, .1f);
+    mat->Kd = vec3(.6f, .6f, .6f);
+    mat->Ks = vec3(.8f, .8f, .8f);
+    mat->SpecularFalloff = 30.0f;
+    mat->DiffuseColor = vec3(1.0f, .0f, .0f);
+    //mat.Specular = .0f;
+    mat->Metallic = 1.0f;
+    mat->Roughness = .0f;
+    GameObject* object = new GameObject();
+    object->Model = model;
+    object->Material = mat;
+    currentScene.GameObjects.push_back(object);
 
     // lights
-    currentScene.PointLights.push_back(PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, 5.0f)));
-    currentScene.PointLights.push_back(PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, -5.0f)));
+    PointLight* pLight1 = new PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, 5.0f));
+    PointLight* pLight2 = new PointLight(vec3(1.0f, 1.0f, 1.0f), 1.f, vec3(.0f, .0f, -5.0f));
+    currentScene.PointLights.push_back(pLight1);
+    currentScene.PointLights.push_back(pLight2);
 
-    Material mat;
-    mat.Ka = vec3(.1f, .1f, .1f);
-    mat.Kd = vec3(.6f, .6f, .6f);
-    mat.Ks = vec3(.8f, .8f, .8f);
-    mat.SpecularFalloff = 30.0f;
-    mat.DiffuseColor = vec3(1.0f, .0f, .0f);
-    //mat.Specular = .0f;
-    mat.Metallic = 1.0f;
-    mat.Roughness = .0f;
-
+    Shader shader = Shader("shaders/rendering/Rendering.vert", "shaders/rendering/Rendering.frag");
     shader.use();
 
     // send light data to shader
@@ -70,17 +76,7 @@ int main()
     unsigned int pointLightsNumber = (unsigned int)currentScene.PointLights.size();
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + pointLightsNumber * sizeof(PointLight), nullptr, GL_STATIC_DRAW);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &pointLightsNumber);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), pointLightsNumber * sizeof(PointLight), &(currentScene.PointLights[0]));
-
-    // send material data to shader
-    glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ka"), 1, value_ptr(mat.Ka));
-    glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Kd"), 1, value_ptr(mat.Kd));
-    glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ks"), 1, value_ptr(mat.Ks));
-    glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "SpecularFalloff"), mat.SpecularFalloff);
-    glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Diffuse"), 1, value_ptr(mat.DiffuseColor));
-    //glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Specular"), mat.Specular);
-    glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Metallic"), mat.Metallic);
-    glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Roughness"), mat.Roughness);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint), pointLightsNumber * sizeof(PointLight), currentScene.PointLights[0]);
     
     GLfloat lastTime = .0f;
     GLfloat deltaTime = .0f;
@@ -106,6 +102,15 @@ int main()
         glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(currentScene.MainCamera.getViewMatrix()))));
         glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(currentScene.MainCamera.getProjectionMatrix()));
         glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "ViewMatrix"), 1, GL_FALSE, value_ptr(currentScene.MainCamera.getViewMatrix()));
+        // send material data to shader
+        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ka"), 1, value_ptr(mat->Ka));
+        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Kd"), 1, value_ptr(mat->Kd));
+        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ks"), 1, value_ptr(mat->Ks));
+        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "SpecularFalloff"), mat->SpecularFalloff);
+        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Diffuse"), 1, value_ptr(mat->DiffuseColor));
+        //glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Specular"), mat.Specular);
+        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Metallic"), mat->Metallic);
+        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Roughness"), mat->Roughness);
 
         // select shading subroutines
 
@@ -120,7 +125,7 @@ int main()
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawArrays(GL_TRIANGLES, 0, cube.Vertices.size());
         */
-        model.draw();
+        currentScene.Draw();
 
         // ui clear
         UI::Clear();

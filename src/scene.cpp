@@ -6,3 +6,11 @@ Scene::Scene()
 {
     this->MainCamera.setYaw(90.0f);
 }
+
+void Scene::Draw()
+{
+    for (unsigned int i = 0; i < this->GameObjects.size(); ++i)
+    {
+        this->GameObjects[i]->Model->draw();
+    }
+}
