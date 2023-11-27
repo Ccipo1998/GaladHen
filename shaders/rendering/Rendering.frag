@@ -83,6 +83,12 @@ vec3 PhongSpecular(vec3 viewNormal, float lightIntensity, vec3 lightDir)
     return Ks * lightIntensity * pow(max(dot(specularDir, ViewDirection), 0.0), SpecularFalloff);
 }
 
+vec3 BlinnPhongSpecular(vec3 viewNormal, float lightIntensity, vec3 lightDir)
+{
+    vec3 halfWay = normalize(ViewDirection + lightDir);
+    return Ks * lightIntensity * pow(max(dot(halfWay, viewNormal), 0.0), SpecularFalloff);
+}
+
 // functions
 
 // subroutines
@@ -171,6 +177,52 @@ vec3 PhongShadingModel(vec3 viewNormal)
     
     // create color
     vec3 color = Diffuse * phongAmbient + Diffuse * phongDiffuse + phongSpecular;
+
+    return color;
+}
+
+layout (index = 4)
+subroutine(ShadingType)
+vec3 BlinnPhongShadingModel(vec3 viewNormal)
+{
+    // compute phong shading model adding contribution from all the lights
+    vec3 phongAmbient = vec3(0.0);
+    vec3 phongDiffuse = vec3(0.0);
+    vec3 blinnPhongSpecular = vec3(0.0);
+    vec3 viewLightPos = vec3(0.0);
+    vec3 viewLightDir = vec3(0.0);
+
+    // point lights
+    for (uint i = 0; i < PointLightsNumber; ++i)
+    {
+        // ambient
+        phongAmbient += PhongAmbient(PointLights[i].Intensity);
+
+        // diffuse
+        viewLightPos = (ViewMatrix * vec4(PointLights[i].Position[0], PointLights[i].Position[1], PointLights[i].Position[2], 1.0)).xyz;
+        viewLightDir = normalize(viewLightPos - ViewPosition);
+        phongDiffuse += PhongDiffuse(viewNormal, PointLights[i].Intensity, viewLightDir);
+
+        // specular
+        blinnPhongSpecular += BlinnPhongSpecular(viewNormal, PointLights[i].Intensity, viewLightDir);
+    }
+
+    // directional lights
+    for (uint i = 0; i < DirectionalLightsNumber; ++i)
+    {
+        // ambient
+        phongAmbient += PhongAmbient(DirectionalLights[i].Intensity);
+        
+        viewLightDir = vec3(DirectionalLights[i].Direction[0], DirectionalLights[i].Direction[1], DirectionalLights[i].Direction[2]);
+        viewLightDir = (NormalMatrix * vec4(viewLightDir, 1.0)).xyz;
+        phongDiffuse += PhongDiffuse(viewNormal, DirectionalLights[i].Intensity, viewLightDir);
+
+        // specular
+        blinnPhongSpecular += BlinnPhongSpecular(viewNormal, DirectionalLights[i].Intensity, viewLightDir);
+    }
+    
+    // create color
+    vec3 color = Diffuse * phongAmbient + Diffuse * phongDiffuse + blinnPhongSpecular;
 
     return color;
 }

@@ -8,9 +8,9 @@ namespace UI
     const unsigned int ShadingModesNumber = 2;
     unsigned int ShadingModeSelected = 0;
 
-    const char* ShadingTypesNames[] = { "Phong Diffuse Reflection", "Phong Shading Model" };
-    const GLuint ShadingTypesValues[] = { 2, 3 };
-    const unsigned int ShadingTypesNumber = 2;
+    const char* ShadingTypesNames[] = { "Phong Diffuse Reflection", "Phong Shading Model", "Blinn Phong Shading Model" };
+    const GLuint ShadingTypesValues[] = { 2, 3, 4 };
+    const unsigned int ShadingTypesNumber = 3;
     unsigned int ShadingTypeSelected = 0;
 }
 
