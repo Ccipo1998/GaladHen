@@ -17,10 +17,10 @@ public:
     void Draw();
 
     Camera MainCamera;
-    std::vector<PointLight*> PointLights;
-    std::vector<DirectionalLight*> DirectionalLights;
+    std::vector<PointLight> PointLights;
+    std::vector<DirectionalLight> DirectionalLights;
 
-    std::vector<GameObject*> GameObjects;
+    std::vector<GameObject> GameObjects;
 
 private:
 

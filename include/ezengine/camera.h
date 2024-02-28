@@ -18,269 +18,100 @@ The camera class could have only few parameters, because many can be calculated 
 #include <ext/quaternion_trigonometric.hpp>
 #include <ext/quaternion_float.hpp>
 
-using namespace glm;
+#include <ezengine/transform.h>
 
 class Camera
 {
-    public:
+public:
 
     // movement parameters
-    GLfloat LinearSpeed = 2.5f;
-    GLfloat AngularSpeed = 1.0f;
+    float LinearSpeed = 2.5f;
+    float AngularSpeed = 5.0f;
+    float MaxPitchAngle = 80.0f;
 
-    Camera(vec3 position, GLfloat fovy, GLfloat aspectRatio, GLfloat nearDistance, GLfloat farDistance)
-    {
-        this->Position = position;
+    // @brief
+    // Default constructor
+    Camera(const TransformQuat& transform = TransformQuat{}, float fovy = 45.0f, float aspectRatio = 1.7f, float nearDistance = 0.1f, float farDistance = 100.0f);
 
-        this->Pitch = .0f;
-        this->Yaw = .0f;
-        this->Roll = .0f;
-        this->Front = vec3(1.0f, .0f, .0f);
-        this->Up = vec3(.0f, 1.0f, .0f);
-        this->Right = vec3(.0f, .0f, 1.0f);
+    // @brief
+    // Move and rotate camera basing on inputs
+    // @param keys: keyboard input keys status
+    // @param mouse_keys: mouse input keys status
+    // @param deltaX: delta x mouse coordinate
+    // @param deltaY: delta y mouse coordinate
+    // @param deltaTime: application delta time
+    void ApplyMovements(const bool* keys, const bool* mouse_keys, const double& deltaX, const double& deltaY, float deltaTime);
 
-        updateViewMatrix();
+    // setters
 
-        this->FovY = fovy;
-        this->AspectRatio = aspectRatio;
-        this->Near = nearDistance;
-        this->Far = farDistance;
+    void SetPosition(const glm::vec3& position);
 
-        updateProjectionMatrix();
-    }
+    void SetPitch(float pitch);
 
-    void applyMovements(const bool* keys, const bool* mouse_keys, double deltaX, double deltaY, GLfloat deltaTime)
-    {
-        // keys
-        if (keys[GLFW_KEY_UP])
-            setPosition(this->Position + this->Front * this->LinearSpeed * deltaTime);
-        if(keys[GLFW_KEY_DOWN])
-            setPosition(this->Position - this->Front * this->LinearSpeed * deltaTime);
-        if(keys[GLFW_KEY_RIGHT])
-            setPosition(this->Position + this->Right * this->LinearSpeed * deltaTime);
-        if(keys[GLFW_KEY_LEFT])
-            setPosition(this->Position - this->Right * this->LinearSpeed * deltaTime);
+    void SetYaw(float yaw);
 
-        // mouse position
-        if (mouse_keys[GLFW_MOUSE_BUTTON_RIGHT])
-        {
-            // rotations
-            quat rotQuatX = angleAxis(GLfloat(this->AngularSpeed * deltaTime * deltaX), this->Up);
-            quat rotQuatY = angleAxis(GLfloat(this->AngularSpeed * deltaTime * deltaY), this->Right);
-            quat rotQuat = rotQuatX * rotQuatY;
-            this->Front = rotQuat * this->Front;
-            this->Up = rotQuat * this->Up;
-            this->Right = cross(this->Front, this->Up);
+    void SetRoll(float roll);
 
-            // update yaw, pitch and roll
-            vec3 eulers = eulerAngles(rotQuat);
-            this->Pitch = degrees(eulers.x);
-            this->Yaw = degrees(eulers.y) + 90.0f; // adding 90 degrees (1,5708 radians) because of the opengl standard orientation
-            this->Roll = degrees(eulers.z);
+    void SetFovY(float fovy);
 
-            updateViewMatrix();
-        }
-    }
+    void SetAspectRatio(float aspect);
 
-    // change the orientation to look at the specified position
-    void lookAt(vec3 position_front, vec3 up_direction)
-    {
-        this->Front = normalize(position_front - this->Position);
-        this->Right = cross(this->Front, up_direction);
-        this->Up = cross(this->Right, this->Front);
-        
-        updateViewMatrix();
+    void SetNear(float nearDistance);
 
-        quat rotQuat = conjugate(toQuat(this->ViewMatrix));
-        vec3 eulers = eulerAngles(rotQuat);
-        this->Pitch = degrees(eulers.x);
-        this->Yaw = degrees(eulers.y) + 90.0f; // adding 90 degrees (1,5708 radians) because of the opengl standard orientation
-        this->Roll = degrees(eulers.z);
-        
-    }
+    void SetFar(float farDistance);
 
-    // setting functions
+    // getters
 
-    // set a new position for the camera
-    void setPosition(vec3 value)
-    {
-        this->Position = value;
+    glm::vec3 GetPosition();
 
-        updateViewMatrix();
-    }
+    float GetRoll();
 
-    // set a new value for Pitch angle
-    void setPitch(GLfloat value)
-    {
-        value = fmod(value, 360.0f);
-        quat rotQuat = angleAxis(radians(value - this->Pitch), vec3(1.0f, .0f, .0f));
-        this->Front = rotQuat * this->Front;
-        this->Up = rotQuat * this->Up;
-        this->Right = cross(this->Front, this->Up);
-        this->Pitch = value;
+    float GetPitch();
 
-        updateViewMatrix();
-    }
+    float GetYaw();
 
-    // set a new value for Yaw angle
-    void setYaw(GLfloat value)
-    {
-        value = fmod(value, 360.0f);
-        quat rotQuat = angleAxis(radians(value - this->Yaw), vec3(.0f, 1.0f, .0f));
-        this->Front = rotQuat * this->Front;
-        this->Up = rotQuat * this->Up;
-        this->Right = cross(this->Front, this->Up);
-        this->Yaw = value;
+    glm::mat4 GetViewMatrix();
 
-        updateViewMatrix();
-    }
+    glm::mat4 GetProjectionMatrix();
 
-    // set a new value for Roll angle
-    void setRoll(GLfloat value)
-    {
-        value = fmod(value, 360.0f);
-        quat rotQuat = angleAxis(radians(value - this->Roll), vec3(.0f, .0f, 1.0f));
-        this->Front = rotQuat * this->Front;
-        this->Up = rotQuat * this->Up;
-        this->Right = cross(this->Front, this->Up);
-        this->Roll = value;
+    float GetFovY();
 
-        updateViewMatrix();
-    }
+    float GetAspectRatio();
 
-    // set a new value for the fov on Y axis
-    void setFovY(GLfloat value)
-    {
-        this->FovY = value;
+    float GetNear();
 
-        updateProjectionMatrix();
-    }
+    float GetFar();
 
-    // set a new value for the aspect ratio
-    void setAspectRatio(GLfloat value)
-    {
-        this->AspectRatio = value;
-
-        updateProjectionMatrix();
-    }
-
-    // set a new value for the near plane distance
-    void setNear(GLfloat value)
-    {
-        this->Near = value;
-
-        updateProjectionMatrix();
-    }
-
-    // set a new value for the far plane distance
-    void setFar(GLfloat value)
-    {
-        this->Far = value;
-
-        updateProjectionMatrix();
-    }
-
-    // getting functions
-
-    vec3 getPosition()
-    {
-        return this->Position;
-    }
-
-    GLfloat getRoll()
-    {
-        return this->Roll;
-    }
-
-    GLfloat getPitch()
-    {
-        return this->Pitch;
-    }
-
-    GLfloat getYaw()
-    {
-        return this->Yaw;
-    }
-
-    vec3 getFront()
-    {
-        return this->Front;
-    }
-
-    vec3 getUp()
-    {
-        return this->Up;
-    }
-
-    vec3 getRight()
-    {
-        return this->Right;
-    }
-
-    mat4 getViewMatrix()
-    {
-        return this->ViewMatrix;
-    }
-
-    GLfloat getFovY()
-    {
-        return this->FovY;
-    }
-
-    GLfloat getAspectRatio()
-    {
-        return this->AspectRatio;
-    }
-
-    GLfloat getNear()
-    {
-        return this->Near;
-    }
-
-    GLfloat getFar()
-    {
-        return this->Far;
-    }
-
-    mat4 getProjectionMatrix()
-    {
-        return this->ProjectionMatrix;
-    }
-
-    private:
+private:
 
     // these data are private because there are specific function to handle the changes (because the changes could interest some other data)
 
-    vec3 Position;
+    TransformQuat Transform;
 
     // roll is the rotation around X axis
-    GLfloat Pitch;
+    float Pitch;
     // pitch is the rotation around Y axis
-    GLfloat Yaw;
+    float Yaw;
     // yaw is the rotation around Z axis
-    GLfloat Roll;
+    float Roll;
 
-    vec3 Front;
-    vec3 Up;
-    vec3 Right;
+    glm::vec3 Front;
+    glm::vec3 Up;
+    glm::vec3 Right;
 
-    GLfloat FovY;
-    GLfloat AspectRatio;
-    GLfloat Near;
-    GLfloat Far;
+    float FovY;
+    float AspectRatio;
+    float Near;
+    float Far;
 
-    mat4 ProjectionMatrix;
-    mat4 ViewMatrix;
+    glm::mat4 ProjectionMatrix;
+    glm::mat4 ViewMatrix;
 
-    // calculate new projection matrix from perspective parameters
-    void updateProjectionMatrix()
-    {
-        this->ProjectionMatrix = perspective(this->FovY, this->AspectRatio, this->Near, this->Far);
-    }
+    // @brief
+    // Calculate new projection matrix from perspective parameters
+    void UpdateProjectionMatrix();
 
-    // calculate new view matrix from orientation parameters
-    void updateViewMatrix()
-    {
-        this->ViewMatrix = glm::lookAt(this->Position, this->Position + this->Front, this->Up);
-    }
+    // @breif
+    // Calculate new view matrix from orientation parameters
+    void UpdateViewMatrix();
 };

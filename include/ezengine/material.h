@@ -9,8 +9,14 @@ Material struct to store shading parameters
 
 #include <glm.hpp>
 
-struct Material
+#include <ezengine/shader.h>
+
+class Material
 {
+public:
+
+    Material();
+
     // enum type -> the type of shading model
 
     // Phong shading model parameters
@@ -27,4 +33,7 @@ struct Material
     GLfloat Roughness;
 
     // ...
+
+    // shader to use
+    Shader* Shader;
 };
