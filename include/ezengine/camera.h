@@ -24,9 +24,11 @@ class Camera
 {
 public:
 
+    TransformQuat Transform;
+
     // movement parameters
     float LinearSpeed = 2.5f;
-    float AngularSpeed = 5.0f;
+    float AngularSpeed = 100.0f;
     float MaxPitchAngle = 80.0f;
 
     // @brief
@@ -44,60 +46,29 @@ public:
 
     // setters
 
-    void SetPosition(const glm::vec3& position);
-
-    void SetPitch(float pitch);
-
-    void SetYaw(float yaw);
-
-    void SetRoll(float roll);
-
     void SetFovY(float fovy);
-
     void SetAspectRatio(float aspect);
-
     void SetNear(float nearDistance);
-
     void SetFar(float farDistance);
 
     // getters
 
-    glm::vec3 GetPosition();
-
-    float GetRoll();
-
-    float GetPitch();
-
-    float GetYaw();
-
+    // @brief
+    // Get view matrix: it's the transform's rotation converted to a matrix
     glm::mat4 GetViewMatrix();
 
+    // @brief
+    // Get projection matrix
     glm::mat4 GetProjectionMatrix();
 
     float GetFovY();
-
     float GetAspectRatio();
-
     float GetNear();
-
     float GetFar();
 
 private:
 
     // these data are private because there are specific function to handle the changes (because the changes could interest some other data)
-
-    TransformQuat Transform;
-
-    // roll is the rotation around X axis
-    float Pitch;
-    // pitch is the rotation around Y axis
-    float Yaw;
-    // yaw is the rotation around Z axis
-    float Roll;
-
-    glm::vec3 Front;
-    glm::vec3 Up;
-    glm::vec3 Right;
 
     float FovY;
     float AspectRatio;
@@ -105,13 +76,8 @@ private:
     float Far;
 
     glm::mat4 ProjectionMatrix;
-    glm::mat4 ViewMatrix;
 
     // @brief
-    // Calculate new projection matrix from perspective parameters
+    // Calculate new projection matrix basing on perspective parameters
     void UpdateProjectionMatrix();
-
-    // @breif
-    // Calculate new view matrix from orientation parameters
-    void UpdateViewMatrix();
 };
