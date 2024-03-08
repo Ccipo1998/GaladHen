@@ -17,7 +17,7 @@ Model is a "move-only" class. A move-only class ensures that you always have a 1
 #include <assimp/scene.h>           // Output data structure
 #include <assimp/postprocess.h>     // Post processing flags
 
-#include <utils/dblog.h>
+#include <utils/log.h>
 
 using namespace glm;
 
@@ -26,9 +26,6 @@ class Model
     public:
 
     std::vector<Mesh> Meshes;
-    // TODO: vector<materials>
-
-    // TODO: position and rotation or a matrix
 
     // We want Model to be a move-only class. We delete copy constructor and copy assignment
     // see:
@@ -79,7 +76,7 @@ class Model
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
             std::string error_message = "Assimp failed to import correctly the file " + std::string(modelPath);
-            dblog::error("Model", error_message);
+            Log::Error("Model", error_message);
 
             return; // void model is created
         }

@@ -24,6 +24,9 @@
 
 #define BUFFER_OFFSET(offset) (void*)(offset) // MACRO
 
+// base types macros
+
+
 // statics data
 
 // current scene
@@ -79,7 +82,7 @@ int main()
 
     CurrentShaders.push_back(Shader("shaders/rendering/Rendering.vert", "shaders/rendering/Rendering.frag"));
     Shader& shader = CurrentShaders[0];
-    shader.use();
+    shader.Use();
 
     // send light data to shader
     GLuint ssbo;
@@ -126,18 +129,18 @@ int main()
         CurrentScene.MainCamera.ApplyMovements(Input::GetKeys(), Input::GetMouseKeys(), Input::GetDeltaMouseX(), Input::GetDeltaMouseY(), deltaTime);
 
         // send camera data to shaders -> may vary between frames
-        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(CurrentScene.MainCamera.GetViewMatrix()))));
-        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "ProjectionMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetProjectionMatrix()));
-        glProgramUniformMatrix4fv(shader.Program, glGetUniformLocation(shader.Program, "ViewMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetViewMatrix()));
+        glProgramUniformMatrix4fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(CurrentScene.MainCamera.GetViewMatrix()))));
+        glProgramUniformMatrix4fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "ProjectionMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetProjectionMatrix()));
+        glProgramUniformMatrix4fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "ViewMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetViewMatrix()));
         // send material data to shader
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ka"), 1, value_ptr(mat.Ka));
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Kd"), 1, value_ptr(mat.Kd));
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Ks"), 1, value_ptr(mat.Ks));
-        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "SpecularFalloff"), mat.SpecularFalloff);
-        glProgramUniform3fv(shader.Program, glGetUniformLocation(shader.Program, "Diffuse"), 1, value_ptr(mat.DiffuseColor));
+        glProgramUniform3fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Ka"), 1, value_ptr(mat.Ka));
+        glProgramUniform3fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Kd"), 1, value_ptr(mat.Kd));
+        glProgramUniform3fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Ks"), 1, value_ptr(mat.Ks));
+        glProgramUniform1f(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "SpecularFalloff"), mat.SpecularFalloff);
+        glProgramUniform3fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Diffuse"), 1, value_ptr(mat.DiffuseColor));
         //glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Specular"), mat.Specular);
-        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Metallic"), mat.Metallic);
-        glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Roughness"), mat.Roughness);
+        glProgramUniform1f(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Metallic"), mat.Metallic);
+        glProgramUniform1f(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Roughness"), mat.Roughness);
 
         // select shading subroutines
 
