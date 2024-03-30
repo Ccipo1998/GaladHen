@@ -1,56 +1,19 @@
 
 #include <ezengine/shader.h>
 
-Shader::Shader(const char* shaderPath, GLenum shaderType)
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+
+#include <utils/log.h>
+
+IShader::IShader()
 {
-    std::string shaderCode;
-    std::ifstream shaderFile;
-
-    // ensure ifstream objects can throw exceptions:
-    shaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
-    try
-    {
-        // Open file
-        shaderFile.open(shaderPath);
-        std::stringstream shaderStream;
-        // Read file's buffer contents into streams
-        shaderStream << shaderFile.rdbuf();
-        // close file handlers
-        shaderFile.close();
-        // Convert stream into string
-        shaderCode = shaderStream.str();
-    }
-    catch(std::ifstream::failure e)
-    {
-        std::string description = (std::string)shaderPath + " not succesfully read";
-        Log::Error("Shader", e.what());
-    }
-    
-    // Convert strings to char pointers
-    const char* shaderCodePtr = shaderCode.c_str();
-
-    // Step 2: we compile the shaders
-    unsigned int shader;
-
-    // Vertex Shader
-    shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &shaderCodePtr, NULL);
-    glCompileShader(shader);
-    // check compilation errors
-    CheckShaderCompilation(shader, shaderPath);
-
-    // Step 3: Shader Program creation
-    this->Program = glCreateProgram();
-    glAttachShader(this->Program, shader);
-    glLinkProgram(this->Program);
-    // check linking errors
-    CheckShaderLinking(this->Program);
-
-    // Step 4: we delete the shaders because they are linked to the Shader Program, and we do not need them anymore
-    glDeleteShader(shader);
+    gl3wInit(); // otherwise the program crashes
 }
 
-Shader::Shader(const char* vertexShaderPath, const char* fragmentShaderPath)
+void IShader::LoadVertexFragmentShaders(const char* vertexShaderPath, const char* fragmentShaderPath)
 {
     // Step 1: we retrieve shaders source code from provided filepaths
     std::string vertexCode;
@@ -131,24 +94,22 @@ Shader::Shader(const char* vertexShaderPath, const char* fragmentShaderPath)
     glDeleteShader(fragment);
 }
 
-unsigned int Shader::GetShaderProgram()
+GLuint IShader::GetShaderProgram()
 {
     return this->Program;
 }
 
-void Shader::Use()
+void IShader::Use()
 {
     glUseProgram(this->Program);
 }
 
-void Shader::Delete()
+void IShader::Delete()
 {
     glDeleteProgram(this->Program);
 }
 
-// privates
-
-void Shader::CheckShaderCompilation(GLuint shader, const char* shaderPath)
+void IShader::CheckShaderCompilation(GLuint shader, const char* shaderPath)
 {
     GLint success;
     GLchar infoLog[1024];
@@ -163,7 +124,7 @@ void Shader::CheckShaderCompilation(GLuint shader, const char* shaderPath)
     }
 }
 
-void Shader::CheckShaderLinking(GLuint program)
+void IShader::CheckShaderLinking(GLuint program)
 {
     GLint success;
     GLchar infoLog[1024];

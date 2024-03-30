@@ -32,9 +32,9 @@ void UI::InitImGui(GLFWwindow* window, const char* glsl_version)
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-void UI::Update(Material* mat)
+void UI::Update(PBRMaterial* mat)
 {
-    // ImGui
+    //ImGui
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -88,6 +88,11 @@ void UI::Update(Material* mat)
     ImGui::End();
 
     ImGui::Render();
+}
+
+void UI::Update(PhongMaterial* mat)
+{
+    
 }
 
 void UI::Clear()

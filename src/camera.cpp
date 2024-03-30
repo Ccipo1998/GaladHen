@@ -1,6 +1,16 @@
 
 #include <ezengine/camera.h>
 
+Camera::Camera()
+    : Transform(TransformQuat{})
+    , FovY(45.0f)
+    , AspectRatio(1.7f)
+    , Near(0.1f)
+    , Far(100.0f) // defaults
+{
+    this->UpdateProjectionMatrix();
+}
+
 Camera::Camera(const TransformQuat& transform, float fovy, float aspectRatio, float nearDistance, float farDistance)
     : Transform(transform)
     , FovY(fovy)
@@ -8,7 +18,7 @@ Camera::Camera(const TransformQuat& transform, float fovy, float aspectRatio, fl
     , Near(nearDistance)
     , Far(farDistance)
 {
-    UpdateProjectionMatrix();
+    this->UpdateProjectionMatrix();
 }
 
 void Camera::ApplyMovements(const bool* keys, const bool* mouse_keys, const double& deltaX, const double& deltaY, float deltaTime)
@@ -47,28 +57,28 @@ void Camera::SetFovY(float fovy)
 {
     this->FovY = fovy;
 
-    UpdateProjectionMatrix();
+    this->UpdateProjectionMatrix();
 }
 
 void Camera::SetAspectRatio(float aspect)
 {
     this->AspectRatio = aspect;
 
-    UpdateProjectionMatrix();
+    this->UpdateProjectionMatrix();
 }
 
 void Camera::SetNear(float nearDistance)
 {
     this->Near = nearDistance;
 
-    UpdateProjectionMatrix();
+    this->UpdateProjectionMatrix();
 }
 
 void Camera::SetFar(float farDistance)
 {
     this->Far = farDistance;
 
-    UpdateProjectionMatrix();
+    this->UpdateProjectionMatrix();
 }
 
 glm::mat4 Camera::GetViewMatrix()
@@ -103,5 +113,5 @@ float Camera::GetFar()
 
 void Camera::UpdateProjectionMatrix()
 {
-    this->ProjectionMatrix = glm::perspective(this->FovY, this->AspectRatio, this->Near, this->Far);
+    this->ProjectionMatrix = glm::perspective(glm::radians(this->FovY), this->AspectRatio, this->Near, this->Far);
 }

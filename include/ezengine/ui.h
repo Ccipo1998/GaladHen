@@ -1,12 +1,16 @@
 
 #pragma once
 
+// gl3w MUST be included before any other OpenGL-related header
+#include <GL/gl3w.h>
+
 // imgui
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 
-#include <ezengine/material.h>
+#include <ezengine/pbrmaterial.h>
+#include <ezengine/phongmaterial.h>
 
 namespace UI
 {
@@ -34,7 +38,13 @@ namespace UI
     @brief
     Create the new frame of the imgui UI
     */
-    void Update(Material* mat);
+    void Update(PBRMaterial* mat);
+
+    /*
+    @brief
+    Create the new frame of the imgui UI
+    */
+    void Update(PhongMaterial* mat);
 
     /*
     @brief

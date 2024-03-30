@@ -33,7 +33,13 @@ public:
 
     // @brief
     // Default constructor
-    Camera(const TransformQuat& transform = TransformQuat{}, float fovy = 45.0f, float aspectRatio = 1.7f, float nearDistance = 0.1f, float farDistance = 100.0f);
+    Camera();
+    
+    // @brief
+    // @param fovy: degrees requested
+    Camera(const TransformQuat& transform, float fovy, float aspectRatio, float nearDistance, float farDistance);
+
+    // Copy constructor, Copy assignment, Move constructor and Move assignment are defaulted
 
     // @brief
     // Move and rotate camera basing on inputs
@@ -46,6 +52,8 @@ public:
 
     // setters
 
+    // @brief
+    // @param fovy: degrees requested
     void SetFovY(float fovy);
     void SetAspectRatio(float aspect);
     void SetNear(float nearDistance);

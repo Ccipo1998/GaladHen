@@ -8,79 +8,61 @@ Light classes for different light types
 #include <GL/gl3w.h>
 
 #include <glm.hpp>
+#include <ezengine/transform.h>
 
-using namespace glm;
+// Copy constructor, Copy assignment, Move constructor and Move assignment are defaulted
 
 class Light
 {
-    public:
+public:
 
-    Light(vec3 color, GLfloat intensity)
-    : Color(color), Intensity(intensity)
-    {
+    TransformQuat Transform;
+    glm::vec3 Color;
+    float Intensity;
 
-    }
+    Light();
 
-    vec3 Color;
-    GLfloat Intensity;
+    Light(const glm::vec3& color, float intensity);
 };
 
 class DirectionalLight : public Light
 {
-    public:
+public:
 
-    DirectionalLight(vec3 color, GLfloat intensity, vec3 direction)
-    : Light(color, intensity), Direction(normalize(direction)) {}
+    DirectionalLight();
+
+    DirectionalLight(const glm::vec3& color, float intensity, const glm::vec3& direction);
     
-    vec3 getDirection()
-    {
-        return this->Direction;
-    }
+    // @brief
+    // Get the direction of the light (front versor)
+    glm::vec3 GetDirection();
 
-    void setDirection(vec3 new_direction)
-    {
-        this->Direction = normalize(new_direction);
-    }
-
-    private:
-    
-    vec3 Direction;
+    // @brief
+    // Set the direction of the light (front versor)
+    void SetDirection(const glm::vec3& direction);
 };
 
 class PointLight : public Light
 {
-    public:
+public:
 
-    PointLight(vec3 color, GLfloat intensity, vec3 position)
-    : Light(color, intensity), Position(position) {}
-
-    vec3 Position;
-    GLfloat FallOffDistance;
+    float FallOffDistance;
     // TODO: falloff function type (penso vada bene un enum da cui dipende la funzione usata negli shader)
+
+    PointLight();
+
+    PointLight(const glm::vec3& color, float intensity, const glm::vec3& position);
 };
 
 class SpotLight : public PointLight
 {
     public:
 
-    SpotLight(vec3 color, GLfloat intensity, vec3 position, vec3 direction, GLfloat penumbra_angle, GLfloat falloff_angle)
-    : PointLight(color, intensity, position), Direction(normalize(direction)), PenumbraAngle(penumbra_angle), FallOffAngle(falloff_angle) {}
-
-    GLfloat PenumbraAngle;
-    GLfloat FallOffAngle; // this is the angle from the penumbra angle and the complete shadow (UmbraAngle = PenumbraAngle + FallOffAngle)
+    float PenumbraAngle;
+    float FallOffAngle; // this is the angle from the penumbra angle and the complete shadow (UmbraAngle = PenumbraAngle + FallOffAngle)
     // TODO: directional falloff function type (penso vada bene un enum da cui dipende la funzione usata negli shader)
 
-    vec3 getDirection()
-    {
-        return this->Direction;
-    }
+    SpotLight();
 
-    void setDirection(vec3 new_direction)
-    {
-        this->Direction = normalize(new_direction);
-    }
-
-    private:
-
-    vec3 Direction;
+    SpotLight(const glm::vec3& color, float intensity, const glm::vec3& position, float penumbra_angle, float falloff_angle);
 };

@@ -1,4 +1,7 @@
 
 #include <ezengine/material.h>
 
-Material::Material() {}
+void IMaterial::SendDataToShader()
+{
+    
+}

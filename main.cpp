@@ -17,6 +17,9 @@
 #include <ezengine/scene.h>
 #include <ezengine/gameobject.h>
 
+#include <ezengine/pbrshader.h>
+#include <ezengine/pbrmaterial.h>
+
 // glm
 #include <glm.hpp>
 #include <gtx/transform.hpp> // for lookat() and perspective()
@@ -32,17 +35,17 @@
 // current scene
 Scene CurrentScene{};
 // shaders
-std::vector<Shader> CurrentShaders;
+PBRShader* pbrShader;
 // models
 std::vector<Model> CurrentModels;
 // materials
-std::vector<Material> CurrentMaterials;
+std::vector<IMaterial*> CurrentMaterials;
 
-GLFWwindow* initContext(int width, int height, const char* name);
+GLFWwindow* InitContext(int width, int height, const char* name);
 
 int main()
 {
-    GLFWwindow* window = initContext(1200, 800, "EzEngine");
+    GLFWwindow* window = InitContext(1200, 800, "EzEngine");
     glfwMakeContextCurrent(window);
 
     // callbacks
@@ -55,19 +58,16 @@ int main()
     // init ui
     UI::InitImGui(window, "#version 450 core");
 
+    pbrShader = new PBRShader();
+    pbrShader->Use();
+
     // game object
     CurrentModels.push_back(Model("prefabs/bunny1.obj"));
     Model& model = CurrentModels[0];
-    CurrentMaterials.push_back(Material{});
-    Material& mat = CurrentMaterials[0];
-    mat.Ka = vec3(.1f, .1f, .1f);
-    mat.Kd = vec3(.6f, .6f, .6f);
-    mat.Ks = vec3(.8f, .8f, .8f);
-    mat.SpecularFalloff = 100.0f;
-    mat.DiffuseColor = vec3(1.0f, .0f, .0f);
-    //mat.Specular = .0f;
-    mat.Metallic = 1.0f;
-    mat.Roughness = .0f;
+    CurrentMaterials.push_back(new PBRMaterial{});
+    PBRMaterial* mat = (PBRMaterial*)(CurrentMaterials[0]);
+    //PBRMaterial mat{};
+    mat->SetShader(pbrShader);
     CurrentScene.GameObjects.push_back(GameObject{});
     GameObject& object = CurrentScene.GameObjects[0];
     object.Model = &model;
@@ -79,10 +79,6 @@ int main()
     PointLight& pLight2 = CurrentScene.PointLights[1];
     CurrentScene.DirectionalLights.push_back(DirectionalLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(1.0f, .0f, .0f)));
     DirectionalLight& dirLight = CurrentScene.DirectionalLights[0];
-
-    CurrentShaders.push_back(Shader("shaders/rendering/Rendering.vert", "shaders/rendering/Rendering.frag"));
-    Shader& shader = CurrentShaders[0];
-    shader.Use();
 
     // send light data to shader
     GLuint ssbo;
@@ -123,24 +119,17 @@ int main()
         // input update
         Input::Update();
         // ui update
-        UI::Update(&mat);
+        UI::Update(mat);
 
         // camera movements
         CurrentScene.MainCamera.ApplyMovements(Input::GetKeys(), Input::GetMouseKeys(), Input::GetDeltaMouseX(), Input::GetDeltaMouseY(), deltaTime);
 
         // send camera data to shaders -> may vary between frames
-        glProgramUniformMatrix4fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(CurrentScene.MainCamera.GetViewMatrix()))));
-        glProgramUniformMatrix4fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "ProjectionMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetProjectionMatrix()));
-        glProgramUniformMatrix4fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "ViewMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetViewMatrix()));
+        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(CurrentScene.MainCamera.GetViewMatrix()))));
+        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "ProjectionMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetProjectionMatrix()));
+        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "ViewMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetViewMatrix()));
         // send material data to shader
-        glProgramUniform3fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Ka"), 1, value_ptr(mat.Ka));
-        glProgramUniform3fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Kd"), 1, value_ptr(mat.Kd));
-        glProgramUniform3fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Ks"), 1, value_ptr(mat.Ks));
-        glProgramUniform1f(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "SpecularFalloff"), mat.SpecularFalloff);
-        glProgramUniform3fv(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Diffuse"), 1, value_ptr(mat.DiffuseColor));
-        //glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Specular"), mat.Specular);
-        glProgramUniform1f(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Metallic"), mat.Metallic);
-        glProgramUniform1f(shader.GetShaderProgram(), glGetUniformLocation(shader.GetShaderProgram(), "Roughness"), mat.Roughness);
+        mat->SendDataToShader();
 
         // select shading subroutines
 
@@ -180,7 +169,7 @@ Initialization of the OpenGL context (glfw & gl3w) and of the window
 @param height: window height
 @param name: window name
 */
-GLFWwindow* initContext(int width, int height, const char* name)
+GLFWwindow* InitContext(int width, int height, const char* name)
 {
     if (!glfwInit())
         throw std::runtime_error("Error: GLFW failed to initialize the context");

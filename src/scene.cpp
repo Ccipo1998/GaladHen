@@ -3,10 +3,9 @@
 #include <ezengine/transform.h>
 
 Scene::Scene()
-    : MainCamera(Camera(TransformQuat{}, radians(45.0f), 600.0f/400.0f, .1f, 100.0f)) // default camera
+    : MainCamera(Camera()) // default camera
 {
     this->MainCamera.Transform.SetPosition(vec3(.0f, .0f, 4.0f));
-    //this->MainCamera.SetYaw(90.0f);
 }
 
 void Scene::Draw()
