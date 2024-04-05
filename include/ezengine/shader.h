@@ -9,22 +9,22 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-class IShader
+class Shader
 {
 public:
 
     // Constructors
 
     // Shader as move-only class. We delete copy constructor and copy assignment
-    IShader(const IShader& shader) = delete;
-    IShader& operator=(const IShader& shader) = delete;
+    Shader(const Shader& shader) = delete;
+    Shader& operator=(const Shader& shader) = delete;
 
     // No need for move constructor and move assignment
-    IShader(IShader&& shader) = delete;
-    IShader& operator=(IShader&& shader) = delete;
+    Shader(Shader&& shader) = delete;
+    Shader& operator=(Shader&& shader) = delete;
 
     // Default shader constructor
-    IShader();
+    Shader();
 
     // getters
 

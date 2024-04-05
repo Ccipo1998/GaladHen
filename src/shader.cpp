@@ -8,12 +8,12 @@
 
 #include <utils/log.h>
 
-IShader::IShader()
+Shader::Shader()
 {
     gl3wInit(); // otherwise the program crashes
 }
 
-void IShader::LoadVertexFragmentShaders(const char* vertexShaderPath, const char* fragmentShaderPath)
+void Shader::LoadVertexFragmentShaders(const char* vertexShaderPath, const char* fragmentShaderPath)
 {
     // Step 1: we retrieve shaders source code from provided filepaths
     std::string vertexCode;
@@ -94,22 +94,22 @@ void IShader::LoadVertexFragmentShaders(const char* vertexShaderPath, const char
     glDeleteShader(fragment);
 }
 
-GLuint IShader::GetShaderProgram()
+GLuint Shader::GetShaderProgram()
 {
     return this->Program;
 }
 
-void IShader::Use()
+void Shader::Use()
 {
     glUseProgram(this->Program);
 }
 
-void IShader::Delete()
+void Shader::Delete()
 {
     glDeleteProgram(this->Program);
 }
 
-void IShader::CheckShaderCompilation(GLuint shader, const char* shaderPath)
+void Shader::CheckShaderCompilation(GLuint shader, const char* shaderPath)
 {
     GLint success;
     GLchar infoLog[1024];
@@ -124,7 +124,7 @@ void IShader::CheckShaderCompilation(GLuint shader, const char* shaderPath)
     }
 }
 
-void IShader::CheckShaderLinking(GLuint program)
+void Shader::CheckShaderLinking(GLuint program)
 {
     GLint success;
     GLchar infoLog[1024];

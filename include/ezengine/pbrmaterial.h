@@ -10,9 +10,7 @@
 
 #include <ezengine/material.h>
 
-class PBRShader;
-
-class PBRMaterial : public IMaterial
+class PBRMaterial : public Material
 {
 public:
 
@@ -31,20 +29,7 @@ public:
     PBRMaterial();
 
     // @brief
-    // Set shader instance
-    void SetShader(PBRShader* pbrShader);
-
-    PBRShader* GetShader();
-
-    // @brief
     // It sends material data to its shader
     virtual void SendDataToShader() override;
-
-protected:
-
-    // DOING: copy and move
-
-    // shader to use
-    PBRShader* MaterialShader;
 
 };

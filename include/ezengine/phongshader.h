@@ -3,7 +3,7 @@
 
 #include <ezengine/shader.h>
 
-class PhongShader : public IShader
+class PhongShader : public Shader
 {
 
 public:

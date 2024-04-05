@@ -39,7 +39,7 @@ PBRShader* pbrShader;
 // models
 std::vector<Model> CurrentModels;
 // materials
-std::vector<IMaterial*> CurrentMaterials;
+std::vector<Material*> CurrentMaterials;
 
 GLFWwindow* InitContext(int width, int height, const char* name);
 
@@ -73,11 +73,11 @@ int main()
     object.Model = &model;
 
     // lights
-    CurrentScene.PointLights.push_back(PointLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(.0f, .0f, 5.0f)));
+    CurrentScene.PointLights.push_back(PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, 5.0f)));
     PointLight& pLight1 = CurrentScene.PointLights[0];
-    CurrentScene.PointLights.push_back(PointLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(.0f, .0f, -5.0f)));
+    CurrentScene.PointLights.push_back(PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, -5.0f)));
     PointLight& pLight2 = CurrentScene.PointLights[1];
-    CurrentScene.DirectionalLights.push_back(DirectionalLight(vec3(1.0f, 1.0f, 1.0f), 1.0f, vec3(1.0f, .0f, .0f)));
+    CurrentScene.DirectionalLights.push_back(DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1.0f, .0f, .0f)));
     DirectionalLight& dirLight = CurrentScene.DirectionalLights[0];
 
     // send light data to shader

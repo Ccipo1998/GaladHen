@@ -13,7 +13,7 @@ public:
     TransformQuat Transform;
 
     Model* Model;
-    IMaterial* Material;
+    Material* Material;
 
 private:
 

@@ -3,7 +3,7 @@
 
 #include <ezengine/shader.h>
 
-class PBRShader : public IShader
+class PBRShader : public Shader
 {
 
 public:

@@ -5,14 +5,10 @@
 
 #include <glm.hpp>
 
-class PhongShader;
-
-class PhongMaterial : public IMaterial
+class PhongMaterial : public Material
 {
 
 public:
-
-    // TODO: enum type -> the type of shading model?
 
     // colors for the diffuse term and for the dielectric reflection
     glm::vec3 DiffuseColor;
@@ -23,20 +19,11 @@ public:
     float SpecularFallOff; // falloff parameter from perfect specular direction (usually value from 1 to 200)
 
     // @brief
-    // Create material with default PBR shader
+    // Create default Phong material
     PhongMaterial();
-
-    PhongShader* GetShader();
 
     // @brief
     // It sends material data to its shader
     virtual void SendDataToShader() override;
-
-protected:
-
-    // DOING: copy and move
-
-    // shader to use
-    PhongShader* MaterialShader;
 
 };

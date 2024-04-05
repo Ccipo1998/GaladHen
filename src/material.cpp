@@ -1,7 +1,20 @@
 
 #include <ezengine/material.h>
+#include <ezengine/shader.h>
 
-void IMaterial::SendDataToShader()
+Material::Material()
+    : MaterialShaderClass(ShaderClass::None)
+    , MaterialShader(nullptr)
+    {}
+
+void Material::SetShader(Shader* shader)
 {
-    
+    this->MaterialShader = shader;
 }
+
+Shader* Material::GetShader()
+{
+    return this->MaterialShader;
+}
+
+void Material::SendDataToShader() {}
