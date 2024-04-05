@@ -17,7 +17,6 @@
 #include <ezengine/scene.h>
 #include <ezengine/gameobject.h>
 
-#include <ezengine/pbrshader.h>
 #include <ezengine/pbrmaterial.h>
 
 // glm
@@ -27,17 +26,21 @@
 
 #define BUFFER_OFFSET(offset) (void*)(offset) // MACRO
 
-// base types macros
-
+// paths of shaders
+#define PBR_VERTEX_SHADER_PATH "shaders/rendering/Rendering.vert"
+#define PBR_FRAGMENT_SHADER_PATH "shaders/rendering/Rendering.frag"
+#define PHONG_VERTEX_SHADER_PATH "shaders/rendering/Rendering.vert"
+#define PHONG_FRAGMENT_SHADER_PATH "shaders/rendering/Rendering.frag"
 
 // statics data
 
 // current scene
-Scene CurrentScene{};
+Scene* CurrentScene;
 // shaders
-PBRShader* pbrShader;
+Shader* pbrShader;
+Shader* phongShader;
 // models
-std::vector<Model> CurrentModels;
+std::vector<Model*> CurrentModels;
 // materials
 std::vector<Material*> CurrentMaterials;
 
@@ -55,53 +58,57 @@ int main()
     // we enable Z test
     glEnable(GL_DEPTH_TEST);
     
+    // create scene
+    CurrentScene = new Scene{};
+
     // init ui
     UI::InitImGui(window, "#version 450 core");
 
-    pbrShader = new PBRShader();
-    pbrShader->Use();
+    // load shaders
+    pbrShader = new Shader{};
+    pbrShader->LoadVertexFragmentShaders(PBR_VERTEX_SHADER_PATH, PBR_FRAGMENT_SHADER_PATH);
 
     // game object
-    CurrentModels.push_back(Model("prefabs/bunny1.obj"));
-    Model& model = CurrentModels[0];
-    CurrentMaterials.push_back(new PBRMaterial{});
+    CurrentModels.push_back(new Model("prefabs/bunny1.obj"));
+    Model* model = CurrentModels[0];
+    CurrentMaterials.push_back(new PBRMaterial{pbrShader});
     PBRMaterial* mat = (PBRMaterial*)(CurrentMaterials[0]);
+    model->Meshes[0].MeshMaterial = mat;
     //PBRMaterial mat{};
-    mat->SetShader(pbrShader);
-    CurrentScene.GameObjects.push_back(GameObject{});
-    GameObject& object = CurrentScene.GameObjects[0];
-    object.Model = &model;
+    CurrentScene->GameObjects.push_back(new GameObject{});
+    GameObject* object = CurrentScene->GameObjects[0];
+    object->Model = model;
 
     // lights
-    CurrentScene.PointLights.push_back(PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, 5.0f)));
-    PointLight& pLight1 = CurrentScene.PointLights[0];
-    CurrentScene.PointLights.push_back(PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, -5.0f)));
-    PointLight& pLight2 = CurrentScene.PointLights[1];
-    CurrentScene.DirectionalLights.push_back(DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1.0f, .0f, .0f)));
-    DirectionalLight& dirLight = CurrentScene.DirectionalLights[0];
+    CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, 5.0f)));
+    PointLight* pLight1 = CurrentScene->PointLights[0];
+    CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, -5.0f)));
+    PointLight* pLight2 = CurrentScene->PointLights[1];
+    CurrentScene->DirectionalLights.push_back(new DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1.0f, .0f, .0f)));
+    DirectionalLight* dirLight = CurrentScene->DirectionalLights[0];
 
     // send light data to shader
     GLuint ssbo;
     glGenBuffers(1, &ssbo);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
-    unsigned int pointLightsNumber = (unsigned int)CurrentScene.PointLights.size();
+    unsigned int pointLightsNumber = (unsigned int)CurrentScene->PointLights.size();
     GLsizeiptr pointLightsSize = sizeof(GLuint) + pointLightsNumber * sizeof(PointLight);
     glBufferData(GL_SHADER_STORAGE_BUFFER, pointLightsSize, nullptr, GL_STATIC_DRAW);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &pointLightsNumber);
     for (unsigned int i = 0; i < pointLightsNumber; ++i)
     {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(PointLight) * i, sizeof(PointLight), &CurrentScene.PointLights[i]);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(PointLight) * i, sizeof(PointLight), CurrentScene->PointLights[i]);
     }
     GLuint ssbo1;
     glGenBuffers(1, &ssbo1);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo1);
-    unsigned int directionalLightsNumber = (unsigned int)CurrentScene.DirectionalLights.size();
+    unsigned int directionalLightsNumber = (unsigned int)CurrentScene->DirectionalLights.size();
     GLsizeiptr directionalLightsSize = sizeof(GLuint) + directionalLightsNumber * sizeof(DirectionalLight);
     glBufferData(GL_SHADER_STORAGE_BUFFER, directionalLightsSize, nullptr, GL_STATIC_DRAW);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &directionalLightsNumber);
     for (unsigned int i = 0; i < directionalLightsNumber; ++i)
     {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(DirectionalLight) * i, sizeof(DirectionalLight), &CurrentScene.DirectionalLights[i]);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(DirectionalLight) * i, sizeof(DirectionalLight), CurrentScene->DirectionalLights[i]);
     }
     
     GLfloat lastTime = .0f;
@@ -122,14 +129,12 @@ int main()
         UI::Update(mat);
 
         // camera movements
-        CurrentScene.MainCamera.ApplyMovements(Input::GetKeys(), Input::GetMouseKeys(), Input::GetDeltaMouseX(), Input::GetDeltaMouseY(), deltaTime);
+        CurrentScene->MainCamera->ApplyMovements(Input::GetKeys(), Input::GetMouseKeys(), Input::GetDeltaMouseX(), Input::GetDeltaMouseY(), deltaTime);
 
         // send camera data to shaders -> may vary between frames
-        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(CurrentScene.MainCamera.GetViewMatrix()))));
-        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "ProjectionMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetProjectionMatrix()));
-        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "ViewMatrix"), 1, GL_FALSE, value_ptr(CurrentScene.MainCamera.GetViewMatrix()));
-        // send material data to shader
-        mat->SendDataToShader();
+        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(CurrentScene->MainCamera->GetViewMatrix()))));
+        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "ProjectionMatrix"), 1, GL_FALSE, value_ptr(CurrentScene->MainCamera->GetProjectionMatrix()));
+        glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "ViewMatrix"), 1, GL_FALSE, value_ptr(CurrentScene->MainCamera->GetViewMatrix()));
 
         // select shading subroutines
 
@@ -144,7 +149,7 @@ int main()
         //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawArrays(GL_TRIANGLES, 0, cube.Vertices.size());
         */
-        CurrentScene.Draw();
+        CurrentScene->Draw();
 
         // ui clear
         UI::Clear();
@@ -155,6 +160,17 @@ int main()
 
     // ui delete
     UI::DestroyAndFree();
+
+    // frees
+    pbrShader->Delete();
+    for (auto& ptr : CurrentModels)
+    {
+        delete ptr;
+    }
+    for (auto& ptr : CurrentMaterials)
+    {
+        delete ptr;
+    }
 
     glfwDestroyWindow(window);
     glfwTerminate();

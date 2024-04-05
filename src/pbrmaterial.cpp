@@ -9,11 +9,13 @@
 #define DEFAULT_METALLIC 0.0f
 #define DEFAULT_ROUGHNESS 0.0f
 
-PBRMaterial::PBRMaterial()
+PBRMaterial::PBRMaterial(Shader* pbrShader)
     : DiffuseColor(DEFAULT_DIFFUSE_COLOR)
     , Metallic(DEFAULT_METALLIC)
     , Roughness(DEFAULT_ROUGHNESS)
-    {}
+{
+    MaterialShader = pbrShader;   
+}
 
 void PBRMaterial::SendDataToShader()
 {
@@ -23,6 +25,7 @@ void PBRMaterial::SendDataToShader()
 
         return;
     }
+
 
     // send material data to shader
     glProgramUniform3fv(this->MaterialShader->GetShaderProgram(), glGetUniformLocation(this->MaterialShader->GetShaderProgram(), "Diffuse"), 1, value_ptr(this->DiffuseColor));

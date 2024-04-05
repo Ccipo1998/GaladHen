@@ -20,9 +20,7 @@ ${CMAKE_SOURCE_DIR}/src/light.cpp
 ${CMAKE_SOURCE_DIR}/src/model.cpp
 ${CMAKE_SOURCE_DIR}/src/mesh.cpp
 ${CMAKE_SOURCE_DIR}/src/pbrmaterial.cpp
-${CMAKE_SOURCE_DIR}/src/pbrshader.cpp
 ${CMAKE_SOURCE_DIR}/src/phongmaterial.cpp
-${CMAKE_SOURCE_DIR}/src/phongshader.cpp
 main.cpp)
 target_include_directories(ezengine PRIVATE
     ${CMAKE_SOURCE_DIR}/libs/assimp/include

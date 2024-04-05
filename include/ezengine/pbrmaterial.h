@@ -25,8 +25,8 @@ public:
     // ...
     
     // @brief
-    // Create material with default PBR shader
-    PBRMaterial();
+    // Create material
+    PBRMaterial(Shader* pbrShader);
 
     // @brief
     // It sends material data to its shader

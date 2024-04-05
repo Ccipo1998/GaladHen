@@ -22,6 +22,8 @@
 
 #include <glm.hpp>
 
+class Material;
+
 struct Vertex
 {
     glm::vec3 Position;
@@ -36,6 +38,8 @@ class Mesh
 {
     
 public:
+
+    Material* MeshMaterial;
 
     // Constructors
 

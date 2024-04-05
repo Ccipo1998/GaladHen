@@ -26,26 +26,26 @@ public:
     // Default shader constructor
     Shader();
 
+    void LoadVertexFragmentShaders(const char* vertexShaderPath, const char* fragmentShaderPath);
+
     // getters
 
     // Get program id
-    virtual GLuint GetShaderProgram();
+    GLuint GetShaderProgram();
 
     // Shader program activation as part of the current rendering process
-    virtual void Use();
+    void Use();
 
     // Shader program delete
-    virtual void Delete();
+    void Delete();
 
 protected:
 
     // Check for shader compilation errors
-    virtual void CheckShaderCompilation(GLuint shader, const char* shaderPath);
+    void CheckShaderCompilation(GLuint shader, const char* shaderPath);
 
     // Check for shader linking errors
-    virtual void CheckShaderLinking(GLuint program);
-
-    void LoadVertexFragmentShaders(const char* vertexShaderPath, const char* fragmentShaderPath);
+    void CheckShaderLinking(GLuint program);
 
     GLuint Program;
 };

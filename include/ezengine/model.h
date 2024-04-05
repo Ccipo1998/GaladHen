@@ -22,6 +22,8 @@ class Model
 
 public:
 
+    std::vector<Mesh> Meshes;
+
     // We want Model to be a move-only class. We delete copy constructor and copy assignment
     // see:
     // https://docs.microsoft.com/en-us/cpp/cpp/constructors-cpp?view=vs-2019
@@ -52,8 +54,6 @@ public:
     void Draw();
 
 protected:
-
-    std::vector<Mesh> Meshes;
 
     // @brief
     // Load 3D model from a file using assimp

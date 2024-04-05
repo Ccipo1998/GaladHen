@@ -1,16 +1,24 @@
 
 #include <ezengine/mesh.h>
+#include <ezengine/material.h>
+#include <utils/log.h>
 
 Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices) noexcept
-    : Vertices(move(vertices)), Indices(move(indices))
+    : Vertices(move(vertices))
+    , Indices(move(indices))
+    , MeshMaterial(nullptr)
 {
     this->InitGPUmemory();
 }
 
 Mesh::Mesh(Mesh&& other) noexcept
     // Calls move for both vectors, which internally consists of a simple pointer swap between the new instance and the source one.
-    : Vertices(move(other.Vertices)), Indices(move(other.Indices)),
-    VAO(other.VAO), VBO(other.VBO), EBO(other.EBO)
+    : Vertices(move(other.Vertices))
+    , Indices(move(other.Indices))
+    , VAO(other.VAO)
+    , VBO(other.VBO)
+    , EBO(other.EBO)
+    , MeshMaterial(other.MeshMaterial)
 {
     other.VAO = 0; // We *could* set VBO and EBO to 0 too,
     // but since we bring all the 3 values around we can use just one of them to check ownership of the 3 resources.
@@ -51,6 +59,14 @@ Mesh::~Mesh() noexcept
 
 void Mesh::Draw()
 {
+    if (this->MeshMaterial != nullptr)
+    {
+        // send material data to its shader
+        this->MeshMaterial->SendDataToShader();
+        // use shader
+        this->MeshMaterial->UseShader();
+    }
+
     glBindVertexArray(this->VAO);
     glDrawElements(GL_TRIANGLES, this->Indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
