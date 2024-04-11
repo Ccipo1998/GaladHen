@@ -16,8 +16,9 @@
 #include <ezengine/input.h>
 #include <ezengine/scene.h>
 #include <ezengine/gameobject.h>
-
 #include <ezengine/pbrmaterial.h>
+#include <ezengine/textureimage.h>
+#include <ezengine/texture.h>
 
 // glm
 #include <glm.hpp>
@@ -57,7 +58,7 @@ int main()
     glClearColor(.1f, .1f, .1f, .0f);
     // we enable Z test
     glEnable(GL_DEPTH_TEST);
-    
+
     // create scene
     CurrentScene = new Scene{};
 
@@ -68,8 +69,13 @@ int main()
     pbrShader = new Shader{};
     pbrShader->LoadVertexFragmentShaders(PBR_VERTEX_SHADER_PATH, PBR_FRAGMENT_SHADER_PATH);
 
+    // texture test
+    TextureImage* texImg = new TextureImage;
+    texImg->LoadTexture("textures/gravel_road_diff_2k.jpg");
+    Texture* tex = new Texture(texImg);
+
     // game object
-    CurrentModels.push_back(new Model("prefabs/bunny1.obj"));
+    CurrentModels.push_back(new Model("prefabs/bunny.ply"));
     Model* model = CurrentModels[0];
     CurrentMaterials.push_back(new PBRMaterial{pbrShader});
     PBRMaterial* mat = (PBRMaterial*)(CurrentMaterials[0]);
@@ -171,6 +177,8 @@ int main()
     {
         delete ptr;
     }
+    delete tex;
+    delete texImg;
 
     glfwDestroyWindow(window);
     glfwTerminate();
