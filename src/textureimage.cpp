@@ -13,6 +13,8 @@ TextureImage::TextureImage()
     , Width(-1)
     , Height(-1)
     , NumberOfChannels(-1)
+    , TextureUnit(-1)
+    , IsLoaded(false)
     {}
 
 void TextureImage::LoadTexture(const char* texturePath)
@@ -33,6 +35,55 @@ const unsigned char* TextureImage::GetTextureData() const
     return this->TextureBytes;
 }
 
+GLuint TextureImage::GetTextureID() const
+{
+    return this->TextureID;
+}
+
+void TextureImage::SendTextureDataToGPU(int textureUnit)
+{
+    if (this->IsLoaded)
+    {
+        // already loaded -> error
+        Log::Error("TextureImage", "Send texture data request for an already loaded texture");
+
+        return;
+    }
+
+    if (this->TextureBytes == nullptr)
+    {
+        // no texture data -> error
+        Log::Error("TextureImage", "Send texture data request for an empty texture");
+
+        return;
+    }
+
+    if (textureUnit > GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+    {
+        // texture unit out of limit -> error
+        Log::Error("TextureImage", "Send texture data request for an illegal texture unit");
+
+        return;
+    }
+
+    // assign texture unit
+    this->TextureUnit = textureUnit;
+
+    // create new texture object
+    glGenTextures(1, &this->TextureID);
+    // assign texture to a texture unit
+    glActiveTexture(this->TextureUnit);
+    // bind new texture object to texture target and current active texture unit
+    glBindTexture(GL_TEXTURE_2D, this->TextureID);
+
+    // allocate immutable storage
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, this->Width, this->Height);
+    // copy texture data to texture object
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, GL_RGB, GL_UNSIGNED_BYTE, this->TextureBytes);
+
+    IsLoaded = true;
+}
+
 int TextureImage::GetTextureWidth() const
 {
     return this->Width;
@@ -51,4 +102,14 @@ int TextureImage::GetNumberOfChannels() const
 TextureImage::~TextureImage()
 {
     stbi_image_free(this->TextureBytes);
+}
+
+int TextureImage::GetBindedTextureUnit() const
+{
+    return this->TextureUnit;
+}
+
+bool TextureImage::IsLoadedInGPU() const
+{
+    return this->IsLoaded;
 }

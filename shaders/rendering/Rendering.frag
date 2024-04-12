@@ -19,6 +19,7 @@ in vec3 SmoothViewNormal;
 flat in vec3 FlatViewNormal;
 in vec3 ViewPosition;
 in vec3 ViewDirection;
+in vec2 TexCoord;
 
 // structs
 struct PointLight
@@ -63,6 +64,8 @@ uniform float SpecularFalloff;
 // matrix
 uniform mat4 ViewMatrix;
 uniform mat4 NormalMatrix;
+// textures
+uniform sampler2D TestSampler;
 
 // const
 const float pi = 3.141592653589793;
@@ -318,7 +321,8 @@ void main()
 {
     vec3 viewNormal = CurrentShadingMode();
     vec3 shading = CurrentShadingType(viewNormal);
-
+    vec3 texColor = texture(TestSampler, TexCoord).rgb;
+    shading = mix(shading, texColor, 0.5);
     // gamma correction
     shading = shading / (shading + vec3(1.0));
     shading = pow(shading, vec3(1.0/2.2));  

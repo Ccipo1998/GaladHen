@@ -49,7 +49,7 @@ GLFWwindow* InitContext(int width, int height, const char* name);
 
 int main()
 {
-    GLFWwindow* window = InitContext(1200, 800, "EzEngine");
+    GLFWwindow* window = InitContext(1280, 720, "EzEngine");
     glfwMakeContextCurrent(window);
 
     // callbacks
@@ -72,10 +72,12 @@ int main()
     // texture test
     TextureImage* texImg = new TextureImage;
     texImg->LoadTexture("textures/gravel_road_diff_2k.jpg");
+    texImg->SendTextureDataToGPU(0);
     Texture* tex = new Texture(texImg);
+    tex->SetUniformSamplerForShader("TestSampler", pbrShader);
 
     // game object
-    CurrentModels.push_back(new Model("prefabs/bunny.ply"));
+    CurrentModels.push_back(new Model("prefabs/prova.glb"));
     Model* model = CurrentModels[0];
     CurrentMaterials.push_back(new PBRMaterial{pbrShader});
     PBRMaterial* mat = (PBRMaterial*)(CurrentMaterials[0]);

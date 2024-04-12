@@ -3,6 +3,8 @@
 
 #include <GL/gl3w.h>
 
+// TODO: refactoring using a friend class "TextureManager" to manage textureunits
+
 class TextureImage
 {
 
@@ -24,9 +26,17 @@ public:
 
     const unsigned char* GetTextureData() const;
 
+    // @brief
+    // Send texture bytes to GPU memory
+    // @param textureUnit: the texture unit to bind texture data on
+    void SendTextureDataToGPU(int textureUnit);
+
     int GetTextureWidth() const;
     int GetTextureHeight() const;
     int GetNumberOfChannels() const;
+    int GetBindedTextureUnit() const;
+    bool IsLoadedInGPU() const;
+    GLuint GetTextureID() const;
 
     // @brief
     // Free texture resources
@@ -36,5 +46,9 @@ protected:
 
     unsigned char* TextureBytes;
     int Width, Height, NumberOfChannels;
+
+    GLuint TextureID;
+    int TextureUnit; // int and not GLuint to assign -1 when previous assigned texture units is taken by another texture
+    bool IsLoaded; // flag for texture data loading on gpu memory
 
 };

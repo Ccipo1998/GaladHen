@@ -94,7 +94,7 @@ void Shader::LoadVertexFragmentShaders(const char* vertexShaderPath, const char*
     glDeleteShader(fragment);
 }
 
-GLuint Shader::GetShaderProgram()
+GLuint Shader::GetShaderProgram() const
 {
     return this->Program;
 }

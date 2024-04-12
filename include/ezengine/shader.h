@@ -31,7 +31,7 @@ public:
     // getters
 
     // Get program id
-    GLuint GetShaderProgram();
+    GLuint GetShaderProgram() const;
 
     // Shader program activation as part of the current rendering process
     void Use();

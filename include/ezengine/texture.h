@@ -25,12 +25,10 @@ public:
     const TextureImage* GetTextureImage() const;
 
     // @brief
-    // Load texture data into gpu memory
+    // Create a uniform sampler for the textureimage on a shader
     // @param samplername: the name of the uniform sampler variable used inside shader's code
-    // @param shader: pointer to shader instance to which link the texture data
-    void SendDataToShader(const unsigned char* samplerName, const Shader* shader);
-
-    GLuint GetTextureID();
+    // @param shader: pointer to shader in which to create uniform sampler
+    void SetUniformSamplerForShader(const char* samplerName, const Shader* shader);
 
     // @brief
     // Set wrapping mode to GL_REPEAT for X axis
@@ -91,8 +89,6 @@ public:
 protected:
 
     const TextureImage* TextureData;
-    GLuint TextureID;
-    bool IsBinded;
 
     // texture rendering parameters
     int WrappingModeX;

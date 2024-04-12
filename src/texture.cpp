@@ -11,7 +11,6 @@
 
 Texture::Texture(const TextureImage* textureData)
     : TextureData(textureData)
-    , IsBinded(false)
     , WrappingModeX(DEFAULT_WRAPPING_MODE)
     , WrappingModeY(DEFAULT_WRAPPING_MODE)
     , FilteringMode(DEFAULT_FILTERING_MODE)
@@ -23,36 +22,42 @@ const TextureImage* Texture::GetTextureImage() const
     return this->TextureData;
 }
 
-void Texture::SendDataToShader(const unsigned char* samplerName, const Shader* shader)
+void Texture::SetUniformSamplerForShader(const char* samplerName, const Shader* shader)
 {
-    if (this->IsBinded)
-    {
-        // already binded -> error
-        Log::Error("Texture", "Send data request for an already binded texture");
-
-        return;
-    }
-
     if (this->TextureData == nullptr)
     {
         // no texture data -> error
-        Log::Error("Texture", "Send data request for an empty texture");
+        Log::Error("Texture", "Set uniform sampler request for an empty texture");
 
         return;
     }
 
-    // create new texture object
-    glGenTextures(1, &this->TextureID);
+    // if (!this->TextureData->IsLoadedInGPU())
+    // {
+    //     // texture image not loaded in memory -> error
+    //     Log::Error("Texture", "Texture image must be loaded in GPU memory before creating samplers");
 
-    // bind new texture object to texture target
-    glBindTexture(GL_TEXTURE_2D, this->TextureID);
+    //     return;
+    // }
 
-    // allocate immutable storage
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, this->TextureData->GetTextureWidth(), this->TextureData->GetTextureHeight());
-    // copy texture data to texture object
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->TextureData->GetTextureWidth(), this->TextureData->GetTextureHeight(), GL_RGBA8, GL_UNSIGNED_BYTE, this->TextureData->GetTextureData());
+    if (this->TextureData->GetBindedTextureUnit() == -1)
+    {
+        // texture image not loaded in memory -> error
+        Log::Error("Texture", "Texture image must be binded to a texture unit memory before creating samplers");
+
+        return;
+    }
+    
+    if (shader == nullptr)
+    {
+        // invalid shader -> error
+        Log::Error("Texture", "Null shader");
+
+        return;
+    }
 
     // send texture parameters
+    glActiveTexture(this->TextureData->GetBindedTextureUnit());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, this->WrappingModeX);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, this->WrappingModeY);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->FilteringMode); // TODO: divide minifying and magnyfing filters
@@ -61,12 +66,12 @@ void Texture::SendDataToShader(const unsigned char* samplerName, const Shader* s
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->MipMapMode); // TODO: check if this is correct
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this->MipMapMode); // TODO: divide minifying and magnyfing filters for mipmaps?
 
-    IsBinded = true;
-}
+    glActiveTexture(this->TextureData->GetBindedTextureUnit());
+    glBindTexture(GL_TEXTURE_2D, this->TextureData->GetTextureID());
 
-GLuint Texture::GetTextureID()
-{
-    return this->TextureID;
+    // create uniform sampler
+    int location = glGetUniformLocation(shader->GetShaderProgram(), samplerName);
+    glUniform1i(location, this->TextureData->GetBindedTextureUnit());
 }
 
 void Texture::SetRepeatWrappingX()
