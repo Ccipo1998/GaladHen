@@ -28,7 +28,7 @@ void PBRMaterial::SendDataToShader()
 
 
     // send material data to shader
-    glProgramUniform3fv(this->MaterialShader->GetShaderProgram(), glGetUniformLocation(this->MaterialShader->GetShaderProgram(), "Diffuse"), 1, value_ptr(this->DiffuseColor));
+    glProgramUniform3fv(this->MaterialShader->GetShaderProgram(), glGetUniformLocation(this->MaterialShader->GetShaderProgram(), "DiffuseColor"), 1, value_ptr(this->DiffuseColor));
     //glProgramUniform1f(shader.Program, glGetUniformLocation(shader.Program, "Specular"), this->Specular);
     glProgramUniform1f(this->MaterialShader->GetShaderProgram(), glGetUniformLocation(this->MaterialShader->GetShaderProgram(), "Metallic"), this->Metallic);
     glProgramUniform1f(this->MaterialShader->GetShaderProgram(), glGetUniformLocation(this->MaterialShader->GetShaderProgram(), "Roughness"), this->Roughness);

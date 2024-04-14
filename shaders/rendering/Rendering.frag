@@ -24,14 +24,15 @@ in vec2 TexCoord;
 // structs
 struct PointLight
 {
+    float[3] Position;
     float[3] Color;
     float Intensity;
-    float[3] Position;
     float FallOffDistance;
 };
 
 struct DirectionalLight
 {
+    float[3] Position;
     float[3] Color;
     float Intensity;
     float[3] Direction;
@@ -53,7 +54,7 @@ layout(std430, binding = 1) buffer DirectionalLightsBuffer
 
 // uniforms
 // material
-uniform vec3 Diffuse;
+uniform vec3 DiffuseColor;
 uniform vec3 Specular;
 uniform float Metallic;
 uniform float Roughness;
@@ -65,7 +66,7 @@ uniform float SpecularFalloff;
 uniform mat4 ViewMatrix;
 uniform mat4 NormalMatrix;
 // textures
-uniform sampler2D TestSampler;
+uniform sampler2D DiffuseTexture;
 
 // const
 const float pi = 3.141592653589793;
@@ -98,41 +99,41 @@ vec3 BlinnPhongSpecular(vec3 viewNormal, float lightIntensity, vec3 lightDir)
 }
 
 // Lambertian Reflectance
-vec3 DiffuseBRDF()
+vec3 DiffuseBRDF(vec3 diffuseColor, float metallic)
 {
-    return Diffuse / pi * (1.0 - Metallic);
+    return diffuseColor / pi * (1.0 - metallic);
 }
 
-vec3 FresnelSchlickApprox(vec3 lightDir, vec3 halfDir)
+vec3 FresnelSchlickApprox(vec3 lightDir, vec3 halfDir, float metallic, vec3 diffuseColor)
 {
-    vec3 F0 = dielectricsF0 * (1.0 - Metallic) + Diffuse * Metallic;
+    vec3 F0 = dielectricsF0 * (1.0 - metallic) + diffuseColor * metallic;
     return F0 + (1.0 - F0) * pow((1.0 - (max(dot(lightDir, halfDir), 0.0))), 5.0);
 }
 
-float GGXNormalDistribution(vec3 viewNormal, vec3 halfDir)
+float GGXNormalDistribution(vec3 viewNormal, vec3 halfDir, float roughness)
 {
     float NdotH = max(dot(viewNormal, halfDir), 0.0);
-    float powRoughness = pow(Roughness, 4.0);
+    float powRoughness = pow(roughness, 4.0);
     return powRoughness / (pi * pow((NdotH * NdotH) * (powRoughness - 1.0) + 1.0, 2.0));
 }
 
-float GGXSmithMasking(vec3 viewNormal, vec3 dir)
+float GGXSmithMasking(vec3 viewNormal, vec3 dir, float roughness)
 {
     float NdotD = max(dot(viewNormal, dir), 0.0);
-    float k = pow(Roughness + 1.0, 2.0) / 8.0;
+    float k = pow(roughness + 1.0, 2.0) / 8.0;
     return NdotD / ((NdotD) * (1.0 - k) + k);
 }
 
-float GGXGeometryMasking(vec3 viewNormal, vec3 lightDir, vec3 viewDir)
+float GGXGeometryMasking(vec3 viewNormal, vec3 lightDir, vec3 viewDir, float roughness)
 {
-    return GGXSmithMasking(viewNormal, lightDir) * GGXSmithMasking(viewNormal, viewDir);
+    return GGXSmithMasking(viewNormal, lightDir, roughness) * GGXSmithMasking(viewNormal, viewDir, roughness);
 }
 
-vec3 SpecularBRDF(vec3 viewNormal, vec3 lightDir, vec3 viewDir, vec3 halfDir)
+vec3 SpecularBRDF(vec3 viewNormal, vec3 lightDir, vec3 viewDir, vec3 halfDir, vec3 diffuseColor, float metallic, float roughness)
 {
-    vec3 fresnel = FresnelSchlickApprox(lightDir, halfDir);
-    float ggxDistribution = GGXNormalDistribution(viewNormal, halfDir);
-    float ggxGeometry = GGXGeometryMasking(viewNormal, lightDir, viewDir);
+    vec3 fresnel = FresnelSchlickApprox(lightDir, halfDir, metallic, diffuseColor);
+    float ggxDistribution = GGXNormalDistribution(viewNormal, halfDir, roughness);
+    float ggxGeometry = GGXGeometryMasking(viewNormal, lightDir, viewDir, roughness);
 
     float NdotL = max(dot(viewNormal, lightDir), 0.0);
     float NdotV = max(dot(viewNormal, viewDir), 0.0);
@@ -182,7 +183,7 @@ vec3 PhongDiffuseReflection(vec3 viewNormal)
         phongDiffuse += PhongDiffuse(viewNormal, DirectionalLights[i].Intensity, viewLightDir);
     }
 
-    return Diffuse * phongDiffuse;
+    return DiffuseColor * phongDiffuse;
 }
 
 layout (index = 3)
@@ -226,7 +227,7 @@ vec3 PhongShadingModel(vec3 viewNormal)
     }
     
     // create color
-    vec3 color = Diffuse * phongAmbient + Diffuse * phongDiffuse + phongSpecular;
+    vec3 color = DiffuseColor * phongAmbient + DiffuseColor * phongDiffuse + phongSpecular;
 
     return color;
 }
@@ -272,7 +273,7 @@ vec3 BlinnPhongShadingModel(vec3 viewNormal)
     }
     
     // create color
-    vec3 color = Diffuse * phongAmbient + Diffuse * phongDiffuse + blinnPhongSpecular;
+    vec3 color = DiffuseColor * phongAmbient + DiffuseColor * phongDiffuse + blinnPhongSpecular;
 
     return color;
 }
@@ -290,25 +291,28 @@ vec3 PhysicallyBasedShadingModel(vec3 viewNormal)
     vec3 viewLightDir = vec3(0.0);
     vec3 viewHalfDir = vec3(0.0);
 
+    // mix parameters and textures
+    vec3 diffuseColor = mix(DiffuseColor, texture(DiffuseTexture, TexCoord).rgb, 0.5);
+
     // point lights
     for (uint i = 0; i < PointLightsNumber; ++i)
     {
-        diffuse = DiffuseBRDF();
+        diffuse = DiffuseBRDF(diffuseColor, Metallic);
         viewLightPos = (ViewMatrix * vec4(PointLights[i].Position[0], PointLights[i].Position[1], PointLights[i].Position[2], 1.0)).xyz;
         viewLightDir = normalize(viewLightPos - ViewPosition);
         viewHalfDir = normalize(viewLightDir + ViewDirection);
-        specular = SpecularBRDF(viewNormal, viewLightDir, ViewDirection, viewHalfDir);
+        specular = SpecularBRDF(viewNormal, viewLightDir, ViewDirection, viewHalfDir, diffuseColor, Metallic, Roughness);
         outgoing += PointLights[i].Intensity * (diffuse + specular) * max(dot(viewNormal, viewLightDir), 0.0);
     }
 
     // directional lights
     for (uint i = 0; i < DirectionalLightsNumber; ++i)
     {
-        diffuse = DiffuseBRDF();
+        diffuse = DiffuseBRDF(diffuseColor, Metallic);
         viewLightDir = vec3(DirectionalLights[i].Direction[0], DirectionalLights[i].Direction[1], DirectionalLights[i].Direction[2]);
         viewLightDir = (NormalMatrix * vec4(viewLightDir, 1.0)).xyz;
         viewHalfDir = normalize(viewLightDir + ViewDirection);
-        specular = SpecularBRDF(viewNormal, viewLightDir, ViewDirection, viewHalfDir);
+        specular = SpecularBRDF(viewNormal, viewLightDir, ViewDirection, viewHalfDir, diffuseColor, Metallic, Roughness);
         outgoing += DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(viewNormal, viewLightDir), 0.0);
     }
 
@@ -321,8 +325,8 @@ void main()
 {
     vec3 viewNormal = CurrentShadingMode();
     vec3 shading = CurrentShadingType(viewNormal);
-    vec3 texColor = texture(TestSampler, TexCoord).rgb;
-    shading = mix(shading, texColor, 0.5);
+    // vec3 texColor = texture(DiffuseTexture, TexCoord).rgb;
+    // shading = mix(shading, texColor, 0.5);
     // gamma correction
     shading = shading / (shading + vec3(1.0));
     shading = pow(shading, vec3(1.0/2.2));  

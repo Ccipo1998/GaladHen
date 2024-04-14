@@ -74,10 +74,10 @@ int main()
     texImg->LoadTexture("textures/gravel_road_diff_2k.jpg");
     texImg->SendTextureDataToGPU(0);
     Texture* tex = new Texture(texImg);
-    tex->SetUniformSamplerForShader("TestSampler", pbrShader);
+    tex->SetUniformSamplerForShader("DiffuseTexture", pbrShader);
 
     // game object
-    CurrentModels.push_back(new Model("prefabs/prova.glb"));
+    CurrentModels.push_back(new Model("prefabs/bunny.glb"));
     Model* model = CurrentModels[0];
     CurrentMaterials.push_back(new PBRMaterial{pbrShader});
     PBRMaterial* mat = (PBRMaterial*)(CurrentMaterials[0]);
@@ -92,7 +92,7 @@ int main()
     PointLight* pLight1 = CurrentScene->PointLights[0];
     CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, -5.0f)));
     PointLight* pLight2 = CurrentScene->PointLights[1];
-    CurrentScene->DirectionalLights.push_back(new DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(1.0f, .0f, .0f)));
+    CurrentScene->DirectionalLights.push_back(new DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(-1.0f, 0.0f, 0.0f)));
     DirectionalLight* dirLight = CurrentScene->DirectionalLights[0];
 
     // send light data to shader
@@ -100,23 +100,23 @@ int main()
     glGenBuffers(1, &ssbo);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
     unsigned int pointLightsNumber = (unsigned int)CurrentScene->PointLights.size();
-    GLsizeiptr pointLightsSize = sizeof(GLuint) + pointLightsNumber * sizeof(PointLight);
+    GLsizeiptr pointLightsSize = sizeof(GLuint) + pointLightsNumber * PointLight::GetPointLightSizeForShader();
     glBufferData(GL_SHADER_STORAGE_BUFFER, pointLightsSize, nullptr, GL_STATIC_DRAW);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &pointLightsNumber);
     for (unsigned int i = 0; i < pointLightsNumber; ++i)
     {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(PointLight) * i, sizeof(PointLight), CurrentScene->PointLights[i]);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + PointLight::GetPointLightSizeForShader() * i, PointLight::GetPointLightSizeForShader(), CurrentScene->PointLights[i]->GetLightDataForShader());
     }
     GLuint ssbo1;
     glGenBuffers(1, &ssbo1);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, ssbo1);
     unsigned int directionalLightsNumber = (unsigned int)CurrentScene->DirectionalLights.size();
-    GLsizeiptr directionalLightsSize = sizeof(GLuint) + directionalLightsNumber * sizeof(DirectionalLight);
+    GLsizeiptr directionalLightsSize = sizeof(GLuint) + directionalLightsNumber * DirectionalLight::GetDirLightSizeForShader();
     glBufferData(GL_SHADER_STORAGE_BUFFER, directionalLightsSize, nullptr, GL_STATIC_DRAW);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &directionalLightsNumber);
     for (unsigned int i = 0; i < directionalLightsNumber; ++i)
     {
-        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + sizeof(DirectionalLight) * i, sizeof(DirectionalLight), CurrentScene->DirectionalLights[i]);
+        glBufferSubData(GL_SHADER_STORAGE_BUFFER, sizeof(GLuint) + DirectionalLight::GetDirLightSizeForShader() * i, DirectionalLight::GetDirLightSizeForShader(), CurrentScene->DirectionalLights[i]->GetLightDataForShader());
     }
     
     GLfloat lastTime = .0f;
