@@ -32,13 +32,13 @@ void Texture::SetUniformSamplerForShader(const char* samplerName, const Shader* 
         return;
     }
 
-    // if (!this->TextureData->IsLoadedInGPU())
-    // {
-    //     // texture image not loaded in memory -> error
-    //     Log::Error("Texture", "Texture image must be loaded in GPU memory before creating samplers");
+    if (!this->TextureData->IsLoadedInGPU())
+    {
+        // texture image not loaded in memory -> error
+        Log::Error("Texture", "Texture image must be loaded in GPU memory before creating samplers");
 
-    //     return;
-    // }
+        return;
+    }
 
     if (this->TextureData->GetBindedTextureUnit() == -1)
     {
@@ -56,8 +56,10 @@ void Texture::SetUniformSamplerForShader(const char* samplerName, const Shader* 
         return;
     }
 
+    // use shader
+    shader->Use();
+
     // send texture parameters
-    glActiveTexture(this->TextureData->GetBindedTextureUnit());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, this->WrappingModeX);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, this->WrappingModeY);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->FilteringMode); // TODO: divide minifying and magnyfing filters
@@ -66,12 +68,11 @@ void Texture::SetUniformSamplerForShader(const char* samplerName, const Shader* 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->MipMapMode); // TODO: check if this is correct
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this->MipMapMode); // TODO: divide minifying and magnyfing filters for mipmaps?
 
-    glActiveTexture(this->TextureData->GetBindedTextureUnit());
-    glBindTexture(GL_TEXTURE_2D, this->TextureData->GetTextureID());
-
     // create uniform sampler
-    int location = glGetUniformLocation(shader->GetShaderProgram(), samplerName);
-    glUniform1i(location, this->TextureData->GetBindedTextureUnit());
+    int loc = glGetUniformLocation(shader->GetShaderProgram(), samplerName);
+    glUniform1i(loc, 1);
+    // int location = glGetUniformLocation(shader->GetShaderProgram(), samplerName);
+    // glUniform1i(location, this->TextureData->GetBindedTextureUnit());
 }
 
 void Texture::SetRepeatWrappingX()

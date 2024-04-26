@@ -29,7 +29,7 @@ public:
     // @brief
     // Send texture bytes to GPU memory
     // @param textureUnit: the texture unit to bind texture data on
-    void SendTextureDataToGPU(int textureUnit);
+    void SendTextureDataToGPU(GLenum textureUnit);
 
     int GetTextureWidth() const;
     int GetTextureHeight() const;

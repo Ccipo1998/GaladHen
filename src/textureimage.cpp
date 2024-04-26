@@ -40,7 +40,7 @@ GLuint TextureImage::GetTextureID() const
     return this->TextureID;
 }
 
-void TextureImage::SendTextureDataToGPU(int textureUnit)
+void TextureImage::SendTextureDataToGPU(GLenum textureUnit)
 {
     if (this->IsLoaded)
     {
@@ -72,12 +72,11 @@ void TextureImage::SendTextureDataToGPU(int textureUnit)
     // create new texture object
     glGenTextures(1, &this->TextureID);
     // assign texture to a texture unit
-    glActiveTexture(this->TextureUnit);
-    // bind new texture object to texture target and current active texture unit
+    glActiveTexture(this->TextureUnit); // -> all next bind textures refers to this
+    // // bind new texture object to texture target and current active texture unit
     glBindTexture(GL_TEXTURE_2D, this->TextureID);
-
     // allocate immutable storage
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, this->Width, this->Height);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_SRGB8, this->Width, this->Height);
     // copy texture data to texture object
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, GL_RGB, GL_UNSIGNED_BYTE, this->TextureBytes);
 

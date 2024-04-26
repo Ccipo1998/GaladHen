@@ -34,7 +34,7 @@ public:
     GLuint GetShaderProgram() const;
 
     // Shader program activation as part of the current rendering process
-    void Use();
+    void Use() const;
 
     // Shader program delete
     void Delete();

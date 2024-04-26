@@ -28,10 +28,10 @@
 #define BUFFER_OFFSET(offset) (void*)(offset) // MACRO
 
 // paths of shaders
-#define PBR_VERTEX_SHADER_PATH "shaders/rendering/Rendering.vert"
-#define PBR_FRAGMENT_SHADER_PATH "shaders/rendering/Rendering.frag"
-#define PHONG_VERTEX_SHADER_PATH "shaders/rendering/Rendering.vert"
-#define PHONG_FRAGMENT_SHADER_PATH "shaders/rendering/Rendering.frag"
+#define PBR_VERTEX_SHADER_PATH "shaders/pbr/Pbr.vert"
+#define PBR_FRAGMENT_SHADER_PATH "shaders/pbr/Pbr.frag"
+#define PHONG_VERTEX_SHADER_PATH "shaders/phong/Phong.vert"
+#define PHONG_FRAGMENT_SHADER_PATH "shaders/phong/Phong.frag"
 
 // statics data
 
@@ -63,21 +63,25 @@ int main()
     CurrentScene = new Scene{};
 
     // init ui
-    UI::InitImGui(window, "#version 450 core");
-
+    UI::InitImGui(window, "#version 460 core");
+    //glEnable(GL_CULL_FACE);
     // load shaders
     pbrShader = new Shader{};
     pbrShader->LoadVertexFragmentShaders(PBR_VERTEX_SHADER_PATH, PBR_FRAGMENT_SHADER_PATH);
-
     // texture test
-    TextureImage* texImg = new TextureImage;
-    texImg->LoadTexture("textures/gravel_road_diff_2k.jpg");
-    texImg->SendTextureDataToGPU(0);
-    Texture* tex = new Texture(texImg);
-    tex->SetUniformSamplerForShader("DiffuseTexture", pbrShader);
+    TextureImage* texImgAlbedo = new TextureImage;
+    texImgAlbedo->LoadTexture("textures/StuccoRoughCast001_COL_2K_METALNESS.png");
+    texImgAlbedo->SendTextureDataToGPU(GL_TEXTURE0);
+    Texture* texAlbedo = new Texture{texImgAlbedo};
+    texAlbedo->SetUniformSamplerForShader("DiffuseColor", pbrShader);
+    TextureImage* texImgNormal = new TextureImage;
+    texImgNormal->LoadTexture("textures/StuccoRoughCast001_NRM_2K_METALNESS.png");
+    texImgNormal->SendTextureDataToGPU(GL_TEXTURE1);
+    Texture* texNormal = new Texture{texImgNormal};
+    texNormal->SetUniformSamplerForShader("NormalMap", pbrShader);
 
     // game object
-    CurrentModels.push_back(new Model("prefabs/bunny.glb"));
+    CurrentModels.push_back(new Model("prefabs/cube.glb"));
     Model* model = CurrentModels[0];
     CurrentMaterials.push_back(new PBRMaterial{pbrShader});
     PBRMaterial* mat = (PBRMaterial*)(CurrentMaterials[0]);
@@ -88,11 +92,11 @@ int main()
     object->Model = model;
 
     // lights
-    CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, 5.0f)));
-    PointLight* pLight1 = CurrentScene->PointLights[0];
-    CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, -5.0f)));
-    PointLight* pLight2 = CurrentScene->PointLights[1];
-    CurrentScene->DirectionalLights.push_back(new DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(-1.0f, 0.0f, 0.0f)));
+    // CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, 5.0f)));
+    // PointLight* pLight1 = CurrentScene->PointLights[0];
+    // CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, -5.0f)));
+    // PointLight* pLight2 = CurrentScene->PointLights[1];
+    CurrentScene->DirectionalLights.push_back(new DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f)));
     DirectionalLight* dirLight = CurrentScene->DirectionalLights[0];
 
     // send light data to shader
@@ -179,8 +183,8 @@ int main()
     {
         delete ptr;
     }
-    delete tex;
-    delete texImg;
+    // delete texAlbedo;
+    // delete texImgAlbedo;
 
     glfwDestroyWindow(window);
     glfwTerminate();
