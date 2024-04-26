@@ -92,12 +92,12 @@ int main()
     object->Model = model;
 
     // lights
-    // CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, 5.0f)));
-    // PointLight* pLight1 = CurrentScene->PointLights[0];
+    CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(5.0f, .0f, 5.0f)));
+    PointLight* pLight1 = CurrentScene->PointLights[0];
     // CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, -5.0f)));
     // PointLight* pLight2 = CurrentScene->PointLights[1];
-    CurrentScene->DirectionalLights.push_back(new DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(0.0f, 0.0f, 1.0f)));
-    DirectionalLight* dirLight = CurrentScene->DirectionalLights[0];
+    // CurrentScene->DirectionalLights.push_back(new DirectionalLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(0.0f, 0.0f, -1.0f)));
+    // DirectionalLight* dirLight = CurrentScene->DirectionalLights[0];
 
     // send light data to shader
     GLuint ssbo;
@@ -147,6 +147,7 @@ int main()
         glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "NormalMatrix"), 1, GL_FALSE, value_ptr(glm::transpose(glm::inverse(CurrentScene->MainCamera->GetViewMatrix()))));
         glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "ProjectionMatrix"), 1, GL_FALSE, value_ptr(CurrentScene->MainCamera->GetProjectionMatrix()));
         glProgramUniformMatrix4fv(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "ViewMatrix"), 1, GL_FALSE, value_ptr(CurrentScene->MainCamera->GetViewMatrix()));
+        glProgramUniform3f(pbrShader->GetShaderProgram(), glGetUniformLocation(pbrShader->GetShaderProgram(), "WCameraPosition"), CurrentScene->MainCamera->Transform.GetPosition().x, CurrentScene->MainCamera->Transform.GetPosition().y, CurrentScene->MainCamera->Transform.GetPosition().z);
 
         // select shading subroutines
 

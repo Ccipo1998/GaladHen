@@ -15,25 +15,29 @@ layout (location = 4) in vec3 Bitangent;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 NormalMatrix;
+uniform vec3 WCameraPosition;
 
 // output
-out vec3 SmoothViewNormal;
-flat out vec3 FlatViewNormal;
-out vec3 ViewPosition;
-out vec3 ViewDirection;
+out vec3 SmoothWNormal;
+flat out vec3 FlatWNormal;
+out vec3 WPosition;
+out vec3 WViewDirection;
 out vec2 TexCoord;
 out mat3 TBN;
 
 void main()
 {
-    SmoothViewNormal = normalize((NormalMatrix * vec4(Normal, 1.0)).xyz);
-    FlatViewNormal = normalize((NormalMatrix * vec4(Normal, 1.0)).xyz);
+    // smooth and flat normals in world coordinates
+    SmoothWNormal = Normal;
+    FlatWNormal = Normal;
 
-    // light position and vertex position in view coords
-    ViewPosition = (ViewMatrix * vec4(Position, 1.0)).xyz;
+    // vertex position in view coordinates
+    vec3 ViewPosition = (ViewMatrix * vec4(Position, 1.0)).xyz;
 
-    // point of view direction in view coords
-    ViewDirection = normalize(-ViewPosition);
+    // point of view direction in world coords
+    WViewDirection = normalize(WCameraPosition - Position);
+    // vertex position in world coords
+    WPosition = Position;
 
     // pass texture coordinates
     TexCoord = UV;

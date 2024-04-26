@@ -10,10 +10,10 @@ layout (location = 0) subroutine uniform ShadingMode CurrentShadingMode;
 out vec4 color;
 
 // inputs
-in vec3 SmoothViewNormal;
-flat in vec3 FlatViewNormal;
-in vec3 ViewPosition;
-in vec3 ViewDirection;
+in vec3 SmoothWNormal;
+flat in vec3 FlatWNormal;
+in vec3 WPosition;
+in vec3 WViewDirection;
 in vec2 TexCoord;
 in mat3 TBN;
 
@@ -56,6 +56,7 @@ uniform float Metallic;
 uniform float Roughness;
 // matrix
 uniform mat4 ViewMatrix;
+uniform mat4 ProjectionMatrix;
 uniform mat4 NormalMatrix;
 // textures
 uniform sampler2D DiffuseTexture;
@@ -132,47 +133,47 @@ layout (index = 0)
 subroutine(ShadingMode)
 vec3 SmoothShading()
 {
-    return SmoothViewNormal;
+    return SmoothWNormal;
 }
 
 layout (index = 1)
 subroutine(ShadingMode)
 vec3 FlatShading()
 {
-    return FlatViewNormal;
+    return FlatWNormal;
 }
 
-vec3 PhysicallyBasedShadingModel(vec3 viewNormal, vec3 diffuseColor)
+vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor)
 {
     vec3 outgoing = vec3(0.0);
 
     vec3 diffuse = vec3(0.0);
     vec3 specular = vec3(0.0);
 
-    vec3 viewLightPos = vec3(0.0);
-    vec3 viewLightDir = vec3(0.0);
-    vec3 viewHalfDir = vec3(0.0);
+    vec3 wLightPos = vec3(0.0);
+    vec3 wLightDir = vec3(0.0);
+    vec3 wHalfDir = vec3(0.0);
 
     // point lights
     for (uint i = 0; i < PointLightsNumber; ++i)
     {
         diffuse = DiffuseBRDF(diffuseColor, Metallic);
-        viewLightPos = (ViewMatrix * vec4(PointLights[i].Position[0], PointLights[i].Position[1], PointLights[i].Position[2], 1.0)).xyz;
-        viewLightDir = normalize(viewLightPos - ViewPosition);
-        viewHalfDir = normalize(viewLightDir + ViewDirection);
-        specular = SpecularBRDF(viewNormal, viewLightDir, ViewDirection, viewHalfDir, diffuseColor, Metallic, Roughness);
-        outgoing += PointLights[i].Intensity * (diffuse + specular) * max(dot(viewNormal, viewLightDir), 0.0);
+        wLightPos = vec3(PointLights[i].Position[0], PointLights[i].Position[1], PointLights[i].Position[2]);
+        wLightDir = normalize(wLightPos - WPosition);
+        wHalfDir = normalize(wLightDir + WViewDirection);
+        specular = SpecularBRDF(wNormal, wLightDir, WViewDirection, wHalfDir, diffuseColor, Metallic, Roughness);
+        outgoing += PointLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
     }
 
     // directional lights
     for (uint i = 0; i < DirectionalLightsNumber; ++i)
     {
         diffuse = DiffuseBRDF(diffuseColor, Metallic);
-        viewLightDir = vec3(DirectionalLights[i].Direction[0], DirectionalLights[i].Direction[1], DirectionalLights[i].Direction[2]);
-        viewLightDir = (NormalMatrix * vec4(viewLightDir, 1.0)).xyz;
-        viewHalfDir = normalize(viewLightDir + ViewDirection);
-        specular = SpecularBRDF(viewNormal, viewLightDir, ViewDirection, viewHalfDir, diffuseColor, Metallic, Roughness);
-        outgoing += DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(viewNormal, viewLightDir), 0.0);
+        wLightDir = -vec3(DirectionalLights[i].Direction[0], DirectionalLights[i].Direction[1], DirectionalLights[i].Direction[2]);
+        //viewLightDir = (NormalMatrix * vec4(viewLightDir, 1.0)).xyz;
+        wHalfDir = normalize(wLightDir + WViewDirection);
+        specular = SpecularBRDF(wNormal, wLightDir, WViewDirection, wHalfDir, diffuseColor, Metallic, Roughness);
+        outgoing += DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
     }
 
     return outgoing * pi;
@@ -190,8 +191,8 @@ void main()
     normalSample = normalize(TBN * normalSample);
 
     // shading
-    vec3 viewNormal = CurrentShadingMode();
-    vec3 shading = PhysicallyBasedShadingModel(normalSample, diffuseColor);
+    vec3 wNormal = CurrentShadingMode();
+    vec3 shading = PhysicallyBasedShadingModel(wNormal, vec3(TexCoord.x, TexCoord.y, 0.0));
 
     // gamma correction
     shading = GammaCorrection(shading);
