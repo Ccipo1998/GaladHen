@@ -28,7 +28,6 @@ in vec3 WPosition;
 in vec3 WViewDirection;
 in vec2 TexCoord;
 in mat3 TBN;
-in vec3 wTangent;
 
 // structs
 struct PointLight
@@ -264,7 +263,6 @@ void main()
     float roughness = CurrentRoughnessMode();
 
     // shading
-    vec3 wNormal = CurrentShadingMode();
     vec3 shading = PhysicallyBasedShadingModel(normal, diffuse, metallic, roughness, normal);
 
     // gamma correction

@@ -24,7 +24,6 @@ out vec3 WPosition;
 out vec3 WViewDirection;
 out vec2 TexCoord;
 out mat3 TBN;
-out vec3 wTangent;
 
 void main()
 {
@@ -44,9 +43,9 @@ void main()
     TexCoord = UV;
 
     // TBN matrix for normal mapping
-    vec3 orthoTangent = normalize(Tangent - dot(Tangent, Normal) * Normal);
-    TBN = mat3(orthoTangent, normalize(cross(orthoTangent, Normal)), Normal);
-    wTangent = orthoTangent;
+    vec3 adjTangent = normalize(Tangent - dot(Tangent, Normal) * Normal); // re-orthogonalize tangent with respect to normal to ensure tangents are orthogonal when calculated (possible smoothing)
+    TBN = mat3(adjTangent, normalize(cross(Normal, adjTangent)), Normal);
+
     // transformed vertex position
     gl_Position = ProjectionMatrix * vec4(ViewPosition, 1.0);
 }
