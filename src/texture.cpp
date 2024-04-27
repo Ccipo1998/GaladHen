@@ -39,14 +39,6 @@ void Texture::SetUniformSamplerForShader(const char* samplerName, const Shader* 
 
         return;
     }
-
-    if (this->TextureData->GetBindedTextureUnit() == -1)
-    {
-        // texture image not loaded in memory -> error
-        Log::Error("Texture", "Texture image must be binded to a texture unit memory before creating samplers");
-
-        return;
-    }
     
     if (shader == nullptr)
     {
@@ -71,8 +63,38 @@ void Texture::SetUniformSamplerForShader(const char* samplerName, const Shader* 
     // create uniform sampler
     int loc = glGetUniformLocation(shader->GetShaderProgram(), samplerName);
     glUniform1i(loc, 1);
-    // int location = glGetUniformLocation(shader->GetShaderProgram(), samplerName);
-    // glUniform1i(location, this->TextureData->GetBindedTextureUnit());
+}
+
+void Texture::SetActiveTexture(GLenum textureUnit)
+{
+    if (this->TextureData == nullptr)
+    {
+        // void texture data
+        Log::Error("Texture", "Set active texture request for a null texture image data");
+
+        return;
+    }
+
+    if (!this->TextureData->IsLoadedInGPU())
+    {
+        // texture data not loaded in memory
+        Log::Error("Texture", "Set active texture request for a texture image data not loaded in GPU memory yet");
+
+        return;
+    }
+
+    if (textureUnit > GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+    {
+        // texture unit out of limit -> error
+        Log::Error("Texture", "Send texture data request for an illegal texture unit");
+
+        return;
+    }
+
+    this->TextureUnit = textureUnit;
+
+    glActiveTexture(this->TextureUnit);
+    glBindTexture(GL_TEXTURE_2D, this->TextureData->GetTextureID());
 }
 
 void Texture::SetRepeatWrappingX()

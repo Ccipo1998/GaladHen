@@ -24,6 +24,7 @@ out vec3 WPosition;
 out vec3 WViewDirection;
 out vec2 TexCoord;
 out mat3 TBN;
+out vec3 wTangent;
 
 void main()
 {
@@ -42,12 +43,10 @@ void main()
     // pass texture coordinates
     TexCoord = UV;
 
-    // calculate TBN matrix
-    vec3 testNormal = normalize((NormalMatrix * vec4(Normal, 1.0)).xyz);
-    vec3 testTangent = normalize((NormalMatrix * vec4(Tangent, 1.0)).xyz);
-    vec3 testBitangent = normalize((NormalMatrix * vec4(Bitangent, 1.0)).xyz);
-    TBN = mat3(testTangent, testBitangent, testNormal);
-
+    // TBN matrix for normal mapping
+    vec3 orthoTangent = normalize(Tangent - dot(Tangent, Normal) * Normal);
+    TBN = mat3(orthoTangent, normalize(cross(orthoTangent, Normal)), Normal);
+    wTangent = orthoTangent;
     // transformed vertex position
     gl_Position = ProjectionMatrix * vec4(ViewPosition, 1.0);
 }

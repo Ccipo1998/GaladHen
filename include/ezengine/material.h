@@ -12,6 +12,12 @@ enum class ShaderClass
     PhysicallyBased
 };
 
+enum class ShadingMode
+{
+    SmoothShading = 0,
+    FlatShading = 1
+};
+
 class Material
 {
 public:
@@ -33,6 +39,8 @@ public:
     // @brief
     // Set material shader for use
     void UseShader();
+
+    ShadingMode MaterialShadingMode;
 
 protected:
 

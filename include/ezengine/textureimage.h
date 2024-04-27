@@ -28,13 +28,13 @@ public:
 
     // @brief
     // Send texture bytes to GPU memory
-    // @param textureUnit: the texture unit to bind texture data on
-    void SendTextureDataToGPU(GLenum textureUnit);
+    // @param textureFormat: the format to interpret the texture (SRGB, RGBA, ...)
+    // @param internalFormat: the format to interpret each texture byte (GL_RGB, GL_RED, ...)
+    void SendTextureDataToGPU(GLenum textureFormat = GL_SRGB8, GLenum internalFormat = GL_RGB);
 
     int GetTextureWidth() const;
     int GetTextureHeight() const;
     int GetNumberOfChannels() const;
-    int GetBindedTextureUnit() const;
     bool IsLoadedInGPU() const;
     GLuint GetTextureID() const;
 
@@ -48,7 +48,6 @@ protected:
     int Width, Height, NumberOfChannels;
 
     GLuint TextureID;
-    int TextureUnit; // int and not GLuint to assign -1 when previous assigned texture units is taken by another texture
     bool IsLoaded; // flag for texture data loading on gpu memory
 
 };

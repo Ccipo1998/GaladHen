@@ -71,28 +71,35 @@ int main()
     // texture test
     TextureImage* texImgAlbedo = new TextureImage;
     texImgAlbedo->LoadTexture("textures/StuccoRoughCast001_COL_2K_METALNESS.png");
-    texImgAlbedo->SendTextureDataToGPU(GL_TEXTURE0);
-    Texture* texAlbedo = new Texture{texImgAlbedo};
-    texAlbedo->SetUniformSamplerForShader("DiffuseColor", pbrShader);
+    texImgAlbedo->SendTextureDataToGPU(GL_SRGB8, GL_RGB);
     TextureImage* texImgNormal = new TextureImage;
     texImgNormal->LoadTexture("textures/StuccoRoughCast001_NRM_2K_METALNESS.png");
-    texImgNormal->SendTextureDataToGPU(GL_TEXTURE1);
-    Texture* texNormal = new Texture{texImgNormal};
-    texNormal->SetUniformSamplerForShader("NormalMap", pbrShader);
+    texImgNormal->SendTextureDataToGPU(GL_RGB8, GL_RGB);
+    TextureImage* texImgRoughness = new TextureImage;
+    texImgRoughness->LoadTexture("textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png");
+    texImgRoughness->SendTextureDataToGPU(GL_RGB, GL_RED);
 
     // game object
-    CurrentModels.push_back(new Model("prefabs/cube.glb"));
+    CurrentModels.push_back(new Model("prefabs/bunny.glb"));
     Model* model = CurrentModels[0];
+
     CurrentMaterials.push_back(new PBRMaterial{pbrShader});
     PBRMaterial* mat = (PBRMaterial*)(CurrentMaterials[0]);
+    mat->MaterialShadingMode = ShadingMode::SmoothShading;
     model->Meshes[0].MeshMaterial = mat;
-    //PBRMaterial mat{};
+    mat->DiffuseTexture = new Texture{texImgAlbedo};
+    mat->DiffuseTexture->SetUniformSamplerForShader("DiffuseColor", pbrShader);
+    mat->NormalMap = new Texture{texImgNormal};
+    mat->NormalMap->SetUniformSamplerForShader("NormalMap", pbrShader);
+    mat->RoughnessTexture = new Texture{texImgRoughness};
+    mat->RoughnessTexture->SetUniformSamplerForShader("RoughnessTexture", pbrShader);
+
     CurrentScene->GameObjects.push_back(new GameObject{});
     GameObject* object = CurrentScene->GameObjects[0];
     object->Model = model;
 
     // lights
-    CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(5.0f, .0f, 5.0f)));
+    CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(0.0f, 0.0f, 5.0f)));
     PointLight* pLight1 = CurrentScene->PointLights[0];
     // CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(.0f, .0f, -5.0f)));
     // PointLight* pLight2 = CurrentScene->PointLights[1];
@@ -151,11 +158,11 @@ int main()
 
         // select shading subroutines
 
-        GLuint subroutinesIndices[2];
-        // IMPORTANT: subroutine uniform location (array index) <-> subroutine function index (value)
-        subroutinesIndices[0] = UI::ShadingModesValues[UI::ShadingModeSelected];
-        subroutinesIndices[1] = UI::ShadingTypesValues[UI::ShadingTypeSelected];
-        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 2, subroutinesIndices);
+        // GLuint subroutinesIndices[2];
+        // // IMPORTANT: subroutine uniform location (array index) <-> subroutine function index (value)
+        // subroutinesIndices[0] = UI::ShadingModesValues[UI::ShadingModeSelected];
+        // subroutinesIndices[1] = UI::ShadingTypesValues[UI::ShadingTypeSelected];
+        // glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 2, subroutinesIndices);
 
         /*
         glBindVertexArray(cube.VAO);

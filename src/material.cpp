@@ -5,6 +5,7 @@
 Material::Material()
     : MaterialShaderClass(ShaderClass::None)
     , MaterialShader(nullptr)
+    , MaterialShadingMode(ShadingMode::SmoothShading)
     {}
 
 Shader* Material::GetShader()

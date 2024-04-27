@@ -31,6 +31,10 @@ public:
     void SetUniformSamplerForShader(const char* samplerName, const Shader* shader);
 
     // @brief
+    // To bind pointed img texture to a shader texture unit and to make it active
+    void SetActiveTexture(GLenum textureUnit);
+
+    // @brief
     // Set wrapping mode to GL_REPEAT for X axis
     void SetRepeatWrappingX();
 
@@ -89,6 +93,7 @@ public:
 protected:
 
     const TextureImage* TextureData;
+    GLenum TextureUnit;
 
     // texture rendering parameters
     int WrappingModeX;

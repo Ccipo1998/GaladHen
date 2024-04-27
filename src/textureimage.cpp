@@ -13,7 +13,6 @@ TextureImage::TextureImage()
     , Width(-1)
     , Height(-1)
     , NumberOfChannels(-1)
-    , TextureUnit(-1)
     , IsLoaded(false)
     {}
 
@@ -40,7 +39,7 @@ GLuint TextureImage::GetTextureID() const
     return this->TextureID;
 }
 
-void TextureImage::SendTextureDataToGPU(GLenum textureUnit)
+void TextureImage::SendTextureDataToGPU(GLenum textureFormat, GLenum internalFormat)
 {
     if (this->IsLoaded)
     {
@@ -58,27 +57,31 @@ void TextureImage::SendTextureDataToGPU(GLenum textureUnit)
         return;
     }
 
-    if (textureUnit > GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
-    {
-        // texture unit out of limit -> error
-        Log::Error("TextureImage", "Send texture data request for an illegal texture unit");
-
-        return;
-    }
-
-    // assign texture unit
-    this->TextureUnit = textureUnit;
-
     // create new texture object
     glGenTextures(1, &this->TextureID);
-    // assign texture to a texture unit
-    glActiveTexture(this->TextureUnit); // -> all next bind textures refers to this
-    // // bind new texture object to texture target and current active texture unit
+    // bind new texture object to texture target and current active texture unit
     glBindTexture(GL_TEXTURE_2D, this->TextureID);
-    // allocate immutable storage
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_SRGB8, this->Width, this->Height);
+    // allocate immutable storage basing on number of channels and on bit depth
+    
+    // IMPORTANT: internal format is an external variable because not all the textures need to be interpreted as SRGB (example: normal maps are already stored in linear values)
+    glTexStorage2D(GL_TEXTURE_2D, 1, textureFormat, this->Width, this->Height);
     // copy texture data to texture object
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, GL_RGB, GL_UNSIGNED_BYTE, this->TextureBytes);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, internalFormat, GL_UNSIGNED_BYTE, this->TextureBytes);
+    // if (this->NumberOfChannels == 3)
+    // {
+    //     // IMPORTANT: internal format is an external variable because not all the textures need to be interpreted as SRGB (example: normal maps are already stored in linear values)
+    //     glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, this->Width, this->Height);
+    //     // copy texture data to texture object
+    //     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, GL_RGB, GL_UNSIGNED_BYTE, this->TextureBytes);
+    // }
+    // else if (this->NumberOfChannels == 1)
+    // {
+    //     glTexStorage2D(GL_TEXTURE_2D, 1, GL_R16, this->Width, this->Height);
+    //     // copy texture data to texture object
+    //     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, this->Width, this->Height, GL_RED, GL_UNSIGNED_BYTE, this->TextureBytes);
+    // }
+
+    glGenerateTextureMipmap(this->TextureID);
 
     IsLoaded = true;
 }
@@ -101,11 +104,6 @@ int TextureImage::GetNumberOfChannels() const
 TextureImage::~TextureImage()
 {
     stbi_image_free(this->TextureBytes);
-}
-
-int TextureImage::GetBindedTextureUnit() const
-{
-    return this->TextureUnit;
 }
 
 bool TextureImage::IsLoadedInGPU() const
