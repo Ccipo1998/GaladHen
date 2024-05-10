@@ -16,7 +16,7 @@ PhongMaterial::PhongMaterial()
     , Ks(DEFAULT_KS)
     {}
 
-void PhongMaterial::SendDataToShader()
+void PhongMaterial::SendDataToShader() const
 {
     if (this->MaterialShader == nullptr)
     {

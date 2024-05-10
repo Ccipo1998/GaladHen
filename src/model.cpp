@@ -8,11 +8,41 @@ Model::Model(const char* modelPath)
     this->LoadModelFile(modelPath);
 }
 
-void Model::Draw()
+void Model::Draw() const
 {
     for (GLuint i = 0; i < Meshes.size(); i++)
     {
         Meshes[i].Draw();
+    }
+}
+
+void Model::Draw(const std::vector<Material*>& materials) const
+{
+    if (this->Meshes.size() != materials.size())
+    {
+        Log::Error("Model", "Incompatible number of meshes and materials before the drawcall");
+
+        return;
+    }
+
+    for (GLuint i = 0; i < Meshes.size(); i++)
+    {
+        Meshes[i].Draw(materials[i]);
+    }
+}
+
+void Model::Draw(const std::vector<Material*>&& materials) const
+{
+    if (this->Meshes.size() != materials.size())
+    {
+        Log::Error("Model", "Incompatible number of meshes and materials before the drawcall");
+
+        return;
+    }
+
+    for (GLuint i = 0; i < Meshes.size(); i++)
+    {
+        Meshes[i].Draw(materials[i]);
     }
 }
 

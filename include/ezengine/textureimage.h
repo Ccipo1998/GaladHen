@@ -1,6 +1,8 @@
 
 // This is the class holding texture actual data (pixel colors and alpha)
 
+#pragma once
+
 #include <GL/gl3w.h>
 
 // TODO: refactoring using a friend class "TextureManager" to manage textureunits

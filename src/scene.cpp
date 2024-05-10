@@ -1,6 +1,9 @@
 
 #include <ezengine/scene.h>
+#include <ezengine/camera.h>
+#include <ezengine/sceneobject.h>
 #include <ezengine/transform.h>
+#include <ezengine/light.h>
 
 Scene::Scene()
     : MainCamera(new Camera()) // default camera
@@ -10,9 +13,9 @@ Scene::Scene()
 
 void Scene::Draw()
 {
-    for (unsigned int i = 0; i < this->GameObjects.size(); ++i)
+    for (unsigned int i = 0; i < this->SceneObjects.size(); ++i)
     {
-        this->GameObjects[i]->Model->Draw();
+        this->SceneObjects[i]->Draw();
     }
 }
 
@@ -32,7 +35,7 @@ Scene::~Scene()
         delete light;
     }
 
-    for (auto& obj : GameObjects)
+    for (auto& obj : SceneObjects)
     {
         delete obj;
     }

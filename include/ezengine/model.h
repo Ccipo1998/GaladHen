@@ -50,8 +50,16 @@ public:
     Model(const char* modelPath);
 
     // @brief
-    // Call draw on all the meshes of the model
-    void Draw();
+    // Drawcall on all the meshes of the model
+    void Draw() const;
+
+    // @brief
+    // Drawcall on all the meshes of the model, using specific materials
+    void Draw(const std::vector<Material*>& materials) const;
+
+    // @brief
+    // Drawcall on all the meshes of the model, using specific materials
+    void Draw(const std::vector<Material*>&& materials) const;
 
 protected:
 

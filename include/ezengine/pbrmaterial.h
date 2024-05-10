@@ -34,7 +34,7 @@ public:
 
     // @brief
     // It sends material data to its shader
-    virtual void SendDataToShader() override;
+    virtual void SendDataToShader() const override;
 
 protected:
 

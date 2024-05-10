@@ -34,11 +34,11 @@ public:
 
     // @brief
     // To send material data to its shader
-    virtual void SendDataToShader();
+    virtual void SendDataToShader() const;
 
     // @brief
     // Set material shader for use
-    void UseShader();
+    void UseShader() const;
 
     ShadingMode MaterialShadingMode;
 

@@ -39,8 +39,6 @@ class Mesh
     
 public:
 
-    Material* MeshMaterial;
-
     // Constructors
 
     // We want Mesh to be a move-only class. We delete copy constructor and copy assignment
@@ -78,8 +76,12 @@ public:
     ~Mesh() noexcept;
 
     // @brief
-    // Draw call for the mesh
-    void Draw();
+    // Drawcall for the mesh
+    void Draw() const;
+
+    // @brief
+    // Drawcall for the mesh, using a specific material
+    void Draw(const Material* material) const;
 
 protected:
 

@@ -3,9 +3,11 @@
 
 #include <vector>
 
-#include <ezengine/gameobject.h>
-#include <ezengine/camera.h>
-#include <ezengine/light.h>
+class Camera;
+class PointLight;
+class DirectionalLight;
+class SceneObject;
+class Shader;
 
 class Scene
 {
@@ -16,7 +18,10 @@ public:
     std::vector<PointLight*> PointLights;
     std::vector<DirectionalLight*> DirectionalLights;
 
-    std::vector<GameObject*> GameObjects;
+    Shader* PBRShader;
+
+    std::vector<SceneObject*> SceneObjects;
+    //std::vector<>
 
     // @brief
     // Default constructor

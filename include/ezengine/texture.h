@@ -1,6 +1,8 @@
 
 // This is a class pointing to a texture and binded to a shader, exposing opengl-related functions
 
+#pragma once
+
 #include <GL/gl3w.h>
 
 class Shader;

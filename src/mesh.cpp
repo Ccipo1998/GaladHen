@@ -6,7 +6,6 @@
 Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices) noexcept
     : Vertices(move(vertices))
     , Indices(move(indices))
-    , MeshMaterial(nullptr)
 {
     this->InitGPUmemory();
 }
@@ -18,7 +17,6 @@ Mesh::Mesh(Mesh&& other) noexcept
     , VAO(other.VAO)
     , VBO(other.VBO)
     , EBO(other.EBO)
-    , MeshMaterial(other.MeshMaterial)
 {
     other.VAO = 0; // We *could* set VBO and EBO to 0 too,
     // but since we bring all the 3 values around we can use just one of them to check ownership of the 3 resources.
@@ -57,19 +55,28 @@ Mesh::~Mesh() noexcept
     this->FreeGPUresources();
 }
 
-void Mesh::Draw()
+void Mesh::Draw() const
 {
-    if (this->MeshMaterial != nullptr)
-    {
-        // send material data to its shader
-        this->MeshMaterial->SendDataToShader();
-        // use shader
-        this->MeshMaterial->UseShader();
-    }
-
     glBindVertexArray(this->VAO);
     glDrawElements(GL_TRIANGLES, this->Indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
+}
+
+void Mesh::Draw(const Material* material) const
+{
+    if (material == nullptr)
+    {
+        Log::Error("Mesh", "Impossible to execute the drawcall on the mesh: null material");
+
+        return;
+    }
+
+    // send material data to its shader
+    material->SendDataToShader();
+    // use shader
+    material->UseShader();
+
+    this->Draw();
 }
 
 void Mesh::InitGPUmemory()

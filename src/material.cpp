@@ -13,9 +13,9 @@ Shader* Material::GetShader()
     return this->MaterialShader;
 }
 
-void Material::SendDataToShader() {}
+void Material::SendDataToShader() const {}
 
-void Material::UseShader()
+void Material::UseShader() const
 {
     if (this->MaterialShader == nullptr)
         return;

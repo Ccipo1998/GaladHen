@@ -24,7 +24,7 @@ PBRMaterial::PBRMaterial(Shader* pbrShader)
     MaterialShader = pbrShader;   
 }
 
-void PBRMaterial::SendDataToShader()
+void PBRMaterial::SendDataToShader() const
 {
     if (this->MaterialShader == nullptr)
     {

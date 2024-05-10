@@ -15,10 +15,12 @@
 #include <ezengine/ui.h>
 #include <ezengine/input.h>
 #include <ezengine/scene.h>
-#include <ezengine/gameobject.h>
+#include <ezengine/sceneobject.h>
 #include <ezengine/pbrmaterial.h>
 #include <ezengine/textureimage.h>
 #include <ezengine/texture.h>
+#include <ezengine/assetsmanager.h>
+//#include <utils/singleton.hpp>
 
 // glm
 #include <glm.hpp>
@@ -39,11 +41,6 @@
 Scene* CurrentScene;
 // shaders
 Shader* pbrShader;
-Shader* phongShader;
-// models
-std::vector<Model*> CurrentModels;
-// materials
-std::vector<Material*> CurrentMaterials;
 
 GLFWwindow* InitContext(int width, int height, const char* name);
 
@@ -65,38 +62,43 @@ int main()
     // init ui
     UI::InitImGui(window, "#version 460 core");
     //glEnable(GL_CULL_FACE);
+
     // load shaders
     pbrShader = new Shader{};
     pbrShader->LoadVertexFragmentShaders(PBR_VERTEX_SHADER_PATH, PBR_FRAGMENT_SHADER_PATH);
+
     // texture test
     TextureImage* texImgAlbedo = new TextureImage;
     texImgAlbedo->LoadTexture("textures/StuccoRoughCast001_COL_2K_METALNESS.png");
     texImgAlbedo->SendTextureDataToGPU(GL_SRGB8, GL_RGB);
+    AssetsManager::GetInstance()->SaveTexImageWithName(texImgAlbedo, "StuccoColor");
     TextureImage* texImgNormal = new TextureImage;
     texImgNormal->LoadTexture("textures/StuccoRoughCast001_NRM_2K_METALNESS.png");
     texImgNormal->SendTextureDataToGPU(GL_RGB8, GL_RGB);
+    AssetsManager::GetInstance()->SaveTexImageWithName(texImgNormal, "StuccoNormal");
     TextureImage* texImgRoughness = new TextureImage;
     texImgRoughness->LoadTexture("textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png");
     texImgRoughness->SendTextureDataToGPU(GL_RGB, GL_RED);
+    AssetsManager::GetInstance()->SaveTexImageWithName(texImgRoughness, "StuccoRoughness");
 
-    // game object
-    CurrentModels.push_back(new Model("prefabs/bunny.glb"));
-    Model* model = CurrentModels[0];
+    AssetsManager::GetInstance()->SaveModelWithName(new Model("prefabs/bunny.glb"), "Bunny");
+    CurrentScene->SceneObjects.push_back(new SceneObject{AssetsManager::GetInstance()->GetModelByName("Bunny")});
+    SceneObject* object = CurrentScene->SceneObjects[0];
 
-    CurrentMaterials.push_back(new PBRMaterial{pbrShader});
-    PBRMaterial* mat = (PBRMaterial*)(CurrentMaterials[0]);
-    mat->MaterialShadingMode = ShadingMode::SmoothShading;
-    model->Meshes[0].MeshMaterial = mat;
-    mat->DiffuseTexture = new Texture{texImgAlbedo};
-    mat->DiffuseTexture->SetUniformSamplerForShader("DiffuseColor", pbrShader);
-    mat->NormalMap = new Texture{texImgNormal};
-    mat->NormalMap->SetUniformSamplerForShader("NormalMap", pbrShader);
-    mat->RoughnessTexture = new Texture{texImgRoughness};
-    mat->RoughnessTexture->SetUniformSamplerForShader("RoughnessTexture", pbrShader);
+    PBRMaterial* pbrMat = new PBRMaterial{pbrShader};
+    pbrMat->MaterialShadingMode = ShadingMode::SmoothShading;
+    AssetsManager::GetInstance()->SaveTextureWithName(new Texture{texImgAlbedo}, "StuccoColor");
+    pbrMat->DiffuseTexture = AssetsManager::GetInstance()->GetTextureByName("StuccoColor");
+    pbrMat->DiffuseTexture->SetUniformSamplerForShader("DiffuseColor", pbrShader);
+    AssetsManager::GetInstance()->SaveTextureWithName(new Texture{texImgNormal}, "StuccoNormal");
+    pbrMat->NormalMap = AssetsManager::GetInstance()->GetTextureByName("StuccoNormal");
+    pbrMat->NormalMap->SetUniformSamplerForShader("NormalMap", pbrShader);
+    AssetsManager::GetInstance()->SaveTextureWithName(new Texture{texImgRoughness}, "StuccoRoughness");
+    pbrMat->RoughnessTexture = AssetsManager::GetInstance()->GetTextureByName("StuccoRoughness");
+    pbrMat->RoughnessTexture->SetUniformSamplerForShader("RoughnessTexture", pbrShader);
 
-    CurrentScene->GameObjects.push_back(new GameObject{});
-    GameObject* object = CurrentScene->GameObjects[0];
-    object->Model = model;
+    AssetsManager::GetInstance()->SaveMaterialWithName(pbrMat, "TestMaterial");
+    object->SetMaterial(0, pbrMat);
 
     // lights
     CurrentScene->PointLights.push_back(new PointLight(glm::vec3(1.0f, 1.0f, 1.0f), 1.0f, glm::vec3(0.0f, 0.0f, 5.0f)));
@@ -145,7 +147,7 @@ int main()
         // input update
         Input::Update();
         // ui update
-        UI::Update(mat);
+        UI::Update(pbrMat);
 
         // camera movements
         CurrentScene->MainCamera->ApplyMovements(Input::GetKeys(), Input::GetMouseKeys(), Input::GetDeltaMouseX(), Input::GetDeltaMouseY(), deltaTime);
@@ -183,16 +185,6 @@ int main()
 
     // frees
     pbrShader->Delete();
-    for (auto& ptr : CurrentModels)
-    {
-        delete ptr;
-    }
-    for (auto& ptr : CurrentMaterials)
-    {
-        delete ptr;
-    }
-    // delete texAlbedo;
-    // delete texImgAlbedo;
 
     glfwDestroyWindow(window);
     glfwTerminate();

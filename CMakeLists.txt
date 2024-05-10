@@ -11,7 +11,7 @@ add_executable(ezengine
 ${CMAKE_SOURCE_DIR}/src/ui.cpp
 ${CMAKE_SOURCE_DIR}/src/input.cpp
 ${CMAKE_SOURCE_DIR}/src/scene.cpp
-${CMAKE_SOURCE_DIR}/src/gameobject.cpp
+${CMAKE_SOURCE_DIR}/src/sceneobject.cpp
 ${CMAKE_SOURCE_DIR}/src/material.cpp
 ${CMAKE_SOURCE_DIR}/src/camera.cpp
 ${CMAKE_SOURCE_DIR}/src/transform.cpp
@@ -23,6 +23,7 @@ ${CMAKE_SOURCE_DIR}/src/pbrmaterial.cpp
 ${CMAKE_SOURCE_DIR}/src/phongmaterial.cpp
 ${CMAKE_SOURCE_DIR}/src/textureimage.cpp
 ${CMAKE_SOURCE_DIR}/src/texture.cpp
+${CMAKE_SOURCE_DIR}/src/assetsmanager.cpp
 main.cpp)
 target_include_directories(ezengine PRIVATE
     ${CMAKE_SOURCE_DIR}/libs/assimp/include
