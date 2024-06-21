@@ -24,7 +24,7 @@ namespace GaladHen
 
         // @brief
         // Load mesh data in GPU memory
-        virtual void LoadMemoryGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int> indices) = 0;
+        virtual void LoadMemoryGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices) = 0;
 
         // @brief
         // Free mesh data from GPU memory

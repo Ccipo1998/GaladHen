@@ -19,7 +19,7 @@ namespace GaladHen
 
         virtual void Draw(MaterialData* data, ShadingMode mode, IShaderProgramAPI* shader) override;
 
-        virtual void LoadMemoryGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int> indices) override;
+        virtual void LoadMemoryGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices) override;
 
         virtual void FreeMemoryGPU() override;
 
