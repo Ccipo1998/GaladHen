@@ -37,7 +37,7 @@ namespace GaladHen
 
         // @brief
         // Destroy the low level pair of the high level mesh, freeing memory
-        void DestroyMeshLowLevelPair(Mesh& mesh);
+        void DestroyMeshLowLevelPair(unsigned int meshID);
 
     protected:
 

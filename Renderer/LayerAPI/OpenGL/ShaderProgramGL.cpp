@@ -95,11 +95,11 @@ namespace GaladHen
         glDeleteShader(fShader);
     }
 
-    void ShaderProgramGL::LoadShaderData(MaterialData& data)
+    void ShaderProgramGL::LoadShaderData(MaterialData* data)
     {
-        std::vector<MaterialDataScalar> scalars = data.GetScalarData();
-        std::vector<MaterialDataVector> vectors data.GetVectorData();
-        std::vector<MaterialDataTexture> texs = data.GetTextureData();
+        std::vector<MaterialDataScalar> scalars = data->GetScalarData();
+        std::vector<MaterialDataVector> vectors = data->GetVectorData();
+        std::vector<MaterialDataTexture> texs = data->GetTextureData();
 
         for (MaterialDataScalar& scalar : scalars)
         {
@@ -111,23 +111,33 @@ namespace GaladHen
             glProgramUniform3fv(Program, glGetUniformLocation(Program, vec.Name.data()), 1, value_ptr(vec.Vector));
         }
 
+        int texUnit = 0;
         for (MaterialDataTexture& tex : texs)
         {
+            glActiveTexture(texUnit); // TODO: conversion index <-> opengl texture unit
+            //glBindTexture(GL_TEXTURE_2D, this->TextureData->GetTextureID());
 
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, )
-            tex.Tex
-            
-            glProgramUniform1f(Program, glGetUniformLocation(Program, scalar.Name.data()), scalar.Scalar);
+            // send texture parameters
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, this->WrappingModeX);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, this->WrappingModeY);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->FilteringMode); // TODO: divide minifying and magnyfing filters
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this->FilteringMode);
+            // glGenerateMipmap(GL_TEXTURE_2D);
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->MipMapMode); // TODO: check if this is correct
+            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this->MipMapMode); // TODO: divide minifying and magnyfing filters for mipmaps?
+
+            // // create uniform sampler
+            // int loc = glGetUniformLocation(shader->GetShaderProgram(), samplerName);
+            // glUniform1i(loc, 1);
         }
     }
 
-    void SetShadingMode(ShadingMode mode)
+    void ShaderProgramGL::SetShadingMode(ShadingMode mode)
     {
         // TODO
     }
 
-    void Use()
+    void ShaderProgramGL::Use()
     {
         glUseProgram(Program);
     }
