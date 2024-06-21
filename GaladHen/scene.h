@@ -3,31 +3,28 @@
 
 #include <vector>
 
-class Camera;
-class PointLight;
-class DirectionalLight;
-class SceneObject;
-class Shader;
+#include "Camera.h"
+#include "SceneObject.h"
+#include "Light.h"
 
-class Scene
+namespace GaladHen
 {
+    class Scene
+    {
 
-public:
+    public:
 
-    Camera* MainCamera;
-    std::vector<PointLight*> PointLights;
-    std::vector<DirectionalLight*> DirectionalLights;
+        // @brief
+        // Default constructor
+        Scene();
 
-    std::vector<SceneObject*> SceneObjects;
+        Camera MainCamera;
 
-    // @brief
-    // Default constructor
-    Scene();
+        // lights
+        std::vector<PointLight> PointLights;
+        std::vector<DirectionalLight> DirectionalLights;
 
-    // @brief
-    // Draw call on all game objects
-    void Draw();
+        std::vector<SceneObject> SceneObjects;
 
-    ~Scene();
-
-};
+    };
+}

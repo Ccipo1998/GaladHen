@@ -1,24 +1,33 @@
 
-#include "material.h"
-#include "shader.h"
+#include "Material.h"
+#include "ShaderProgram.h"
 
-Material::Material()
-    : MaterialShaderClass(ShaderClass::None)
-    , MaterialShader(nullptr)
-    , MaterialShadingMode(ShadingMode::SmoothShading)
-    {}
-
-Shader* Material::GetShader()
+namespace GaladHen
 {
-    return this->MaterialShader;
-}
+    Material::Material()
+        : MaterialShader(nullptr)
+        , MaterialShadingMode(ShadingMode::SmoothShading)
+        {}
 
-void Material::SendDataToShader() const {}
+    Material::Material(ShaderProgram* materialShader, ShadingMode shadingMode)
+        : MaterialShader(materialShader)
+        , MaterialShadingMode(shadingMode)
+        {}
 
-void Material::UseShader() const
-{
-    if (this->MaterialShader == nullptr)
-        return;
-        
-    this->MaterialShader->Use();
+    PBRMaterialData:: PBRMaterialData()
+        : DiffuseColor(glm::vec3(0.3f, 0.9f, 0.3f))
+        , DiffuseTexture(Texture{})
+        , NormalMap(Texture{})
+        , Metallic(0.0f)
+        , MetallicTexture(Texture{})
+        , Roughness(0.0f)
+        , RoughnessTexture(Texture{})
+        {}
+
+    BPMaterialData::BPMaterialData()
+        : DiffuseColor(glm::vec3(0.3f, 0.9f, 0.3f))
+        , Ka(glm::vec3(.1f, .1f, .1f))
+        , Kd(glm::vec3(.6f, .6f, .6f))
+        , Ks(glm::vec3(.8f, .8f, .8f))
+        {}
 }

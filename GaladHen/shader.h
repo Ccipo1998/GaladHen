@@ -1,51 +1,45 @@
 
-// Shader interface
+// Shader is the class representing a stage of the Graphics Pipeline (Vertex, Tesselation, Geometry, Fragment, Compute)
 
 #pragma once
 
-// gl3w MUST be included before any other OpenGL-related header
-#include <GL/gl3w.h>
+#include <string>
 
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
-class Shader
+namespace GaladHen
 {
-public:
+    enum ShaderStage
+    {
+        None = 0,
+        Vertex = 1,
+        Fragment = 2
+    };
 
-    // Constructors
+    class Shader
+    {
+    public:
 
-    // Shader as move-only class. We delete copy constructor and copy assignment
-    Shader(const Shader& shader) = delete;
-    Shader& operator=(const Shader& shader) = delete;
+        // Constructors
 
-    // No need for move constructor and move assignment
-    Shader(Shader&& shader) = delete;
-    Shader& operator=(Shader&& shader) = delete;
+        Shader();
 
-    // Default shader constructor
-    Shader();
+        // @brief
+        // Construction of a shader object with a shader file and a shader type, no compilation call
+        Shader(std::string& shaderFilePath, ShaderStage shaderType);
 
-    void LoadVertexFragmentShaders(const char* vertexShaderPath, const char* fragmentShaderPath);
+        // Copy ctor
+        Shader(const Shader& shader) noexcept;
+        // Copy assignment
+        Shader& operator=(const Shader& shader) noexcept;
+        // Move ctor
+        Shader(Shader&& shader) noexcept;
+        // Move assignment
+        Shader& operator=(Shader&& shader) noexcept;
 
-    // getters
+        std::string ShaderFilePath;
+        ShaderStage ShaderType;
 
-    // Get program id
-    GLuint GetShaderProgram() const;
+    protected:
 
-    // Shader program activation as part of the current rendering process
-    void Use() const;
-
-    // Shader program delete
-    void Delete();
-
-protected:
-
-    // Check for shader compilation errors
-    void CheckShaderCompilation(GLuint shader, const char* shaderPath);
-
-    // Check for shader linking errors
-    void CheckShaderLinking(GLuint program);
-
-    GLuint Program;
-};
+        unsigned int ShaderID; // 0 means -1, so the low level pair is not already been created
+    };
+}

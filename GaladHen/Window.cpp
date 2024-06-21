@@ -1,6 +1,7 @@
 
 #include "Window.h"
-#include <Renderer/LayerAPI/WindowGL.h>
+//#include <Renderer/LayerAPI/IWindowAPI.h>
+#include <Renderer/LayerAPI/OpenGL/WindowGL.h>
 
 namespace GaladHen
 {
@@ -11,8 +12,6 @@ namespace GaladHen
         , Height(720)
         , OutKeyboardCallback(nullptr)
         , OutMouseCallback(nullptr)
-        , OutKeyboardCallbackOwner(nullptr)
-        , OutMouseCallbackOwner(nullptr)
     {
         // TODO: add a static way to retrieve current api selection, this changes the way of win api creation
         WinAPI = new WindowGL(1280, 720, "");
@@ -24,8 +23,6 @@ namespace GaladHen
         , Height(height)
         , OutKeyboardCallback(nullptr)
         , OutMouseCallback(nullptr)
-        , OutKeyboardCallbackOwner(nullptr)
-        , OutMouseCallbackOwner(nullptr)
     {
         // TODO: add a static way to retrieve current api selection, this changes the way of win api creation
         WinAPI = new WindowGL(width, height, windowName.data());
@@ -36,28 +33,38 @@ namespace GaladHen
         return static_cast<float>(Width) / static_cast<float>(Height);
     }
     
-    void Window::SetKeyboardCallback(void (Input::*callback)(Window*, unsigned int key, unsigned int action), Input* obj)
+    void Window::SetKeyboardCallback(void (Input::*callback)(Window* sender, unsigned int key, unsigned int action), Input* owner)
     {
         OutKeyboardCallback = callback;
-        OutKeyboardCallbackOwner = obj;
-        WinAPI->RegisterKeyboardCallback(&Window::KeyboardCallback, this);
+        OutKeyboardCallbackOwner = owner;
+        WinAPI->RegisterKeyboardCallback((void (*)(void*, unsigned int, unsigned int))&Window::KeyboardCallback, this);
     }
 
-    void Window::SetMouseCallback(void (Input::*callback)(Window*, unsigned int key, unsigned int action), Input* obj)
+    void Window::SetMouseCallback(void (Input::*callback)(Window* sender, unsigned int key, unsigned int action), Input* owner)
     {
         OutMouseCallback = callback;
-        OutMouseCallbackOwner = obj;
-        WinAPI->RegisterKeyboardCallback(&Window::MouseCallback, this);
+        OutMouseCallbackOwner = owner;
+        WinAPI->RegisterMouseCallback((void (*)(void*, unsigned int, unsigned int))&Window::MouseCallback, this);
     }
 
-    void Window::KeyboardCallback(unsigned int key, unsigned int action)
+    void Window::CallKeyboardCallback(unsigned int key, unsigned int action)
     {
         (OutKeyboardCallbackOwner->*OutKeyboardCallback)(this, key, action);
     }
-    
-    void Window::MouseCallback(unsigned int key, unsigned int action)
+
+    void Window::CallMouseCallback(unsigned int key, unsigned int action)
     {
         (OutMouseCallbackOwner->*OutMouseCallback)(this, key, action);
+    }
+
+    void Window::KeyboardCallback(Window* owner, unsigned int key, unsigned int action)
+    {
+        owner->CallKeyboardCallback(key, action);
+    }
+    
+    void Window::MouseCallback(Window* owner, unsigned int key, unsigned int action)
+    {
+        owner->CallMouseCallback(key, action);
     }
 
     Window::~Window()

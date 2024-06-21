@@ -1,133 +1,59 @@
 
-#include "light.h"
+#include "Light.h"
 #include <gtx/quaternion.hpp>
 
-Light::Light()
-    : Transform()
-    , Color(glm::vec3(1.0f))
-    , Intensity(1.0f)
-    , LightDataShaderFormat(nullptr)
-    {}
-
-Light::Light(const glm::vec3& color, float intensity)
-    : Transform()
-    , Color(color)
-    , Intensity(intensity)
-    , LightDataShaderFormat(nullptr)
-    {}
-
-void* Light::GetLightDataForShader()
+namespace GaladHen
 {
-    return nullptr;
-}
+    Light::Light()
+        : Transform{}
+        , Color(glm::vec3(1.0f))
+        , Intensity(1.0f)
+        {}
 
-std::size_t Light::GetLightSizeForShader()
-{
-    return 0;
-}
+    Light::Light(const glm::vec3& color, float intensity)
+        : Transform{}
+        , Color(color)
+        , Intensity(intensity)
+        {}
 
-Light::~Light()
-{
-    if (LightDataShaderFormat == nullptr)
-        return;
+    DirectionalLight::DirectionalLight()
+        : Light()
+        {}
 
-    delete this->LightDataShaderFormat;
-}
-
-DirectionalLight::DirectionalLight()
-    : Light()
-    {}
-
-DirectionalLight::DirectionalLight(const glm::vec3& color, float intensity, const glm::vec3& direction)
-    : Light(color, intensity)
-{
-    this->SetDirection(direction);
-}
-
-glm::vec3 DirectionalLight::GetDirection()
-{
-    return this->Transform.GetFront();
-}
-
-void DirectionalLight::SetDirection(const glm::vec3& direction)
-{
-    glm::quat rot = glm::lookAt(this->Transform.GetPosition(), this->Transform.GetPosition() + direction, TransformQuat::GetGlobalUp());
-    this->Transform.SetRotation(rot);
-}
-
-void* DirectionalLight::GetLightDataForShader()
-{
-    if (LightDataShaderFormat == nullptr)
+    DirectionalLight::DirectionalLight(const glm::vec3& color, float intensity, const glm::vec3& direction)
+        : Light(color, intensity)
     {
-        // create data
-        this->LightDataShaderFormat = new DirectionalLightShaderData;
+        SetDirection(direction);
     }
 
-    // fill data
-    DirectionalLightShaderData* data = static_cast<DirectionalLightShaderData*>(LightDataShaderFormat);
-    data->Position = this->Transform.GetPosition();
-    data->Color = this->Color;
-    data->Intensity = this->Intensity;
-    data->Direction = this->Transform.GetFront();
-
-    return data;
-}
-
-std::size_t DirectionalLight::GetLightSizeForShader()
-{
-    return sizeof(DirectionalLightShaderData);
-}
-
-std::size_t DirectionalLight::GetDirLightSizeForShader()
-{
-    return sizeof(DirectionalLight);
-}
-
-PointLight::PointLight()
-    : Light()
-    , FallOffDistance(5.0f) // default
-    {}
-
-PointLight::PointLight(const glm::vec3& color, float intensity, const glm::vec3& position)
-    : Light(color, intensity)
-{
-    this->Transform.SetPosition(position);
-}
-
-SpotLight::SpotLight()
-    : PointLight()
-    {}
-
-SpotLight::SpotLight(const glm::vec3& color, float intensity, const glm::vec3& position, float penumbra_angle, float falloff_angle)
-    : PointLight(color, intensity, position)
-    , PenumbraAngle(penumbra_angle)
-    , FallOffAngle(falloff_angle)
-    {}
-
-void* PointLight::GetLightDataForShader()
-{
-    if (LightDataShaderFormat == nullptr)
+    glm::vec3 DirectionalLight::GetDirection()
     {
-        // create data
-        this->LightDataShaderFormat = new PointLightShaderData;
+        return Transform.GetFront();
     }
 
-    // fill data
-    PointLightShaderData* data = static_cast<PointLightShaderData*>(LightDataShaderFormat);
-    data->Position = this->Transform.GetPosition();
-    data->Color = this->Color;
-    data->Intensity = this->Intensity;
-    data->FallOffDistance = this->FallOffDistance;
+    void DirectionalLight::SetDirection(const glm::vec3& direction)
+    {
+        glm::quat rot = glm::lookAt(Transform.GetPosition(), Transform.GetPosition() + direction, TransformQuat::GlobalUp);
+        Transform.SetRotation(rot);
+    }
 
-    return data;
-}
+    PointLight::PointLight()
+        : Light()
+        , FallOffDistance(5.0f) // default
+        {}
 
-std::size_t PointLight::GetLightSizeForShader()
-{
-    return sizeof(PointLightShaderData);
-}
+    PointLight::PointLight(const glm::vec3& color, float intensity, float fallOffDistance)
+        : Light(color, intensity)
+        , FallOffDistance(fallOffDistance)
+        {}
 
-std::size_t PointLight::GetPointLightSizeForShader()
-{
-    return sizeof(PointLightShaderData);
+    SpotLight::SpotLight()
+        : PointLight()
+        {}
+
+    SpotLight::SpotLight(const glm::vec3& color, float intensity, float fallOffDistance, float penumbra_angle, float falloff_angle)
+        : PointLight(color, intensity, fallOffDistance)
+        , PenumbraAngle(penumbra_angle)
+        , FallOffAngle(falloff_angle)
+        {}
 }

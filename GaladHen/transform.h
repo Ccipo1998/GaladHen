@@ -1,90 +1,82 @@
 
 #pragma once
 
-#define GLOBAL_FRONT glm::vec3(0.0f, 0.0f, -1.0f) // default front direction is negative z (because of OpenGL standard)
-#define GLOBAL_UP glm::vec3(0.0f, 1.0f, 0.0f) // default up direction is positive y (because of OpenGL standard)
-#define GLOBAL_RIGHT glm::vec3(1.0f, 0.0f, 0.0f) // default right direction is positive x (because of OpenGL standard)
-
 #include <glm.hpp>
 #include <ext/quaternion_float.hpp>
 
-class TransformQuat
+namespace GaladHen
 {
-public:
+    class TransformQuat
+    {
+    public:
 
-    // @brief
-    // Default constructor
-    TransformQuat();
+        // statics
+        static const glm::vec3 GlobalFront; // global front direction is positive x axis
+        static const glm::vec3 GlobalUp; // global up direction is positive y axis
+        static const glm::vec3 GlobalRight; // global right direction is positive z axis
 
-    // @brief
-    // Rotate the transform by delta pitch, yaw and roll angles (in degrees)
-    void Rotate(float deltaPitch, float deltaYaw, float deltaRoll);
+        // @brief
+        // Create a default quaternion in (0,0,0) position and pointing towards global front axis
+        TransformQuat();
 
-    // getters
+        // @brief
+        // Rotate the transform by delta pitch, yaw and roll angles (in degrees)
+        void Rotate(float deltaPitch, float deltaYaw, float deltaRoll);
 
-    // @brief
-    // Get global default front axis
-    static glm::vec3 GetGlobalFront();
+        // getters
 
-    // @brief
-    // Get global default up axis
-    static glm::vec3 GetGlobalUp();
+        glm::vec3 GetFront();
+        glm::vec3 GetUp();
+        glm::vec3 GetRight();
 
-    // @brief
-    // Get global default right axis
-    static glm::vec3 GetGlobalRight();
+        glm::vec3 GetPosition();
+        glm::quat GetRotation();
 
-    glm::vec3 GetFront();
-    glm::vec3 GetUp();
-    glm::vec3 GetRight();
+        // @brief
+        // Get pitch angle
+        float GetPitch();
 
-    glm::vec3 GetPosition();
-    glm::quat GetRotation();
+        // @brief
+        // Get yaw angle
+        float GetYaw();
 
-    // @brief
-    // Get pitch angle
-    float GetPitch();
+        // @brief
+        // Get roll angle
+        float GetRoll();
 
-    // @brief
-    // Get yaw angle
-    float GetYaw();
+        // setters
 
-    // @brief
-    // Get roll angle
-    float GetRoll();
+        void SetPosition(const glm::vec3& position);
+        void SetRotation(const glm::quat& rotation);
 
-    // setters
+        // @brief
+        // Set pitch angle
+        void SetPitch(float angle);
 
-    void SetPosition(const glm::vec3& position);
-    void SetRotation(const glm::quat& rotation);
+        // @brief
+        // Set yaw angle
+        void SetYaw(float angle);
 
-    // @brief
-    // Set pitch angle
-    void SetPitch(float angle);
+        // @brief
+        // Set roll angle
+        void SetRoll(float angle);
 
-    // @brief
-    // Set yaw angle
-    void SetYaw(float angle);
+    protected:
 
-    // @brief
-    // Set roll angle
-    void SetRoll(float angle);
+        // @brief
+        // Update rotation quaternion basing on Pitch, Yaw and Roll angles
+        void UpdateRotation();
 
-private:
+        // @brief
+        // Update euler angles basing on pitch, yaw and roll
+        void UpdateEulerAngles();
 
-    glm::vec3 Position;
-    glm::quat Rotation;
+        glm::vec3 Position;
+        glm::quat Rotation;
 
-    // euler angles
-    float Pitch; // around X axis
-    float Yaw; // around Y axis
-    float Roll; // around Z axis
-
-    // @brief
-    // Update rotation quaternion basing on Pitch, Yaw and Roll angles
-    void UpdateRotation();
-
-    // @brief
-    // Update euler angles basing on pitch, yaw and roll
-    void UpdateEulerAngles();
-};
+        // euler angles
+        float Pitch; // around X axis
+        float Yaw; // around Y axis
+        float Roll; // around Z axis
+    };
+}

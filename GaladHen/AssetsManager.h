@@ -4,8 +4,8 @@
 #include <map>
 #include <string>
 
-class Model;
-class TextureImage;
+#include "Model.h"
+#include "TextureImage.h"
 
 namespace GaladHen
 {

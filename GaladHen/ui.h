@@ -1,16 +1,9 @@
 
 #pragma once
 
-// gl3w MUST be included before any other OpenGL-related header
-#include <GL/gl3w.h>
-
-// imgui
 #include <imgui/imgui.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
-
-#include "pbrmaterial.h"
-#include "phongmaterial.h"
 
 namespace UI
 {

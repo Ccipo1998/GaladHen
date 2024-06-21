@@ -6,6 +6,7 @@ add_library(Utils STATIC
     log.cpp
     stb_image.cpp
     singleton.hpp
+    FileLoader.cpp
 )
 
 #target_include_directories(Utils PRIVATE

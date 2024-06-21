@@ -3,10 +3,6 @@
 
 #pragma once
 
-//#include <GaladHen/Window.h>
-
-class Window;
-
 namespace GaladHen
 {
     class IWindowAPI
@@ -14,13 +10,27 @@ namespace GaladHen
     
     public:
 
-        virtual void RegisterKeyboardCallback(void (Window::*)(unsigned int key, unsigned int action), Window* obj) = 0;
+        IWindowAPI()
+        {
+            // Key associations created at ctor time
+            FillKeyAssociations();
+        }
 
-        virtual void RegisterMouseCallback(void (Window::*)(unsigned int key, unsigned int action), Window* obj) = 0;
+        virtual void FillKeyAssociations() = 0;
+
+        virtual void RegisterKeyboardCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) = 0;
+
+        virtual void RegisterMouseCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) = 0;
 
         virtual void GetCursorPosition(float& cursorX, float& cursorY) = 0;
 
         virtual ~IWindowAPI() = 0;
+
+    protected:
+
+        int KeyboardKeyAssociations[1024];
+        int MouseKeyAssociations[12];
+        int KeyActionAssociations[2];
 
     };
 }

@@ -2,26 +2,25 @@
 project(GaladHenLib VERSION 0.1.0)
 
 add_library(GaladHenLib STATIC
-    ui.cpp
-    input.cpp
-    scene.cpp
-    sceneobject.cpp
-    material.cpp
-    camera.cpp
-    transform.cpp
-    shader.cpp
-    light.cpp
-    model.cpp
-    mesh.cpp
-    pbrmaterial.cpp
-    phongmaterial.cpp
-    textureimage.cpp
-    texture.cpp
-    assetsmanager.cpp
+    #ui.cpp
+    Input.cpp
+    Scene.cpp
+    SceneObject.cpp
+    Material.cpp
+    Camera.cpp
+    Transform.cpp
+    Shader.cpp
+    ShaderProgram.cpp
+    Light.cpp
+    Model.cpp
+    Mesh.cpp
+    TextureImage.cpp
+    Texture.cpp
+    AssetsManager.cpp
     Window.cpp)
 
 target_include_directories(GaladHenLib PRIVATE
-    include/
+    ${CMAKE_SOURCE_DIR}/
     ${CMAKE_SOURCE_DIR}/libs/assimp/include/
     ${CMAKE_SOURCE_DIR}/libs/gl3w/include/
     ${CMAKE_SOURCE_DIR}/libs/glfw/include/

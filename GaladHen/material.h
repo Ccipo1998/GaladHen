@@ -1,54 +1,73 @@
 
-// Interface for Material classes to store shading parameters
+// Material class holding data and pointer to shader
 
 #pragma once
 
-class Shader;
+#include <glm.hpp>
+#include <string>
+#include <vector>
 
-enum class ShaderClass
+#include <Common/MaterialData.h>
+#include "Texture.h"
+
+namespace GaladHen
 {
-    None,
-    Phong,
-    PhysicallyBased
-};
+    class ShaderProgram;
 
-enum class ShadingMode
-{
-    SmoothShading = 0,
-    FlatShading = 1
-};
+    struct MaterialData;
 
-class Material
-{
-public:
+    class Material
+    {
+    public:
 
-    // Default copy and move contructors and assignments
-    Material(const Material& material) = default;
-    Material& operator=(const Material& material) = default;
-    Material(Material&& material) = default;
-    Material& operator=(Material&& material) = default;
+        Material();
 
-    // @brief
-    // Get shader instance
-    Shader* GetShader();
+        Material(ShaderProgram* materialShader, ShadingMode shadingMode);
 
-    // @brief
-    // To send material data to its shader
-    virtual void SendDataToShader() const;
+        // Default copy and move contructors and assignments
+        Material(const Material& material) = default;
+        Material& operator=(const Material& material) = default;
+        Material(Material&& material) = default;
+        Material& operator=(Material&& material) = default;
 
-    // @brief
-    // Set material shader for use
-    void UseShader() const;
+        MaterialData* Data; // ownership of material data
+        ShaderProgram* MaterialShader;
 
-    ShadingMode MaterialShadingMode;
+        ShadingMode MaterialShadingMode;
+    };
 
-protected:
+    // Material data structures
 
-    // @brief
-    // Default constructor
-    Material();
+    // physically-based material data
+    struct PBRMaterialData : public MaterialData
+    {
+        PBRMaterialData();
 
-    ShaderClass MaterialShaderClass;
-    Shader* MaterialShader;
+        virtual std::vector<MaterialDataScalar> GetScalarData() override;
+        virtual std::vector<MaterialDataVector> GetVectorData() override;
+        virtual std::vector<MaterialDataTexture> GetTextureData() override;
 
-};
+        glm::vec3 DiffuseColor;
+        Texture DiffuseTexture;
+        Texture NormalMap;
+        float Metallic;
+        Texture MetallicTexture;
+        float Roughness;
+        Texture RoughnessTexture;
+        //GLfloat Specular;
+    };
+
+    // Blinn-Phong material data
+    struct BPMaterialData : public MaterialData
+    {
+        BPMaterialData();
+
+        // colors for the diffuse term and for the dielectric reflection
+        glm::vec3 DiffuseColor;
+        // Phong shading model parameters
+        glm::vec3 Ka; // ambient component
+        glm::vec3 Kd; // diffuse component (WARNING: if Kd is 1, it means that with colors that saturate an rgb channel the diffuse will behave like specular)
+        glm::vec3 Ks; // specular component
+        float SpecularFallOff; // falloff parameter from perfect specular direction (usually value from 1 to 200)
+    };
+}

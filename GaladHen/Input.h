@@ -1,4 +1,6 @@
 
+// The integers representing keys, actions and similar are already been translated at api level to be correct inside this higher level class
+
 #pragma once
 
 namespace GaladHen
@@ -8,7 +10,9 @@ namespace GaladHen
         W = 0,
         A = 1,
         S = 2,
-        D = 3
+        D = 3,
+        E = 4,
+        Q = 5
     };
 
     enum MouseKey

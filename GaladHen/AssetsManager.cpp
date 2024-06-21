@@ -3,8 +3,6 @@
 #include <utility>
 #include <iterator>
 #include <Utils/log.h>
-#include "model.h"
-#include "textureimage.h"
 
 // assimp
 #include <assimp/Importer.hpp>      // C++ importer interface

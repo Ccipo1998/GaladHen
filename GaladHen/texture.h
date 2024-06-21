@@ -1,106 +1,62 @@
 
-// This is a class pointing to a texture and binded to a shader, exposing opengl-related functions
+// This is a class pointing to a texture, exposing texture parameters for rendering
 
 #pragma once
 
-#include <GL/gl3w.h>
-
-class Shader;
-class TextureImage;
-
-class Texture
+namespace GaladHen
 {
+    class Shader;
+    class TextureImage;
 
-public:
+    enum TextureWrapping
+    {
+        Repeat = 0,
+        ClampToBorder = 1,
+        ClampToEdge = 2,
+        MirroredRepeat = 3
+    };
 
-    // Void texture is non-sense
-    Texture() = delete;
+    enum TextureFiltering
+    {
+        Linear = 0,
+        Nearest = 1
+    };
 
-    Texture(const TextureImage* textureData);
+    enum TextureMipMap
+    {
+        LinearLinear = 0,
+        NearestNearest = 1,
+        LinearNearest = 2,
+        NearestLinear = 3
+    };
 
-    // Texture has not copy and move constructors and assignments -> a texture can be created only calling explicitly LoadTexture
-    Texture(Texture& OtherTexture) = delete;
-    Texture& operator=(Texture& OtherTexture) = delete;
-    Texture(Texture&& OtherTexture) = delete;
-    Texture&& operator=(Texture&& OtherTexture) = delete;
+    class Texture
+    {
 
-    const TextureImage* GetTextureImage() const;
+    public:
 
-    // @brief
-    // Create a uniform sampler for the textureimage on a shader
-    // @param samplername: the name of the uniform sampler variable used inside shader's code
-    // @param shader: pointer to shader in which to create uniform sampler
-    void SetUniformSamplerForShader(const char* samplerName, const Shader* shader);
+        Texture();
 
-    // @brief
-    // To bind pointed img texture to a shader texture unit and to make it active
-    void SetActiveTexture(GLenum textureUnit);
+        // @brief
+        // Create a texture
+        // @param textureData: pointer to the texture image to use inside the texture
+        // @param hWrapping: horizontal wrapping mode
+        // @param vWrapping: vertical wrapping mode
+        // @param filtering: filtering mode
+        // @param modeMipMap: mip map mode
+        Texture(TextureImage* textureData, TextureWrapping hWrapping, TextureWrapping vWrapping, TextureFiltering filtering, TextureMipMap modeMipMap);
 
-    // @brief
-    // Set wrapping mode to GL_REPEAT for X axis
-    void SetRepeatWrappingX();
+        Texture(Texture& other) = default;
+        Texture& operator=(Texture& other) = default;
+        Texture(Texture&& other) = default;
+        Texture& operator=(Texture&& other) = default;
 
-    // @brief
-    // Set wrapping mode to GL_REPEAT for Y axis
-    void SetRepeatWrappingY();
+        TextureImage* TextureData;
+        // texture rendering parameters
+        TextureWrapping HorizontalWrapping;
+        TextureWrapping VerticalWrapping;
+        TextureFiltering Filtering;
+        TextureMipMap MipMapMode;
 
-    // @brief
-    // Set wrapping mode to GL_MIRRORED_REPEAT for X axis
-    void SetMirrorRepeatWrappingX();
-    
-    // @brief
-    // Set wrapping mode to GL_MIRRORED_REPEAT for Y axis
-    void SetMirrorRepeatWrappingY();
-
-    // @brief
-    // Set wrapping mode to GL_CLAMP_TO_BORDER for X axis
-    void SetClampToBorderWrappingX();
-    
-    // @brief
-    // Set wrapping mode to GL_CLAMP_TO_BORDER for Y axis
-    void SetClampToBorderWrappingY();
-
-    // @brief
-    // Set wrapping mode to GL_CLAMP_TO_EDGE for X axis
-    void SetClampToEdgeWrappingX();
-    
-    // @brief
-    // Set wrapping mode to GL_CLAMP_TO_EDGE for Y axis
-    void SetClampToEdgeWrappingY();
-
-    // @brief
-    // Set filtering mode to GL_LINEAR
-    void SetLinearFiltering();
-
-    // @brief
-    // Set wrapping mode to GL_NEAREST
-    void SetNearestFiltering();
-
-    // @brief
-    // Set mipmap mode to GL_NEAREST_MIPMAP_NEAREST
-    void SetNearestMipMap();
-
-    // @brief
-    // Set mipmap mode to GL_LINEAR_MIPMAP_LINEAR
-    void SetLinearMipMap();
-
-    // @brief
-    // Set mipmap mode to GL_NEAREST_MIPMAP_LINEAR
-    void SetNearestLinearMipMap();
-
-    // @brief
-    // Set mipmap mode to GL_LINEAR_MIPMAP_NEAREST
-    void SetLinearNearestMipMap();
-
-protected:
-
-    TextureImage const*  TextureData;
-    GLenum TextureUnit;
-
-    // texture rendering parameters
-    int WrappingModeX;
-    int WrappingModeY;
-    int FilteringMode;
-    int MipMapMode;
-
-};
+    };
+}

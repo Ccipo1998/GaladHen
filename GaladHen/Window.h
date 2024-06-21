@@ -5,8 +5,8 @@
 
 namespace GaladHen
 {
-    class Input;
     class IWindowAPI;
+    class Input;
 
     class Window
     {
@@ -25,15 +25,27 @@ namespace GaladHen
 
         // @brief
         // Set the callback to call when a key is pressed or change status
-        void SetKeyboardCallback(void (Input::*callback)(Window*, unsigned int key, unsigned int action), Input* obj);
+        void SetKeyboardCallback(void (Input::*callback)(Window* sender, unsigned int key, unsigned int action), Input* owner);
 
         // @brief
         // Set the callback to call when a mouse key is pressed or change status
-        void SetMouseCallback(void (Input::*callback)(Window*, unsigned int key, unsigned int action), Input* obj);
+        void SetMouseCallback(void (Input::*callback)(Window* sender, unsigned int key, unsigned int action), Input* owner);
 
         // @brief
         // Write on mouseX and mouseY references the current values of mouse position in viewport space
         void GetCurrentMousePosition(float& mouseX, float& mouseY);
+
+        // @brief
+        // Manual call to keyboard callback on the owner
+        // @param key: integer representing the activated key
+        // @param action: the action type on the key
+        void CallKeyboardCallback(unsigned int key, unsigned int action);
+
+        // @brief
+        // Manual call to mouse callback on the owner
+        // @param key: integer representing the activated key
+        // @param action: the action type on the key
+        void CallMouseCallback(unsigned int key, unsigned int action);
 
         ~Window();
 
@@ -45,13 +57,13 @@ namespace GaladHen
 
         // pointer to api level window
         IWindowAPI* WinAPI;
-        void (Input::*OutKeyboardCallback)(Window*, unsigned int key, unsigned int action);
-        void (Input::*OutMouseCallback)(Window*, unsigned int key, unsigned int action);
+        void (Input::*OutKeyboardCallback)(Window* sender, unsigned int key, unsigned int action);
+        void (Input::*OutMouseCallback)(Window* sender, unsigned int key, unsigned int action);
         Input* OutKeyboardCallbackOwner;
         Input* OutMouseCallbackOwner;
 
-        void KeyboardCallback(unsigned int key, unsigned int action);
-        void MouseCallback(unsigned int key, unsigned int action);
+        static void KeyboardCallback(Window* owner, unsigned int key, unsigned int action);
+        static void MouseCallback(Window* owner, unsigned int key, unsigned int action);
 
     };
 }
