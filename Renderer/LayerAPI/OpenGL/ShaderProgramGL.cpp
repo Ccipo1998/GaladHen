@@ -2,7 +2,9 @@
 #include "ShaderProgramGL.h"
 
 #include <gtc/type_ptr.hpp> // for value_ptr() and stuff
-#include <GaladHen/Material.h>
+#include <Renderer/LayerAPI/IMaterialDataAPI.h>
+#include <Renderer/LayerAPI/OpenGL/MaterialDataGL.h>
+#include <Renderer/LayerAPI/OpenGL/TextureGL.h>
 
 namespace GaladHen
 {
@@ -95,40 +97,37 @@ namespace GaladHen
         glDeleteShader(fShader);
     }
 
-    void ShaderProgramGL::LoadShaderData(MaterialData* data)
+    void ShaderProgramGL::LoadShaderData(IMaterialDataAPI* data)
     {
-        std::vector<MaterialDataScalar> scalars = data->GetScalarData();
-        std::vector<MaterialDataVector> vectors = data->GetVectorData();
-        std::vector<MaterialDataTexture> texs = data->GetTextureData();
-
-        for (MaterialDataScalar& scalar : scalars)
+        MaterialDataGL* dataGL = static_cast<MaterialDataGL*>(data);
+        for (MaterialScalarGL& scalar : dataGL->ScalarData)
         {
-            glProgramUniform1f(Program, glGetUniformLocation(Program, scalar.Name.data()), scalar.Scalar);
+            glProgramUniform1f(Program, glGetUniformLocation(Program, scalar.Name), scalar.Scalar);
         }
-
-        for (MaterialDataVector& vec : vectors)
+        for (MaterialVector2GL& vec2 : dataGL->Vector2Data)
         {
-            glProgramUniform3fv(Program, glGetUniformLocation(Program, vec.Name.data()), 1, value_ptr(vec.Vector));
+            glProgramUniform2fv(Program, glGetUniformLocation(Program, vec2.Name), 1, glm::value_ptr(glm::vec2(vec2.Vector[0], vec2.Vector[1])));
+        }
+        for (MaterialVector3GL& vec3 : dataGL->Vector3Data)
+        {
+            glProgramUniform3fv(Program, glGetUniformLocation(Program, vec3.Name), 1, glm::value_ptr(glm::vec3(vec3.Vector[0], vec3.Vector[1], vec3.Vector[2])));
+        }
+        for (MaterialVector4GL& vec4 : dataGL->Vector4Data)
+        {
+            glProgramUniform4fv(Program, glGetUniformLocation(Program, vec4.Name), 1, glm::value_ptr(glm::vec4(vec4.Vector[0], vec4.Vector[1], vec4.Vector[2], vec4.Vector[3])));
         }
 
         int texUnit = 0;
-        for (MaterialDataTexture& tex : texs)
+        for (std::pair<TextureGL*, TextureParameters>& tex : dataGL->TextureData)
         {
-            glActiveTexture(texUnit); // TODO: conversion index <-> opengl texture unit
-            //glBindTexture(GL_TEXTURE_2D, this->TextureData->GetTextureID());
+            TextureGL* texImage = tex.first;
+            TextureParameters& params = tex.second;
+            
+            // tex image must be already loaded when arriving here -> this is load shader data, for textures it is for parameters
+            assert(texImage->IsLoaded());
 
-            // send texture parameters
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, this->WrappingModeX);
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, this->WrappingModeY);
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->FilteringMode); // TODO: divide minifying and magnyfing filters
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this->FilteringMode);
-            // glGenerateMipmap(GL_TEXTURE_2D);
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, this->MipMapMode); // TODO: check if this is correct
-            // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, this->MipMapMode); // TODO: divide minifying and magnyfing filters for mipmaps?
-
-            // // create uniform sampler
-            // int loc = glGetUniformLocation(shader->GetShaderProgram(), samplerName);
-            // glUniform1i(loc, 1);
+            texImage->LoadTextureParameters(this, texUnit, params.HorizontalWrapping, params.Filtering, params.MipMapMode); // TODO: here should be wrapping for both horizontal and vertical axes
+            
         }
     }
 
@@ -166,5 +165,10 @@ namespace GaladHen
         }
 
         return success;
+    }
+
+    GLuint ShaderProgramGL::GetShaderProgram()
+    {
+        return Program;
     }
 }

@@ -11,7 +11,7 @@ namespace GaladHen
         , EBO(0)
         {}
 
-    void MeshGL::Draw(MaterialData* data, ShadingMode mode, IShaderProgramAPI* shader)
+    void MeshGL::Draw(IMaterialDataAPI* data, ShadingMode mode, IShaderProgramAPI* shader)
     {
         // shader functionalities
         shader->Use();
@@ -24,7 +24,7 @@ namespace GaladHen
         glBindVertexArray(0);
     }
 
-    void MeshGL::LoadMemoryGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int> indices)
+    void MeshGL::LoadMemoryGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
     {
         gl3wInit();
 

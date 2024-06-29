@@ -13,7 +13,6 @@
 namespace GaladHen
 {
     class ShaderProgram;
-
     struct MaterialData;
 
     class Material

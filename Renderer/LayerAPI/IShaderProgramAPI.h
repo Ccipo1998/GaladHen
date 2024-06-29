@@ -4,11 +4,12 @@
 #pragma once
 
 #include <string>
-
 #include "Common/MaterialData.h"
 
 namespace GaladHen
 {
+    class IMaterialDataAPI;
+
     struct CompilationResult
     {
         // @brief
@@ -41,7 +42,7 @@ namespace GaladHen
         
         virtual CompilationResult Compile(std::string& computeCode) = 0;
 
-        virtual void LoadShaderData(MaterialData* data) = 0;
+        virtual void LoadShaderData(IMaterialDataAPI* data) = 0;
 
         virtual void SetShadingMode(ShadingMode mode) = 0;
 

@@ -3,13 +3,17 @@
 // - api specific settings are set, api specific data are stored
 // - the actual rendering happens
 
+// The Renderer is final because it's not supposed to have derivates: all API-specific operations are managed by API-specific objects inside the renderer 
+
 #pragma once
 
 #include <vector>
+#include <glm/glm.hpp>
+
+#include <Renderer/LayerAPI/IMeshAPI.h>
 
 namespace GaladHen
 {
-    class IMeshAPI;
     class Mesh;
     class Window;
 
@@ -18,7 +22,7 @@ namespace GaladHen
         OpenGL = 0
     };
 
-    class Renderer
+    class Renderer final
     {
 
         friend class Mesh;
@@ -38,6 +42,14 @@ namespace GaladHen
         // @brief
         // Destroy the low level pair of the high level mesh, freeing memory
         void DestroyMeshLowLevelPair(unsigned int meshID);
+
+        // @brief
+        // Specify clear color for color buffers
+        void SetColorBufferClearColor(const glm::vec3 color);
+
+        // @brief
+        // Enable or disable depth testing
+        void EnableDepthTest(bool enable);
 
     protected:
 

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <glm.hpp>
+#include "Libs/glm/glm.hpp"
 
 namespace GaladHen
 {

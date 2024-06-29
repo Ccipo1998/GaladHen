@@ -3,32 +3,12 @@
 
 #pragma once
 
+#include <Common/TextureData.h>
+
 namespace GaladHen
 {
     class Shader;
     class TextureImage;
-
-    enum TextureWrapping
-    {
-        Repeat = 0,
-        ClampToBorder = 1,
-        ClampToEdge = 2,
-        MirroredRepeat = 3
-    };
-
-    enum TextureFiltering
-    {
-        Linear = 0,
-        Nearest = 1
-    };
-
-    enum TextureMipMap
-    {
-        LinearLinear = 0,
-        NearestNearest = 1,
-        LinearNearest = 2,
-        NearestLinear = 3
-    };
 
     class Texture
     {
@@ -53,10 +33,7 @@ namespace GaladHen
 
         TextureImage* TextureData;
         // texture rendering parameters
-        TextureWrapping HorizontalWrapping;
-        TextureWrapping VerticalWrapping;
-        TextureFiltering Filtering;
-        TextureMipMap MipMapMode;
+        TextureParameters Parameters;
 
     };
 }

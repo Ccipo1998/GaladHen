@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <glm.hpp>
+#include "Libs/glm/glm.hpp"
 
 #include "GaladHen/Texture.h"
 
@@ -24,10 +24,20 @@ namespace GaladHen
         std::string Name;
         float Scalar;
     };
-    struct MaterialDataVector
+    struct MaterialDataVector2
+    {
+        std::string Name;
+        glm::vec2 Vector;
+    };
+    struct MaterialDataVector3
     {
         std::string Name;
         glm::vec3 Vector;
+    };
+    struct MaterialDataVector4
+    {
+        std::string Name;
+        glm::vec4 Vector;
     };
     struct MaterialDataTexture
     {
@@ -39,7 +49,9 @@ namespace GaladHen
     struct MaterialData
     {
         virtual std::vector<MaterialDataScalar> GetScalarData() = 0;
-        virtual std::vector<MaterialDataVector> GetVectorData() = 0;
+        virtual std::vector<MaterialDataVector2> GetVector2Data() = 0;
+        virtual std::vector<MaterialDataVector3> GetVector3Data() = 0;
+        virtual std::vector<MaterialDataVector4> GetVector4Data() = 0;
         virtual std::vector<MaterialDataTexture> GetTextureData() = 0;
     };
 }

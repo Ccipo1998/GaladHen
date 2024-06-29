@@ -8,7 +8,8 @@ add_library(Renderer STATIC
 )
 
 target_include_directories(Renderer PRIVATE
-${CMAKE_SOURCE_DIR}/)
+${CMAKE_SOURCE_DIR}/
+${CMAKE_SOURCE_DIR}/Libs/)
 
 
 add_subdirectory(LayerAPI)

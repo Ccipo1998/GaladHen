@@ -9,7 +9,7 @@
 
 namespace GaladHen
 {
-    class MaterialData;
+    class IMaterialDataAPI;
     enum ShadingMode;
     class IShaderProgramAPI;
 
@@ -20,7 +20,7 @@ namespace GaladHen
 
         // @brief
         // Drawcall
-        virtual void Draw(MaterialData* data, ShadingMode mode, IShaderProgramAPI* shader) = 0;
+        virtual void Draw(IMaterialDataAPI* data, ShadingMode mode, IShaderProgramAPI* shader) = 0;
 
         // @brief
         // Load mesh data in GPU memory

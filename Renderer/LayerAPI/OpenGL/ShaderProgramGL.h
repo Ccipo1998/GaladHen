@@ -43,11 +43,13 @@ namespace GaladHen
 
         //@brief
         // Load material data for shader in GPU memory
-        void LoadShaderData(MaterialData* data) override;
+        void LoadShaderData(IMaterialDataAPI* data) override;
 
         void SetShadingMode(ShadingMode mode) override;
 
         void Use() override;
+
+        GLuint GetShaderProgram();
 
     protected:
 
