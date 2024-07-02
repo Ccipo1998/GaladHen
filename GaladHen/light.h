@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <glm.hpp>
+#include <glm/glm.hpp>
 #include "Transform.h"
 
 // Copy constructor, Copy assignment, Move constructor and Move assignment are defaulted

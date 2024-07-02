@@ -1,6 +1,6 @@
 
 #include "Window.h"
-//#include <Renderer/LayerAPI/IWindowAPI.h>
+#include <Renderer/LayerAPI/IWindowAPI.h>
 #include <Renderer/LayerAPI/OpenGL/WindowGL.h>
 
 namespace GaladHen
@@ -65,6 +65,11 @@ namespace GaladHen
     void Window::MouseCallback(Window* owner, unsigned int key, unsigned int action)
     {
         owner->CallMouseCallback(key, action);
+    }
+
+    void Window::GetCurrentMousePosition(float& mouseX, float& mouseY)
+    {
+        WinAPI->GetCursorPosition(mouseX, mouseY);
     }
 
     Window::~Window()

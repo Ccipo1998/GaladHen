@@ -10,4 +10,11 @@ namespace GaladHen
         , FragmentShader(nullptr)
         , ShaderProgramID(0)
         {}
+
+    ShaderProgram::ShaderProgram(Shader* vertex, Shader* tesselation, Shader* geometry, Shader* fragment)
+        : VertexShader(vertex)
+        , TesselationShader(tesselation)
+        , GeometryShader(geometry)
+        , FragmentShader(fragment)
+        {}
 }

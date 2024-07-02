@@ -4,14 +4,12 @@
 #pragma once
 
 #include <vector>
-#include <glm.hpp>
+#include <glm/glm.hpp>
 
-#include <Common/MeshData.h>
+#include "MeshData.h"
 
 namespace GaladHen
 {
-    class Material;
-
     class Mesh
     {
     public:

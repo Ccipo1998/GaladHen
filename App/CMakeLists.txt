@@ -2,19 +2,14 @@
 project(GaladHenApp VERSION 0.1.0)
 
 add_executable(GaladHenApp
-    ${CMAKE_SOURCE_DIR}/App/GaladHen.cpp)
+    GaladHen.cpp)
+
 
 target_include_directories(GaladHenApp PRIVATE
-    ${CMAKE_SOURCE_DIR}/GaladHen/
-    ${CMAKE_SOURCE_DIR}/libs/assimp/include
-    ${CMAKE_SOURCE_DIR}/libs/gl3w/include/
-    ${CMAKE_SOURCE_DIR}/libs/glfw/include/
-    ${CMAKE_SOURCE_DIR}/libs/glm/
-    ${CMAKE_SOURCE_DIR}/libs/imgui/
-    ${CMAKE_SOURCE_DIR}/libs/imgui/imgui/
-    ${CMAKE_SOURCE_DIR}/libs/imgui/imgui/backends/
-    ${CMAKE_SOURCE_DIR}/utils/include/
-    ${CMAKE_SOURCE_DIR}/include/)
+    ${CMAKE_SOURCE_DIR}/
+    ${CMAKE_SOURCE_DIR}/Libs/
+    ${CMAKE_SOURCE_DIR}/Libs/assimp/include
+    ${CMAKE_SOURCE_DIR}/Utils/)
 
 set_target_properties(GaladHenApp
     PROPERTIES
@@ -23,6 +18,7 @@ set_target_properties(GaladHenApp
 target_link_libraries(GaladHenApp
     PRIVATE
     GaladHenLib
+    Renderer
     assimp
     glfw
     gl3w

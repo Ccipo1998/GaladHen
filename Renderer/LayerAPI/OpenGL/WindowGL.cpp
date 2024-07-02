@@ -14,7 +14,9 @@ namespace GaladHen
         , MouseCallback(nullptr)
         , KeyboardCallbackOwner(nullptr)
         , MouseCallbackOwner(nullptr)
-        {}
+    {
+        FillKeyAssociations();
+    }
 
     WindowGL::WindowGL(unsigned int width, unsigned int height, const char* name)
         : KeyboardCallback(nullptr)
@@ -22,6 +24,8 @@ namespace GaladHen
         , KeyboardCallbackOwner(nullptr)
         , MouseCallbackOwner(nullptr)
     {
+        FillKeyAssociations();
+
         InitContext(width, height, name);
     }
 

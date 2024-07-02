@@ -4,11 +4,11 @@
 #include <map>
 #include <string>
 
-#include "Model.h"
-#include "TextureImage.h"
-
 namespace GaladHen
 {
+    class Model;
+    class TextureImage;
+
     class AssetsManager
     {
 

@@ -5,12 +5,12 @@
 
 #include <vector>
 
-#include "Common/MeshData.h"
+#include <GaladHen/MeshData.h>
+#include <GaladHen/MaterialData.h>
 
 namespace GaladHen
 {
     class IMaterialDataAPI;
-    enum ShadingMode;
     class IShaderProgramAPI;
 
     class IMeshAPI

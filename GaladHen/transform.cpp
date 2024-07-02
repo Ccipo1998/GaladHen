@@ -1,8 +1,8 @@
 
 #include "Transform.h"
-#include <gtx/quaternion.hpp>
-#include <ext/quaternion_trigonometric.hpp>
-#include <ext/quaternion_float.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/ext/quaternion_trigonometric.hpp>
+#include <glm/ext/quaternion_float.hpp>
 
 namespace GaladHen
 {

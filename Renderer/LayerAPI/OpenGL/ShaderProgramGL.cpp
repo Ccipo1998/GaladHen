@@ -1,7 +1,7 @@
 
 #include "ShaderProgramGL.h"
 
-#include <gtc/type_ptr.hpp> // for value_ptr() and stuff
+#include <glm/gtc/type_ptr.hpp> // for value_ptr() and stuff
 #include <Renderer/LayerAPI/IMaterialDataAPI.h>
 #include <Renderer/LayerAPI/OpenGL/MaterialDataGL.h>
 #include <Renderer/LayerAPI/OpenGL/TextureGL.h>
@@ -11,16 +11,6 @@ namespace GaladHen
     ShaderProgramGL::ShaderProgramGL()
         : Program(0)
         {}
-
-    void ShaderProgramGL::Use()
-    {
-        glUseProgram(Program);
-    }
-
-    void ShaderProgramGL::Delete()
-    {
-        glDeleteProgram(Program);
-    }
 
     CompilationResult ShaderProgramGL::Compile(std::string& vertexCode, std::string& tessContCode, std::string& tessEvalCode, std::string& geometryCode, std::string& fragmentCode)
     {
@@ -95,6 +85,8 @@ namespace GaladHen
         glDeleteShader(teShader);
         glDeleteShader(gShader);
         glDeleteShader(fShader);
+
+        return res;
     }
 
     void ShaderProgramGL::LoadShaderData(IMaterialDataAPI* data)
@@ -139,6 +131,11 @@ namespace GaladHen
     void ShaderProgramGL::Use()
     {
         glUseProgram(Program);
+    }
+
+    void ShaderProgramGL::Delete()
+    {
+        glDeleteProgram(Program);
     }
 
     bool ShaderProgramGL::CheckCompilation(GLuint shader, char* outLog)

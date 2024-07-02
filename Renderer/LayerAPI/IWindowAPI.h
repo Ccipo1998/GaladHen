@@ -10,12 +10,6 @@ namespace GaladHen
     
     public:
 
-        IWindowAPI()
-        {
-            // Key associations created at ctor time
-            FillKeyAssociations();
-        }
-
         virtual void FillKeyAssociations() = 0;
 
         virtual void RegisterKeyboardCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) = 0;
@@ -24,7 +18,7 @@ namespace GaladHen
 
         virtual void GetCursorPosition(float& cursorX, float& cursorY) = 0;
 
-        virtual ~IWindowAPI() = 0;
+        virtual ~IWindowAPI() {}; // not pure virtual because of linking errors
 
     protected:
 

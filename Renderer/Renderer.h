@@ -45,7 +45,7 @@ namespace GaladHen
 
         // @brief
         // Specify clear color for color buffers
-        void SetColorBufferClearColor(const glm::vec3 color);
+        void SetColorBufferClearColor(const glm::vec4 color);
 
         // @brief
         // Enable or disable depth testing

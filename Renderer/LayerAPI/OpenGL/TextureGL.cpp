@@ -10,21 +10,20 @@ namespace GaladHen
         : TextureID(0)
     {
         // fill associations
-
-        TextureFormatAssociations[TextureFormat::RGB] = GL_RGB;
-        TextureFormatAssociations[TextureFormat::SRGB] = GL_SRGB;
+        TextureFormatAssociations[(int)TextureFormat::RGB] = GL_RGB;
+        TextureFormatAssociations[(int)TextureFormat::SRGB] = GL_SRGB;
         
-        PixelFormatAssociations[PixelDataFormat::R] = GL_RED;
-        PixelFormatAssociations[PixelDataFormat::RG] = GL_RED;
-        PixelFormatAssociations[PixelDataFormat::RGB] = GL_RED;
-        PixelFormatAssociations[PixelDataFormat::RGBA] = GL_RED;
+        PixelFormatAssociations[(int)PixelDataFormat::R] = GL_RED;
+        PixelFormatAssociations[(int)PixelDataFormat::RG] = GL_RED;
+        PixelFormatAssociations[(int)PixelDataFormat::RGB] = GL_RED;
+        PixelFormatAssociations[(int)PixelDataFormat::RGBA] = GL_RED;
 
-        PixelDataTypeAssociations[PixelDataType::UnsignedByte] = GL_UNSIGNED_BYTE;
+        PixelDataTypeAssociations[(int)PixelDataType::UnsignedByte] = GL_UNSIGNED_BYTE;
 
-        WrappingAssociations[TextureWrapping::Repeat] = GL_REPEAT;
-        WrappingAssociations[TextureWrapping::ClampToBorder] = GL_CLAMP_TO_BORDER;
-        WrappingAssociations[TextureWrapping::ClampToEdge] = GL_CLAMP_TO_EDGE;
-        WrappingAssociations[TextureWrapping::MirroredRepeat] = GL_MIRRORED_REPEAT;
+        WrappingAssociations[(int)TextureWrapping::Repeat] = GL_REPEAT;
+        WrappingAssociations[(int)TextureWrapping::ClampToBorder] = GL_CLAMP_TO_BORDER;
+        WrappingAssociations[(int)TextureWrapping::ClampToEdge] = GL_CLAMP_TO_EDGE;
+        WrappingAssociations[(int)TextureWrapping::MirroredRepeat] = GL_MIRRORED_REPEAT;
     }
 
     void TextureGL::LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps)
@@ -36,10 +35,10 @@ namespace GaladHen
 
         // allocate immutable storage basing on number of channels and on bit depth
         // IMPORTANT: internal format is an external variable because not all the textures need to be interpreted as SRGB (example: normal maps are already stored in linear values)
-        glTexStorage2D(GL_TEXTURE_2D, 1, TextureFormatAssociations[textureFormat], width, height);
+        glTexStorage2D(GL_TEXTURE_2D, 1, TextureFormatAssociations[(int)textureFormat], width, height);
 
         // copy texture data to texture object
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PixelFormatAssociations[pixelFormat], PixelDataTypeAssociations[pixelType], textureBytes);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PixelFormatAssociations[(int)pixelFormat], PixelDataTypeAssociations[(int)pixelType], textureBytes);
 
         if (generateMipMaps)
             glGenerateTextureMipmap(TextureID);
@@ -49,10 +48,10 @@ namespace GaladHen
     {
         BindToTextureUnit(shaderProgram, unit);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrappingAssociations[wrapping]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrappingAssociations[wrapping]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, FilteringAssociations[filtering]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilteringAssociations[filtering]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrappingAssociations[(int)wrapping]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrappingAssociations[(int)wrapping]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, FilteringAssociations[(int)filtering]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilteringAssociations[(int)filtering]);
         // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, MipMapAssociations[mipmap]); // TODO: check if this is correct
         // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MipMapAssociations[mipmap]); 
     }

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Common/TextureData.h>
+#include "TextureData.h"
 
 namespace GaladHen
 {
@@ -26,8 +26,8 @@ namespace GaladHen
         // @param modeMipMap: mip map mode
         Texture(TextureImage* textureData, TextureWrapping hWrapping, TextureWrapping vWrapping, TextureFiltering filtering, TextureMipMap modeMipMap);
 
-        Texture(Texture& other) = default;
-        Texture& operator=(Texture& other) = default;
+        Texture(const Texture& other) = default;
+        Texture& operator=(const Texture& other) = default;
         Texture(Texture&& other) = default;
         Texture& operator=(Texture&& other) = default;
 

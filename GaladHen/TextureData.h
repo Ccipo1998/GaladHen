@@ -7,13 +7,13 @@
 
 namespace GaladHen
 {
-    enum TextureFormat
+    enum class TextureFormat
     {
         RGB = 0,
         SRGB = 1
     };
 
-    enum PixelDataFormat
+    enum class PixelDataFormat
     {
         R = 0,
         RG = 1,
@@ -21,12 +21,12 @@ namespace GaladHen
         RGBA = 3
     };
 
-    enum PixelDataType
+    enum class PixelDataType
     {
         UnsignedByte = 0
     };
 
-    enum TextureWrapping
+    enum class TextureWrapping
     {
         Repeat = 0,
         ClampToBorder = 1,
@@ -34,13 +34,13 @@ namespace GaladHen
         MirroredRepeat = 3
     };
 
-    enum TextureFiltering
+    enum class TextureFiltering
     {
         Linear = 0,
         Nearest = 1
     };
 
-    enum TextureMipMap
+    enum class TextureMipMap
     {
         LinearLinear = 0,
         NearestNearest = 1,

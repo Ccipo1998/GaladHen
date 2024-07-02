@@ -4,7 +4,7 @@
 #pragma once
 
 #include <string>
-#include "Common/MaterialData.h"
+#include <GaladHen/MaterialData.h>
 
 namespace GaladHen
 {
@@ -47,5 +47,7 @@ namespace GaladHen
         virtual void SetShadingMode(ShadingMode mode) = 0;
 
         virtual void Use() = 0;
+
+        virtual void Delete() = 0;
     };
 }

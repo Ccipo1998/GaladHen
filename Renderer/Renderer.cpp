@@ -8,4 +8,24 @@ namespace GaladHen
     {
         
     }
+
+    void Renderer::CreateMeshLowLevelPair(Mesh& mesh)
+    {
+
+    }
+
+    void Renderer::DestroyMeshLowLevelPair(unsigned int meshID)
+    {
+
+    }
+
+    void Renderer::SetColorBufferClearColor(const glm::vec4 color)
+    {
+
+    }
+
+    void Renderer::EnableDepthTest(bool enable)
+    {
+        
+    }
 }

@@ -1,6 +1,6 @@
 
 #include "Light.h"
-#include <gtx/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace GaladHen
 {

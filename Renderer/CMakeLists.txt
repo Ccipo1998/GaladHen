@@ -5,11 +5,35 @@ project(Renderer VERSION 0.1.0)
 
 add_library(Renderer STATIC
     Renderer.cpp
+    Renderer.h
+    LayerAPI/IWindowAPI.h
+    LayerAPI/ITextureAPI.h
+    LayerAPI/IShaderProgramAPI.h
+    LayerAPI/IMeshAPI.h
+    LayerAPI/IMaterialDataAPI.h
+    LayerAPI/OpenGL/WindowGL.cpp
+    LayerAPI/OpenGL/WindowGL.h
+    LayerAPI/OpenGL/MeshGL.cpp
+    LayerAPI/OpenGL/MeshGL.h
+    LayerAPI/OpenGL/ShaderProgramGL.cpp
+    LayerAPI/OpenGL/ShaderProgramGL.h
+    LayerAPI/OpenGL/MaterialDataGL.h
+    LayerAPI/OpenGL/TextureGL.cpp
+    LayerAPI/OpenGL/TextureGL.h
 )
 
 target_include_directories(Renderer PRIVATE
-${CMAKE_SOURCE_DIR}/
-${CMAKE_SOURCE_DIR}/Libs/)
+    ${CMAKE_SOURCE_DIR}/
+    ${CMAKE_SOURCE_DIR}/Libs/
+    ${CMAKE_SOURCE_DIR}/Libs/gl3w/include/
+    ${CMAKE_SOURCE_DIR}/Libs/glfw/include/)
 
-
-add_subdirectory(LayerAPI)
+target_link_libraries(Renderer
+    PRIVATE
+    GaladHenLib
+    assimp
+    glfw
+    gl3w
+    glm
+    imgui
+    Utils)

@@ -2,10 +2,10 @@
 #include "Camera.h"
 
 #include "Input.h"
-#include <gtx/transform.hpp> // for lookat() and perspective()
-#include <gtx/quaternion.hpp>
-#include <ext/quaternion_trigonometric.hpp>
-#include <ext/quaternion_float.hpp>
+#include <glm/gtx/transform.hpp> // for lookat() and perspective()
+#include <glm/gtx/quaternion.hpp>
+#include <glm/ext/quaternion_trigonometric.hpp>
+#include <glm/ext/quaternion_float.hpp>
 
 namespace GaladHen
 {

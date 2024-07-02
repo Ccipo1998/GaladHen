@@ -6,13 +6,13 @@
 #include <string>
 #include <vector>
 
-#include "Libs/glm/glm.hpp"
+#include <glm/glm.hpp>
 
-#include "GaladHen/Texture.h"
+#include "Texture.h"
 
 namespace GaladHen
 {
-    enum ShadingMode
+    enum class ShadingMode
     {
         SmoothShading = 0,
         FlatShading = 1
@@ -41,6 +41,12 @@ namespace GaladHen
     };
     struct MaterialDataTexture
     {
+        MaterialDataTexture(std::string& name, Texture texture)
+        {
+            Name = name;
+            Tex = texture;
+        }
+
         std::string Name;
         Texture Tex;
     };

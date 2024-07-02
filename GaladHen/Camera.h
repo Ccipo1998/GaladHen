@@ -9,7 +9,7 @@
 // #include <GL/gl3w.h>
 
 // #include <GLFW/glfw3.h>
-#include <glm.hpp>
+#include <glm/glm.hpp>
 // #include <gtx/transform.hpp> // for lookat() and perspective()
 // #include <gtx/quaternion.hpp>
 // #include <ext/quaternion_trigonometric.hpp>

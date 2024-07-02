@@ -4,6 +4,9 @@
 #include <iterator>
 #include <Utils/log.h>
 
+#include "Model.h"
+#include "TextureImage.h"
+
 // assimp
 #include <assimp/Importer.hpp>      // C++ importer interface
 #include <assimp/scene.h>           // Output data structure

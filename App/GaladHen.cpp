@@ -19,7 +19,7 @@ int main()
     // create opengl renderer
     Renderer renderer{API::OpenGL};
     // renderer settings
-    renderer.SetColorBufferClearColor(glm::vec3(0.1f, 0.1f, 0.1f));
+    renderer.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
     renderer.EnableDepthTest(true);
 
     // make window

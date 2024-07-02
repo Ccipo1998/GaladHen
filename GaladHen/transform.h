@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include <glm.hpp>
-#include <ext/quaternion_float.hpp>
+#include <glm/glm.hpp>
+#include <glm/ext/quaternion_float.hpp>
 
 namespace GaladHen
 {

@@ -8,9 +8,9 @@
 
 #include "Mesh.h"
 
-class aiNode;
-class aiScene;
-class aiMesh;
+struct aiNode;
+struct aiScene;
+struct aiMesh;
 
 namespace GaladHen
 {

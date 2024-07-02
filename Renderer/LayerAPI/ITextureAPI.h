@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Common/TextureData.h>
+#include <GaladHen/TextureData.h>
 
 namespace GaladHen
 {

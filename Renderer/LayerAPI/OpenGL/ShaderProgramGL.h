@@ -18,14 +18,6 @@ namespace GaladHen
         ShaderProgramGL();
 
         // @brief
-        // Set shader program as current active
-        void Use();
-
-        // @brief
-        // Delete program from gpu memory
-        void Delete();
-
-        // @brief
         // Compile graphics pipeline's shaders and assign program
         // @param vertexCode: vertex shader code
         // @param tessContCode: tessellation control shader code
@@ -47,7 +39,13 @@ namespace GaladHen
 
         void SetShadingMode(ShadingMode mode) override;
 
+        // @brief
+        // Set shader program as current active
         void Use() override;
+
+        // @brief
+        // Delete program from gpu memory
+        void Delete() override;
 
         GLuint GetShaderProgram();
 
