@@ -5,6 +5,9 @@ TODO.txt
 # ignore .vscode dir
 .vscode/
 
+# ignore vs dir
+.vs/
+
 # ignore bin e build dirs
 bin/
 build/
