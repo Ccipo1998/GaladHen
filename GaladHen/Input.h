@@ -5,7 +5,7 @@
 
 namespace GaladHen
 {
-    enum KeyboardKey
+    enum class KeyboardKey
     {
         W = 0,
         A = 1,
@@ -15,13 +15,13 @@ namespace GaladHen
         Q = 5
     };
 
-    enum MouseKey
+    enum class MouseKey
     {
         Left = 0,
         Right = 1
     };
 
-    enum KeyAction
+    enum class KeyAction
     {
         Pressed = 0,
         Released = 1
@@ -30,8 +30,6 @@ namespace GaladHen
 
 namespace GaladHen
 {
-    class Window;
-    
     class Input
     {
     public:
@@ -39,14 +37,25 @@ namespace GaladHen
         Input();
 
         // @brief
-        // Callback functions link with specified glfw window
-        // @param window: window to link for input callbacks
-        void LinkInputCallbacks(Window* window);
+        // Keyboard callback response
+        // @param sender: a generic pointer to the object invoking the callback
+        // @param key: integer representing the activated key
+        // @param action: the action type on the key
+        void KeyboardCallback(void* sender, unsigned int key, unsigned int action);
 
         // @brief
-        // Perform the operations needed at each frame
-        // @param window: window from which the updated data are taken
-        void Update(Window* window);
+        // Mouse key callback response
+        // @param sender: a generic pointer to the object invoking the callback
+        // @param button: integer representing the activated mouse key
+        // @param action: the action type on the key
+        void MouseKeyCallback(void* sender, unsigned int key, unsigned int action);
+
+        // @brief
+        // Mouse position callback response
+        // @param sender: a generic pointer to the object invoking the callback
+        // @param mouseX: new mouse x coordinate
+        // @param mouseY: new mouse y coordinate
+        void MousePositionCallback(void* sender, float mouseX, float mouseY);
 
         // @brief
         // Return the status of the keyboard's key
@@ -85,20 +94,6 @@ namespace GaladHen
         float MouseY;
         float LastMouseX;
         float LastMouseY;
-
-        // @brief
-        // Keyboard callback response
-        // @param window: pointer to the window invoking the callbacks
-        // @param key: integer representing the activated key
-        // @param action: the action type on the key
-        void KeyboardCallback(Window* window, unsigned int key, unsigned int action);
-
-        // @brief
-        // Mouse callback response
-        // @param window: pointer to the window invoking the callbacks
-        // @param button: integer representing the activated mouse key
-        // @param action: the action type on the key
-        void MouseCallback(Window* window, unsigned int key, unsigned int action);
 
     };
 }

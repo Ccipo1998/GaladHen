@@ -14,7 +14,9 @@ namespace GaladHen
 
         virtual void RegisterKeyboardCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) = 0;
 
-        virtual void RegisterMouseCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) = 0;
+        virtual void RegisterMouseKeyCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) = 0;
+
+        virtual void RegisterMousePositionCallback(void (*callback)(void* owner, float mouseX, float mouseY), void* owner) = 0;
 
         virtual void GetCursorPosition(float& cursorX, float& cursorY) = 0;
 

@@ -1,7 +1,8 @@
 
 #include "Input.h"
-#include "Window.h"
 #include <Utils/Log.h>
+
+#include <algorithm>
 
 namespace GaladHen
 {
@@ -10,34 +11,42 @@ namespace GaladHen
         , MouseY(0.0f)
         , LastMouseX(0.0f)
         , LastMouseY(0.0f)
-        {}
-
-    void Input::LinkInputCallbacks(Window* window)
     {
-        if (window == nullptr)
-        {
-            Log::Error("Input", "Tried to link input callbacks to null window");
-
-            return;
-        }
-
-        window->SetKeyboardCallback(&Input::KeyboardCallback, this);
-        window->SetMouseCallback(&Input::MouseCallback, this);
+        // fill arrays
+        std::fill_n(Keyboard, 1024, false);
+        std::fill_n(Mouse, 12, false);
     }
 
-    void Input::Update(Window* window)
+    void Input::KeyboardCallback(void* sender, unsigned int key, unsigned int action)
     {
-        if (window == nullptr)
+        if (key >= 1024)
         {
-            Log::Error("Input", "Tried to update input from a null window");
+            Log::Error("Input", "Invalid keyboard key from callback");
 
             return;
         }
 
-        // update mouse position
+        if (action == (int)KeyAction::Pressed)
+            Keyboard[key] = true;
+        else if (action == (int)KeyAction::Released)
+            Keyboard[key] = false;
+    }
+
+    void Input::MouseKeyCallback(void* sender, unsigned int key, unsigned int action)
+    {
+        if (action == (int)KeyAction::Pressed)
+            Mouse[key] = true;
+        else if (action == (int)KeyAction::Released)
+            Mouse[key] = false;
+    }
+
+    void Input::MousePositionCallback(void* sender, float mouseX, float mouseY)
+    {
         LastMouseX = MouseX;
         LastMouseY = MouseY;
-        window->GetCurrentMousePosition(MouseX, MouseY);
+
+        MouseX = mouseX;
+        MouseY = mouseY;
     }
 
     bool Input::GetKeyboardKey(unsigned int key)
@@ -82,28 +91,5 @@ namespace GaladHen
     float Input::GetDeltaMouseY()
     {
         return MouseY - LastMouseY;
-    }
-
-    void Input::KeyboardCallback(Window* window, unsigned int key, unsigned int action)
-    {
-        if (key >= 1024)
-        {
-            Log::Error("Input", "Invalid keyboard key from callback");
-
-            return;
-        }
-
-        if(action == KeyAction::Pressed)
-            Keyboard[key] = true;
-        else if(action == KeyAction::Released)
-            Keyboard[key] = false;
-    }
-
-    void Input::MouseCallback(Window* window, unsigned int key, unsigned int action)
-    {
-        if(action == KeyAction::Pressed)
-            Mouse[key] = true;
-        else if(action == KeyAction::Released)
-            Mouse[key] = false;
     }
 }

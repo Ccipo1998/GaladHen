@@ -1,6 +1,6 @@
 
 #include <Renderer/Renderer.h>
-#include <GaladHen/Window.h>
+#include <Renderer/Window.h>
 #include <GaladHen/Input.h>
 #include <GaladHen/Scene.h>
 #include <GaladHen/ShaderProgram.h>
@@ -25,9 +25,11 @@ int main()
     // make window
     Window window{}; // temp: we need to retrieve the API
 
-    // input to link
+    // input to link to the window
     Input input{};
-    input.LinkInputCallbacks(&window);
+    window.SetKeyboardCallback(&Input::KeyboardCallback, &input);
+    window.SetMouseKeyCallback(&Input::MouseKeyCallback, &input);
+    window.SetMousePositionCallback(&Input::MousePositionCallback, &input);
 
     // create scene
     Scene scene{};

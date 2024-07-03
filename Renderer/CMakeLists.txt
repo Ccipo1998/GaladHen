@@ -6,6 +6,8 @@ project(Renderer VERSION 0.1.0)
 add_library(Renderer STATIC
     Renderer.cpp
     Renderer.h
+    Window.h
+    Window.cpp
     LayerAPI/IWindowAPI.h
     LayerAPI/ITextureAPI.h
     LayerAPI/IShaderProgramAPI.h

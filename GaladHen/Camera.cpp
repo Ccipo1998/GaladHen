@@ -34,21 +34,21 @@ namespace GaladHen
     void Camera::ProcessInput(Input& input, float deltaTime)
     {
         // keys
-        if (input.GetKeyboardKey(KeyboardKey::W))
+        if (input.GetKeyboardKey((int)KeyboardKey::W))
             Transform.SetPosition(Transform.GetPosition() + Transform.GetFront() * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey(KeyboardKey::S))
+        if (input.GetKeyboardKey((int)KeyboardKey::S))
             Transform.SetPosition(Transform.GetPosition() - Transform.GetFront() * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey(KeyboardKey::D))
+        if (input.GetKeyboardKey((int)KeyboardKey::D))
             Transform.SetPosition(Transform.GetPosition() + Transform.GetRight() * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey(KeyboardKey::A))
+        if (input.GetKeyboardKey((int)KeyboardKey::A))
             Transform.SetPosition(Transform.GetPosition() - Transform.GetRight() * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey(KeyboardKey::E))
+        if (input.GetKeyboardKey((int)KeyboardKey::E))
             Transform.SetPosition(Transform.GetPosition() + TransformQuat::GlobalUp * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey(KeyboardKey::Q))
+        if (input.GetKeyboardKey((int)KeyboardKey::Q))
             Transform.SetPosition(Transform.GetPosition() - TransformQuat::GlobalUp * LinearSpeed * deltaTime);
 
         // rotation
-        if (input.GetKeyboardKey(MouseKey::Right))
+        if (input.GetKeyboardKey((int)MouseKey::Right))
         {
             // calculate delta radians within limits
             float deltaYaw = -float(AngularSpeed * deltaTime * input.GetDeltaMouseX());

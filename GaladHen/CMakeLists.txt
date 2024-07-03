@@ -31,8 +31,6 @@ add_library(GaladHenLib STATIC
     Texture.h
     AssetsManager.cpp
     AssetsManager.h
-    Window.cpp
-    Window.h
     MaterialData.h
     MeshData.h
     TextureData.h)

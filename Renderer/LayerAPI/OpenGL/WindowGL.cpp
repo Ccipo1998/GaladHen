@@ -11,18 +11,22 @@ namespace GaladHen
     WindowGL::WindowGL()
         : WinGL(nullptr)
         , KeyboardCallback(nullptr)
-        , MouseCallback(nullptr)
+        , MouseKeyCallback(nullptr)
+        , MousePosCallback(nullptr)
         , KeyboardCallbackOwner(nullptr)
-        , MouseCallbackOwner(nullptr)
+        , MouseKeyCallbackOwner(nullptr)
+        , MousePosCallbackOwner(nullptr)
     {
         FillKeyAssociations();
     }
 
     WindowGL::WindowGL(unsigned int width, unsigned int height, const char* name)
         : KeyboardCallback(nullptr)
-        , MouseCallback(nullptr)
+        , MouseKeyCallback(nullptr)
+        , MousePosCallback(nullptr)
         , KeyboardCallbackOwner(nullptr)
-        , MouseCallbackOwner(nullptr)
+        , MouseKeyCallbackOwner(nullptr)
+        , MousePosCallbackOwner(nullptr)
     {
         FillKeyAssociations();
 
@@ -31,18 +35,18 @@ namespace GaladHen
 
     void WindowGL::FillKeyAssociations()
     {
-        KeyboardKeyAssociations[GLFW_KEY_W] = KeyboardKey::W;
-        KeyboardKeyAssociations[GLFW_KEY_A] = KeyboardKey::A;
-        KeyboardKeyAssociations[GLFW_KEY_S] = KeyboardKey::S;
-        KeyboardKeyAssociations[GLFW_KEY_D] = KeyboardKey::D;
-        KeyboardKeyAssociations[GLFW_KEY_E] = KeyboardKey::E;
-        KeyboardKeyAssociations[GLFW_KEY_Q] = KeyboardKey::Q;
+        KeyboardKeyAssociations[GLFW_KEY_W] = (int)KeyboardKey::W;
+        KeyboardKeyAssociations[GLFW_KEY_A] = (int)KeyboardKey::A;
+        KeyboardKeyAssociations[GLFW_KEY_S] = (int)KeyboardKey::S;
+        KeyboardKeyAssociations[GLFW_KEY_D] = (int)KeyboardKey::D;
+        KeyboardKeyAssociations[GLFW_KEY_E] = (int)KeyboardKey::E;
+        KeyboardKeyAssociations[GLFW_KEY_Q] = (int)KeyboardKey::Q;
         
-        MouseKeyAssociations[GLFW_MOUSE_BUTTON_LEFT] = MouseKey::Left;
-        MouseKeyAssociations[GLFW_MOUSE_BUTTON_RIGHT] = MouseKey::Right;
+        MouseKeyAssociations[GLFW_MOUSE_BUTTON_LEFT] = (int)MouseKey::Left;
+        MouseKeyAssociations[GLFW_MOUSE_BUTTON_RIGHT] = (int)MouseKey::Right;
 
-        KeyActionAssociations[GLFW_PRESS] = KeyAction::Pressed;
-        KeyActionAssociations[GLFW_RELEASE] = KeyAction::Released;
+        KeyActionAssociations[GLFW_PRESS] = (int)KeyAction::Pressed;
+        KeyActionAssociations[GLFW_RELEASE] = (int)KeyAction::Released;
     }
 
     void WindowGL::RegisterKeyboardCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner)
@@ -54,13 +58,22 @@ namespace GaladHen
         glfwSetKeyCallback(WinGL, WindowGL::KeyboardCallbackGL);
     }
 
-    void WindowGL::RegisterMouseCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner)
+    void WindowGL::RegisterMouseKeyCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner)
     {
         // save external callback and register wingl callback
-        MouseCallback = callback;
-        MouseCallbackOwner = owner;
+        MouseKeyCallback = callback;
+        MouseKeyCallbackOwner = owner;
         glfwSetWindowUserPointer(WinGL, this); // to retrieve this pointer inside static function call
-        glfwSetMouseButtonCallback(WinGL, WindowGL::MouseCallbackGL);
+        glfwSetMouseButtonCallback(WinGL, WindowGL::MouseKeyCallbackGL);
+    }
+
+    void WindowGL::RegisterMousePositionCallback(void (*callback)(void* owner, float mouseX, float mouseY), void* owner)
+    {
+        // save external callback and register wingl callback
+        MousePosCallback = callback;
+        MousePosCallbackOwner = owner;
+        glfwSetWindowUserPointer(WinGL, this); // to retrieve this pointer inside static function call
+        glfwSetCursorPosCallback(WinGL, WindowGL::MousePosCallbackGL);
     }
 
     void WindowGL::GetCursorPosition(float& cursorX, float& cursorY)
@@ -87,7 +100,7 @@ namespace GaladHen
         winGL->SendKeyboardCallback(ghKey, ghAction);
     }
 
-    void WindowGL::MouseCallbackGL(GLFWwindow* window, int button, int action, int mods)
+    void WindowGL::MouseKeyCallbackGL(GLFWwindow* window, int button, int action, int mods)
     {
         // translation from opengl callback to galadhen window callback
 
@@ -100,6 +113,21 @@ namespace GaladHen
 
         // send callback
         winGL->SendKeyboardCallback(ghKey, ghAction);
+    }
+
+    void WindowGL::MousePosCallbackGL(GLFWwindow* window, double xpos, double ypos)
+    {
+        // translation from opengl callback to galadhen window callback
+
+        // get context
+        WindowGL* winGL = static_cast<WindowGL*>(glfwGetWindowUserPointer(window));
+
+        // translation
+        float mouseX = float(xpos);
+        float mouseY= float(ypos);
+
+        // send callback
+        winGL->SendMousePositionCallback(mouseX, mouseY);
     }
 
     void WindowGL::InitContext(unsigned int width, unsigned int height, const char* name)
@@ -131,9 +159,14 @@ namespace GaladHen
         KeyboardCallback(KeyboardCallbackOwner, key, action);
     }
 
-    void WindowGL::SendMouseCallback(unsigned int key, unsigned int action)
+    void WindowGL::SendMouseKeyCallback(unsigned int key, unsigned int action)
     {
-        MouseCallback(MouseCallbackOwner, key, action);
+        MouseKeyCallback(MouseKeyCallbackOwner, key, action);
+    }
+
+    void WindowGL::SendMousePositionCallback(float mouseX, float mouseY)
+    {
+        MousePosCallback(MousePosCallbackOwner, mouseX, mouseY);
     }
 
     unsigned int WindowGL::TranslateKeyboardKey(int glSpecificKey)

@@ -23,7 +23,9 @@ namespace GaladHen
 
         virtual void RegisterKeyboardCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) override;
 
-        virtual void RegisterMouseCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) override;
+        virtual void RegisterMouseKeyCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) override;
+        
+        virtual void RegisterMousePositionCallback(void (*callback)(void* owner, float mouseX, float mouseY), void* owner) override;
 
         virtual void GetCursorPosition(float& cursorX, float& cursorY) override;
 
@@ -32,8 +34,12 @@ namespace GaladHen
         void SendKeyboardCallback(unsigned int key, unsigned int action);
 
         // @brief
-        // Call the mouse callback on the owner at higher level
-        void SendMouseCallback(unsigned int key, unsigned int action);
+        // Call the mouse key callback on the owner at higher level
+        void SendMouseKeyCallback(unsigned int key, unsigned int action);
+
+        // @brief
+        // Call the mouse position callback on the owner at higher level
+        void SendMousePositionCallback(float mouseX, float mouseY);
 
         unsigned int TranslateKeyboardKey(int glSpecificKey);
 
@@ -46,7 +52,8 @@ namespace GaladHen
     protected:
 
         static void KeyboardCallbackGL(GLFWwindow* window, int key, int scancode, int action, int mode);
-        static void MouseCallbackGL(GLFWwindow* window, int button, int action, int mods);
+        static void MouseKeyCallbackGL(GLFWwindow* window, int button, int action, int mods);
+        static void MousePosCallbackGL(GLFWwindow* window, double xpos, double ypos);
 
         // @brief
         // Initialization of the OpenGL context (glfw & gl3w) and of the window
@@ -55,8 +62,10 @@ namespace GaladHen
         GLFWwindow* WinGL;
         void* KeyboardCallbackOwner;
         void (* KeyboardCallback)(void* owner, unsigned int key, unsigned int action);
-        void* MouseCallbackOwner;
-        void (* MouseCallback)(void* owner, unsigned int key, unsigned int action);
+        void* MouseKeyCallbackOwner;
+        void (* MouseKeyCallback)(void* owner, unsigned int key, unsigned int action);
+        void* MousePosCallbackOwner;
+        void (*MousePosCallback)(void* owner, float mouseX, float mouseY);
 
     };
 }
