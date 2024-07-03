@@ -1,5 +1,9 @@
 
 #include "WindowGL.h"
+
+// gl3w MUST be included before any other OpenGL-related header
+#include <GL/gl3w.h>
+
 #include <GaladHen/Input.h>
 // glfw
 #include <GLFW/glfw3.h>
@@ -76,6 +80,11 @@ namespace GaladHen
         glfwSetCursorPosCallback(WinGL, WindowGL::MousePosCallbackGL);
     }
 
+    void WindowGL::InvokePendingCallbacks()
+    {
+        glfwPollEvents();
+    }
+
     void WindowGL::GetCursorPosition(float& cursorX, float& cursorY)
     {
         double x, y;
@@ -123,8 +132,8 @@ namespace GaladHen
         WindowGL* winGL = static_cast<WindowGL*>(glfwGetWindowUserPointer(window));
 
         // translation
-        float mouseX = float(xpos);
-        float mouseY= float(ypos);
+        float mouseX = static_cast<float>(xpos);
+        float mouseY= static_cast<float>(ypos);
 
         // send callback
         winGL->SendMousePositionCallback(mouseX, mouseY);
@@ -146,6 +155,13 @@ namespace GaladHen
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         // for MacOS:
         //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+        if (!gl3wInit())
+        {
+            Log::Error("WindowGL", "Error: GL3W failed to initialize the context");
+
+            return;
+        }
 
         WinGL = glfwCreateWindow(width, height, name, nullptr, nullptr);
         if (WinGL == nullptr)
@@ -182,6 +198,17 @@ namespace GaladHen
     unsigned int WindowGL::TranslateKeyAction(int glSpecificAction)
     {
         return KeyActionAssociations[glSpecificAction];
+    }
+
+    void WindowGL::ClearFrontBuffers(bool colorBuffer, bool depthBuffer, bool stencilBuffer)
+    {
+        GLbitfield mask = (colorBuffer ? GL_COLOR_BUFFER_BIT : 0) | (depthBuffer ? GL_DEPTH_BUFFER_BIT : 0) | (stencilBuffer ? GL_STENCIL_BUFFER_BIT : 0);
+        glClear(mask);
+    }
+
+    void WindowGL::SwapBuffers()
+    {
+        glfwSwapBuffers(WinGL);
     }
 
     WindowGL::~WindowGL()

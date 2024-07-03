@@ -10,6 +10,8 @@ namespace GaladHen
     
     public:
 
+        // INPUT -------------------------------------------------------------------------------------------------
+
         virtual void FillKeyAssociations() = 0;
 
         virtual void RegisterKeyboardCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner) = 0;
@@ -19,6 +21,14 @@ namespace GaladHen
         virtual void RegisterMousePositionCallback(void (*callback)(void* owner, float mouseX, float mouseY), void* owner) = 0;
 
         virtual void GetCursorPosition(float& cursorX, float& cursorY) = 0;
+
+        virtual void InvokePendingCallbacks() = 0;
+
+        // RENDERING ---------------------------------------------------------------------------------------------
+
+        virtual void ClearFrontBuffers(bool colorBuffer, bool depthBuffer, bool stencilBuffer) = 0;
+
+        virtual void SwapBuffers() = 0;
 
         virtual ~IWindowAPI() {}; // not pure virtual because of linking errors
 

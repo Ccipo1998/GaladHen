@@ -85,6 +85,17 @@ namespace GaladHen
         owner->CallMousePositionCallback(mouseX, mouseY);
     }
 
+    void Window::BeginFrame()
+    {
+        WinAPI->ClearFrontBuffers(true, true, true); // TODO: clear parameters exposed in Window class?
+    }
+
+    void Window::EndFrame()
+    {
+        WinAPI->SwapBuffers();
+        WinAPI->InvokePendingCallbacks();
+    }
+
     Window::~Window()
     {
         // TODO

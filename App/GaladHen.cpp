@@ -58,5 +58,12 @@ int main()
     // load models
     Model* bunny = AssetsManager::LoadAndStoreModel(std::string("prefabs/bunny.glb"), "Bunny");
 
+    while (true)
+    {
+        window.BeginFrame();
+
+        window.EndFrame();
+    }
+
     return 0;
 }

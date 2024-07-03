@@ -17,11 +17,15 @@ namespace GaladHen
 
         Window(const std::string& windowName, unsigned int width, unsigned int height);
 
+        // WINDOW ----------------------------------------------------------------------------------------------------------------
+
         float GetAspectRatio();
 
         // void ChangeWindowName(const std::string& windowName);
 
         // void ChangeWindowSize(unsigned int width, unsigned int height);
+
+        // INPUT -------------------------------------------------------------------------------------------------------------------
 
         // @brief
         // Set the callback to call when a key is pressed or change status
@@ -52,6 +56,16 @@ namespace GaladHen
         // @param key: integer representing the activated key
         // @param action: the action type on the key
         void CallMousePositionCallback(float mouseX, float mouseY);
+
+        // RENDERING ------------------------------------------------------------------------------------------------------
+
+        // @brief
+        // Perform operations needed at the beginning of a frame
+        void BeginFrame();
+
+        // @brief
+        // Perform operations needed at the end of a frame
+        void EndFrame();
 
         ~Window();
 
