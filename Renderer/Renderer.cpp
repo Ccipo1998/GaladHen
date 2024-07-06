@@ -1,20 +1,36 @@
 
 #include "Renderer.h"
 
+#include <Renderer/LayerAPI/OpenGL/RendererGL.h>
+
 namespace GaladHen
 {
     Renderer::Renderer(API apiToUse)
         : CurrentAPI(apiToUse)
+        , RendererAPI(nullptr)
     {
-        
+        // Initialization basing on API
+
+        switch (apiToUse)
+        {
+        case GaladHen::OpenGL:
+
+            // Create low level OpenGL Renderer
+            RendererAPI = new RendererGL{};
+
+            break;
+
+        default:
+            break;
+        }
     }
 
-    void Renderer::CreateMeshLowLevelPair(Mesh& mesh)
+    void Renderer::CreateLowLevelMesh(Mesh& mesh)
     {
 
     }
 
-    void Renderer::DestroyMeshLowLevelPair(unsigned int meshID)
+    void Renderer::DestroyLowLevelMesh(unsigned int meshID)
     {
 
     }

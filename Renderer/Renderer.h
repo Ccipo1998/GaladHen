@@ -10,14 +10,13 @@
 #include <vector>
 #include <glm/glm.hpp>
 
-#include <Renderer/LayerAPI/IMeshAPI.h>
+#include <Renderer/LayerAPI/IRendererAPI.h>
 
 namespace GaladHen
 {
     class Mesh;
-    class Window;
 
-    enum API
+    enum class API
     {
         OpenGL = 0
     };
@@ -32,16 +31,12 @@ namespace GaladHen
         Renderer(API apiToUse);
 
         // @brief
-        // Create the low level pair of the high level Window
-        // void CreateLowLevelWindow(Window& window);
-
-        // @brief
         // Create the low level pair of the high level mesh, assigning a mesh id -> this is needed to render the mesh
-        void CreateMeshLowLevelPair(Mesh& mesh);
+        void CreateLowLevelMesh(Mesh& mesh);
 
         // @brief
         // Destroy the low level pair of the high level mesh, freeing memory
-        void DestroyMeshLowLevelPair(unsigned int meshID);
+        void DestroyLowLevelMesh(unsigned int meshID);
 
         // @brief
         // Specify clear color for color buffers
@@ -55,7 +50,8 @@ namespace GaladHen
 
         API CurrentAPI;
 
-        std::vector<IMeshAPI> MeshAPI;
+        // API-specific renderer for API-specific operations
+        IRendererAPI* RendererAPI;
 
     };
 }
