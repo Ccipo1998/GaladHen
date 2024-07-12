@@ -13,7 +13,7 @@ namespace GaladHen
 
         switch (apiToUse)
         {
-        case GaladHen::OpenGL:
+        case API::OpenGL:
 
             // Create low level OpenGL Renderer
             RendererAPI = new RendererGL{};
