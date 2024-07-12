@@ -81,6 +81,14 @@ namespace GaladHen
         glfwSetCursorPosCallback(WinGL, WindowGL::MousePosCallbackGL);
     }
 
+    void WindowGL::RegisterClosingWindowCallback(void (*callback)(void* owner), void* owner)
+    {
+        ClosingWindowCallback = callback;
+        ClosingWindowCallbackOwner = owner;
+        glfwSetWindowUserPointer(WinGL, this); // to retrieve this pointer inside static function call
+        glfwSetWindowCloseCallback(WinGL, WindowGL::ClosingWindowCallbackGL);
+    }
+
     void WindowGL::InvokePendingCallbacks()
     {
         glfwPollEvents();
@@ -140,6 +148,14 @@ namespace GaladHen
         winGL->SendMousePositionCallback(mouseX, mouseY);
     }
 
+    void WindowGL::ClosingWindowCallbackGL(GLFWwindow* window)
+    {
+        // get context
+        WindowGL* winGL = static_cast<WindowGL*>(glfwGetWindowUserPointer(window));
+
+        winGL->SendClosingWindowCallback();
+    }
+
     void WindowGL::CreateOpenGLWindow(unsigned int width, unsigned int height, const char* name)
     {
         WinGL = glfwCreateWindow(width, height, name, nullptr, nullptr);
@@ -164,6 +180,11 @@ namespace GaladHen
     void WindowGL::SendMousePositionCallback(float mouseX, float mouseY)
     {
         MousePosCallback(MousePosCallbackOwner, mouseX, mouseY);
+    }
+
+    void WindowGL::SendClosingWindowCallback()
+    {
+        ClosingWindowCallback(ClosingWindowCallbackOwner);
     }
 
     unsigned int WindowGL::TranslateKeyboardKey(int glSpecificKey)
@@ -195,6 +216,12 @@ namespace GaladHen
     void WindowGL::SetColorBufferClearColor(glm::vec4 color)
     {
         glClearColor(color.x, color.y, color.z, color.w);
+    }
+
+    void WindowGL::CloseWindow()
+    {
+        glfwDestroyWindow(WinGL);
+        glfwTerminate();
     }
 
     WindowGL::~WindowGL()

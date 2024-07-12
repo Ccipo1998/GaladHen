@@ -22,6 +22,8 @@ namespace GaladHen
 
         virtual void RegisterMousePositionCallback(void (*callback)(void* owner, float mouseX, float mouseY), void* owner) = 0;
 
+        virtual void RegisterClosingWindowCallback(void (*callback)(void* owner), void* owner) = 0;
+
         virtual void GetCursorPosition(float& cursorX, float& cursorY) = 0;
 
         virtual void InvokePendingCallbacks() = 0;
@@ -33,6 +35,8 @@ namespace GaladHen
         virtual void SwapBuffers() = 0;
 
         virtual void SetColorBufferClearColor(glm::vec4 color) = 0;
+
+        virtual void CloseWindow() = 0;
 
         virtual ~IWindowAPI() {}; // not pure virtual because of linking errors
 

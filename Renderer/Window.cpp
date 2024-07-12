@@ -12,6 +12,10 @@ namespace GaladHen
         , OutKeyboardCallback(nullptr)
         , OutMouseKeyCallback(nullptr)
         , OutMousePosCallback(nullptr)
+        , OutClosingWindowCallback(nullptr)
+        , OutKeyboardCallbackOwner(nullptr)
+        , OutMouseKeyCallbackOwner(nullptr)
+        , OutMousePosCallbackOwner(nullptr)
     {
         switch (apiToUse)
         {
@@ -34,6 +38,10 @@ namespace GaladHen
         , OutKeyboardCallback(nullptr)
         , OutMouseKeyCallback(nullptr)
         , OutMousePosCallback(nullptr)
+        , OutClosingWindowCallback(nullptr)
+        , OutKeyboardCallbackOwner(nullptr)
+        , OutMouseKeyCallbackOwner(nullptr)
+        , OutMousePosCallbackOwner(nullptr)
     {
         switch (apiToUse)
         {
@@ -52,6 +60,11 @@ namespace GaladHen
     float Window::GetAspectRatio()
     {
         return static_cast<float>(Width) / static_cast<float>(Height);
+    }
+
+    void Window::CloseWindow()
+    {
+        WinAPI->CloseWindow();
     }
     
     void Window::SetKeyboardCallback(void (Input::*callback)(void* sender, unsigned int key, unsigned int action), Input* owner)
@@ -75,6 +88,13 @@ namespace GaladHen
         WinAPI->RegisterMousePositionCallback((void (*)(void*, float, float)) & Window::MousePosCallback, this);
     }
 
+    void Window::SetClosingWindowCallback(void(Input::* callback)(void* sender), Input* owner)
+    {
+        OutClosingWindowCallback = callback;
+        OutClosingWindowCallbackOwner = owner;
+        WinAPI->RegisterClosingWindowCallback((void (*)(void*))&Window::ClosingWindowCallback, this);
+    }
+
     void Window::CallKeyboardCallback(unsigned int key, unsigned int action)
     {
         (OutKeyboardCallbackOwner->*OutKeyboardCallback)(this, key, action);
@@ -90,6 +110,11 @@ namespace GaladHen
         (OutMousePosCallbackOwner->*OutMousePosCallback)(this, mouseX, mouseY);
     }
 
+    void Window::CallClosingWindowCallback()
+    {
+        (OutClosingWindowCallbackOwner->*OutClosingWindowCallback)(this);
+    }
+
     void Window::KeyboardCallback(Window* owner, unsigned int key, unsigned int action)
     {
         owner->CallKeyboardCallback(key, action);
@@ -103,6 +128,11 @@ namespace GaladHen
     void Window::MousePosCallback(Window* owner, float mouseX, float mouseY)
     {
         owner->CallMousePositionCallback(mouseX, mouseY);
+    }
+
+    void Window::ClosingWindowCallback(Window* owner)
+    {
+        owner->CallClosingWindowCallback();
     }
 
     void Window::BeginFrame()

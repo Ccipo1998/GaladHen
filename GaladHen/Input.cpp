@@ -11,6 +11,7 @@ namespace GaladHen
         , MouseY(0.0f)
         , LastMouseX(0.0f)
         , LastMouseY(0.0f)
+        , CloseWindowRequested(false)
     {
         // fill arrays
         std::fill_n(Keyboard, 1024, false);
@@ -47,6 +48,11 @@ namespace GaladHen
 
         MouseX = mouseX;
         MouseY = mouseY;
+    }
+
+    void Input::ClosingWindowCallback(void* sender)
+    {
+        CloseWindowRequested = true;
     }
 
     bool Input::GetKeyboardKey(unsigned int key)
@@ -91,5 +97,10 @@ namespace GaladHen
     float Input::GetDeltaMouseY()
     {
         return MouseY - LastMouseY;
+    }
+
+    bool Input::IsCloseWindowRequested()
+    {
+        return CloseWindowRequested;
     }
 }

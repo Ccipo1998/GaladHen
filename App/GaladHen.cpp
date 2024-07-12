@@ -31,6 +31,7 @@ int main()
     window.SetKeyboardCallback(&Input::KeyboardCallback, &input);
     window.SetMouseKeyCallback(&Input::MouseKeyCallback, &input);
     window.SetMousePositionCallback(&Input::MousePositionCallback, &input);
+    window.SetClosingWindowCallback(&Input::ClosingWindowCallback, &input);
 
     // create scene
     Scene scene{};
@@ -59,12 +60,14 @@ int main()
     // load models
     Model* bunny = AssetsManager::LoadAndStoreModel(std::string("prefabs/bunny.glb"), "Bunny");
 
-    while (true)
+    while (!input.IsCloseWindowRequested())
     {
         window.BeginFrame();
 
         window.EndFrame();
     }
+
+    window.CloseWindow();
 
     return 0;
 }

@@ -58,6 +58,11 @@ namespace GaladHen
         void MousePositionCallback(void* sender, float mouseX, float mouseY);
 
         // @brief
+        // Closing window callback response
+        // @param sender: a generic pointer to the object invoking the callback
+        void ClosingWindowCallback(void* sender);
+
+        // @brief
         // Return the status of the keyboard's key
         bool GetKeyboardKey(unsigned int key);
 
@@ -81,6 +86,10 @@ namespace GaladHen
         // Return delta mouse y coordinate between previous and current positions
         float GetDeltaMouseY();
 
+        // @brief
+        // Check if a close window request arrived
+        bool IsCloseWindowRequested();
+
     protected:
 
         // array of booleans for each keybord key
@@ -95,5 +104,6 @@ namespace GaladHen
         float LastMouseX;
         float LastMouseY;
 
+        bool CloseWindowRequested;
     };
 }

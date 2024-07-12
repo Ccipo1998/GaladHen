@@ -24,6 +24,8 @@ namespace GaladHen
 
         float GetAspectRatio();
 
+        void CloseWindow();
+
         // void ChangeWindowName(const std::string& windowName);
 
         // void ChangeWindowSize(unsigned int width, unsigned int height);
@@ -43,6 +45,10 @@ namespace GaladHen
         void SetMousePositionCallback(void (Input::* callback)(void* sender, float mouseX, float mouseY), Input* owner);
 
         // @brief
+        // Set the callback to call at window closing
+        void SetClosingWindowCallback(void(Input::* callback)(void* sender), Input* owner);
+
+        // @brief
         // Manual call to keyboard callback on the owner
         // @param key: integer representing the activated key
         // @param action: the action type on the key
@@ -59,6 +65,10 @@ namespace GaladHen
         // @param key: integer representing the activated key
         // @param action: the action type on the key
         void CallMousePositionCallback(float mouseX, float mouseY);
+
+        // @brief
+        // Manual call to closing window callback on the owner
+        void CallClosingWindowCallback();
 
         // RENDERING ------------------------------------------------------------------------------------------------------
 
@@ -85,13 +95,16 @@ namespace GaladHen
         void (Input::*OutKeyboardCallback)(void* sender, unsigned int key, unsigned int action);
         void (Input::*OutMouseKeyCallback)(void* sender, unsigned int key, unsigned int action);
         void (Input::*OutMousePosCallback)(void* sender, float mouseX, float mouseY);
+        void(Input::* OutClosingWindowCallback)(void* sender);
         Input* OutKeyboardCallbackOwner;
         Input* OutMouseKeyCallbackOwner;
         Input* OutMousePosCallbackOwner;
+        Input* OutClosingWindowCallbackOwner;
 
         static void KeyboardCallback(Window* owner, unsigned int key, unsigned int action);
         static void MouseKeyCallback(Window* owner, unsigned int key, unsigned int action);
         static void MousePosCallback(Window* owner, float mouseX, float mouseY);
+        static void ClosingWindowCallback(Window* owner);
 
     };
 }
