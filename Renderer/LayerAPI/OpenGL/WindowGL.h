@@ -57,6 +57,8 @@ namespace GaladHen
 
         virtual void SwapBuffers() override;
 
+        virtual void SetColorBufferClearColor(glm::vec4 color) override;
+
 #pragma endregion
 
         virtual ~WindowGL() override;
@@ -71,9 +73,7 @@ namespace GaladHen
 
         // OPENGL ----------------------------------------------------------------------------------------------------
 
-        // @brief
-        // Initialization of the OpenGL context (glfw & gl3w) and of the window
-        void InitContext(unsigned int width, unsigned int height, const char* name);
+        void CreateOpenGLWindow(unsigned int width, unsigned int height, const char* name);
 
         GLFWwindow* WinGL;
         void* KeyboardCallbackOwner;

@@ -6,7 +6,7 @@
 #include <Renderer/LayerAPI/IRendererAPI.h>
 #include <Renderer/LayerAPI/OpenGL/MeshGL.h>
 
-#include <vector>
+#include <unordered_map>
 
 namespace GaladHen
 {
@@ -15,13 +15,19 @@ namespace GaladHen
 
 	public:
 
-		virtual void CreateLowLevelMesh() override;
+		virtual void Init() override;
 
-		virtual void DestroyLowLevelMesh() override;
+		virtual unsigned int CreateLowLevelMesh() override;
+
+		virtual void DestroyLowLevelMesh(unsigned int meshID) override;
+
+		virtual void LoadMeshDataIntoGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, unsigned int meshID) override;
+
+		virtual void EnableDepthTest(bool enable) override;
 
 	protected:
 
-		std::vector<MeshGL> Meshes;
+		std::unordered_map<unsigned int, MeshGL> Meshes;
 
 	};
 }

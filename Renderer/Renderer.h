@@ -10,16 +10,12 @@
 #include <vector>
 #include <glm/glm.hpp>
 
+#include "Common.h"
 #include <Renderer/LayerAPI/IRendererAPI.h>
 
 namespace GaladHen
 {
     class Mesh;
-
-    enum class API
-    {
-        OpenGL = 0
-    };
 
     class Renderer final
     {
@@ -31,16 +27,16 @@ namespace GaladHen
         Renderer(API apiToUse);
 
         // @brief
-        // Create the low level pair of the high level mesh, assigning a mesh id -> this is needed to render the mesh
-        void CreateLowLevelMesh(Mesh& mesh);
+        // Perform initialization operations
+        void Init();
 
         // @brief
-        // Destroy the low level pair of the high level mesh, freeing memory
-        void DestroyLowLevelMesh(unsigned int meshID);
+        // Load mesh data into gpu memory, plus assigning a mesh id for internal use
+        void SendMeshDataToGPU(Mesh& mesh);
 
         // @brief
-        // Specify clear color for color buffers
-        void SetColorBufferClearColor(const glm::vec4 color);
+        // Free gpu memory from mesh data, plus clearing internal data
+        void FreeMeshDataFromGPU(Mesh& mesh);
 
         // @brief
         // Enable or disable depth testing

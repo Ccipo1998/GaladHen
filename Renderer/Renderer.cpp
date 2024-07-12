@@ -2,6 +2,7 @@
 #include "Renderer.h"
 
 #include <Renderer/LayerAPI/OpenGL/RendererGL.h>
+#include <GaladHen/Mesh.h>
 
 namespace GaladHen
 {
@@ -25,23 +26,26 @@ namespace GaladHen
         }
     }
 
-    void Renderer::CreateLowLevelMesh(Mesh& mesh)
+    void Renderer::Init()
     {
-
+        RendererAPI->Init();
     }
 
-    void Renderer::DestroyLowLevelMesh(unsigned int meshID)
+    void Renderer::SendMeshDataToGPU(Mesh& mesh)
     {
+        unsigned int meshID = RendererAPI->CreateLowLevelMesh();
+        mesh.MeshID = meshID;
 
+        RendererAPI->LoadMeshDataIntoGPU(mesh.Vertices, mesh.Indices, meshID);
     }
 
-    void Renderer::SetColorBufferClearColor(const glm::vec4 color)
+    void Renderer::FreeMeshDataFromGPU(Mesh& mesh)
     {
-
+        RendererAPI->DestroyLowLevelMesh(mesh.MeshID);
     }
 
     void Renderer::EnableDepthTest(bool enable)
     {
-        
+        RendererAPI->EnableDepthTest(enable);
     }
 }

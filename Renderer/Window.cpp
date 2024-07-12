@@ -5,7 +5,7 @@
 
 namespace GaladHen
 {
-    Window::Window()
+    Window::Window(API apiToUse)
         : WindowName("")
         , Width(1280)
         , Height(720)
@@ -13,11 +13,21 @@ namespace GaladHen
         , OutMouseKeyCallback(nullptr)
         , OutMousePosCallback(nullptr)
     {
-        // TODO: add a static way to retrieve current api selection, this changes the way of win api creation
-        WinAPI = new WindowGL(1280, 720, "");
+        switch (apiToUse)
+        {
+        case API::OpenGL:
+
+            // Create OpenGL window
+            WinAPI = new WindowGL(1280, 720, "");
+
+            break;
+
+        default:
+            break;
+        }
     }
 
-    Window::Window(const std::string& windowName, unsigned int width, unsigned int height)
+    Window::Window(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height)
         : WindowName(windowName)
         , Width(width)
         , Height(height)
@@ -25,8 +35,18 @@ namespace GaladHen
         , OutMouseKeyCallback(nullptr)
         , OutMousePosCallback(nullptr)
     {
-        // TODO: add a static way to retrieve current api selection, this changes the way of win api creation
-        WinAPI = new WindowGL(width, height, windowName.data());
+        switch (apiToUse)
+        {
+        case API::OpenGL:
+
+            // Create OpenGL window
+            WinAPI = new WindowGL(width, height, windowName.data());
+
+            break;
+
+        default:
+            break;
+        }
     }
 
     float Window::GetAspectRatio()
@@ -94,6 +114,11 @@ namespace GaladHen
     {
         WinAPI->SwapBuffers();
         WinAPI->InvokePendingCallbacks();
+    }
+
+    void Window::SetColorBufferClearColor(glm::vec4 color)
+    {
+        WinAPI->SetColorBufferClearColor(color);
     }
 
     Window::~Window()

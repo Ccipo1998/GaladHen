@@ -18,12 +18,13 @@ int main()
 {
     // create opengl renderer
     Renderer renderer{API::OpenGL};
+    renderer.Init();
     // renderer settings
-    renderer.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
     renderer.EnableDepthTest(true);
 
     // make window
-    Window window{}; // temp: we need to retrieve the API
+    Window window{API::OpenGL}; // temp: we need to retrieve the API
+    window.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
 
     // input to link to the window
     Input input{};

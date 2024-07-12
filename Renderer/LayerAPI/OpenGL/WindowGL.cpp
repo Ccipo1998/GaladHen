@@ -1,14 +1,15 @@
 
 #include "WindowGL.h"
 
-// gl3w MUST be included before any other OpenGL-related header
-#include <GL/gl3w.h>
-
 #include <GaladHen/Input.h>
+
 // glfw
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
+
 #include <Utils/Log.h>
+
+#include <glm/glm.hpp>
 
 namespace GaladHen
 {
@@ -34,7 +35,7 @@ namespace GaladHen
     {
         FillKeyAssociations();
 
-        InitContext(width, height, name);
+        CreateOpenGLWindow(width, height, name);
     }
 
     void WindowGL::FillKeyAssociations()
@@ -139,35 +140,15 @@ namespace GaladHen
         winGL->SendMousePositionCallback(mouseX, mouseY);
     }
 
-    void WindowGL::InitContext(unsigned int width, unsigned int height, const char* name)
+    void WindowGL::CreateOpenGLWindow(unsigned int width, unsigned int height, const char* name)
     {
-        if (!glfwInit())
-        {
-            Log::Error("WindowGL", "GLFW failed to initialize the context");
-
-            return;
-        }
-
-        // setting the minimum required version of OpenGL
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-        // core profile is a subset of OpenGL features (without the backward-compatible features)
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        // for MacOS:
-        //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-        if (!gl3wInit())
-        {
-            Log::Error("WindowGL", "Error: GL3W failed to initialize the context");
-
-            return;
-        }
-
         WinGL = glfwCreateWindow(width, height, name, nullptr, nullptr);
         if (WinGL == nullptr)
         {
             Log::Error("WindowGL", "GLFW failed to create the window");
         }
+
+        glfwMakeContextCurrent(WinGL);
     }
 
     void WindowGL::SendKeyboardCallback(unsigned int key, unsigned int action)
@@ -209,6 +190,11 @@ namespace GaladHen
     void WindowGL::SwapBuffers()
     {
         glfwSwapBuffers(WinGL);
+    }
+
+    void WindowGL::SetColorBufferClearColor(glm::vec4 color)
+    {
+        glClearColor(color.x, color.y, color.z, color.w);
     }
 
     WindowGL::~WindowGL()

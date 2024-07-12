@@ -3,6 +3,9 @@
 
 #include <string>
 
+#include <glm/glm.hpp>
+#include "Common.h"
+
 namespace GaladHen
 {
     class IWindowAPI;
@@ -13,9 +16,9 @@ namespace GaladHen
 
     public:
 
-        Window();
+        Window(API apiToUse);
 
-        Window(const std::string& windowName, unsigned int width, unsigned int height);
+        Window(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height);
 
         // WINDOW ----------------------------------------------------------------------------------------------------------------
 
@@ -66,6 +69,8 @@ namespace GaladHen
         // @brief
         // Perform operations needed at the end of a frame
         void EndFrame();
+
+        void SetColorBufferClearColor(glm::vec4 color);
 
         ~Window();
 
