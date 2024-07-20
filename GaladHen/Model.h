@@ -8,10 +8,6 @@
 
 #include "Mesh.h"
 
-struct aiNode;
-struct aiScene;
-struct aiMesh;
-
 namespace GaladHen
 {
     class Model
@@ -30,24 +26,6 @@ namespace GaladHen
         // Move constructor
         Model(Model&& model) noexcept;
 
-        // @brief
-        // Model creation by file loading
-        Model(const std::string& modelPath);
-
         std::vector<Mesh> Meshes;
-
-    protected:
-
-        // @brief
-        // Load 3D model from a file using assimp
-        void LoadModelFile(const std::string& modelPath);
-
-        // @brief
-        // Util function for assimp model loading
-        void ProcessAssimpNode(aiNode* node, const aiScene* scene);
-
-        // @brief
-        // Convert assimp data structure into GaladHen data structure
-        void ProcessMesh(aiMesh* mesh);
     };
 }

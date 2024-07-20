@@ -36,7 +36,6 @@ target_include_directories(Renderer PRIVATE
 target_link_libraries(Renderer
     PRIVATE
     GaladHenLib
-    assimp
     glfw
     gl3w
     glm

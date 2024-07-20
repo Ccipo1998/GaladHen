@@ -12,7 +12,7 @@
 
 namespace GaladHen
 {
-    class ShaderProgram;
+    class ShaderPipeline;
 
     class Material
     {
@@ -20,7 +20,7 @@ namespace GaladHen
 
         Material();
 
-        Material(ShaderProgram* materialShader, ShadingMode shadingMode);
+        Material(ShaderPipeline* materialShader, ShadingMode shadingMode);
 
         // Default copy and move contructors and assignments
         Material(const Material& material) = default;
@@ -29,7 +29,7 @@ namespace GaladHen
         Material& operator=(Material&& material) = default;
 
         MaterialData* Data; // ownership of material data
-        ShaderProgram* MaterialShader;
+        ShaderPipeline* MaterialShader;
 
         ShadingMode MaterialShadingMode;
     };

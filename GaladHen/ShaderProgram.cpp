@@ -4,17 +4,30 @@
 namespace GaladHen
 {
     ShaderProgram::ShaderProgram()
+        : ShaderProgramID(0)
+    {}
+
+    ShaderPipeline::ShaderPipeline()
         : VertexShader(nullptr)
-        , TesselationShader(nullptr)
+        , TessContShader(nullptr)
+        , TessEvalShader(nullptr)
         , GeometryShader(nullptr)
         , FragmentShader(nullptr)
-        , ShaderProgramID(0)
         {}
 
-    ShaderProgram::ShaderProgram(Shader* vertex, Shader* tesselation, Shader* geometry, Shader* fragment)
+    ShaderPipeline::ShaderPipeline(Shader* vertex, Shader* tessCont, Shader* tessEval, Shader* geometry, Shader* fragment)
         : VertexShader(vertex)
-        , TesselationShader(tesselation)
+        , TessContShader(tessCont)
+        , TessEvalShader(tessEval)
         , GeometryShader(geometry)
         , FragmentShader(fragment)
         {}
+
+    ComputeShader::ComputeShader()
+        : CompShader(nullptr)
+    {}
+
+    ComputeShader::ComputeShader(Shader* compute)
+        : CompShader(compute)
+    {}
 }

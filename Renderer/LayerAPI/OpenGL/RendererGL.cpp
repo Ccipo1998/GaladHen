@@ -16,6 +16,7 @@ namespace GaladHen
 		: MeshIndex(0)
 		, BufferIndex(0)
 		, LightingBufferID(0)
+		, ShaderIndex(0)
 	{}
 
 	void RendererGL::Init()
@@ -100,6 +101,43 @@ namespace GaladHen
 	void RendererGL::FreeLightingDataFromGPU()
 	{
 		FreeBufferData(LightingBufferID);
+	}
+
+	unsigned int RendererGL::CreateLowLevelShaderProgram()
+	{
+		if (ShaderIndex >= Shaders.size())
+		{
+			Shaders.push_back(ShaderProgramGL{});
+
+			return ++ShaderIndex;
+		}
+
+		unsigned int next = *(unsigned int*)(&Shaders[ShaderIndex]);
+		Shaders[ShaderIndex] = ShaderProgramGL{};
+		unsigned int old = ShaderIndex;
+		ShaderIndex = next;
+
+		return old + 1;
+	}
+
+	void RendererGL::DestroyLowLevelShaderProgram(unsigned int shaderID)
+	{
+		Shaders[shaderID - 1].Delete();
+
+		*(unsigned int*)(&Shaders[shaderID - 1]) = ShaderIndex;
+		ShaderIndex = shaderID - 1;
+	}
+
+	CompilationResult RendererGL::CompileShaderProgramPipeline(std::string& vertexCode, std::string& tessContCode, std::string& tessEvalCode, std::string& geometryCode, std::string& fragmentCode, unsigned int shaderID)
+	{
+		ShaderProgramGL& program = Shaders[shaderID - 1];
+		return program.Compile(vertexCode, tessContCode, tessEvalCode, geometryCode, fragmentCode);
+	}
+
+	CompilationResult RendererGL::CompilerShaderProgram(std::string& computeCode, unsigned int shaderID)
+	{
+		ShaderProgramGL& program = Shaders[shaderID - 1];
+		return program.CompileCompute(computeCode);
 	}
 
 	void RendererGL::EnableDepthTest(bool enable)

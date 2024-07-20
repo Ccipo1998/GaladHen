@@ -9,5 +9,11 @@ add_library(Utils STATIC
     FileLoader.cpp
 )
 
-#target_include_directories(Utils PRIVATE
-#    ${CMAKE_SOURCE_DIR}/utils/include/)
+target_include_directories(Utils PRIVATE
+    ${CMAKE_SOURCE_DIR}/
+    ${CMAKE_SOURCE_DIR}/Libs/
+    ${CMAKE_SOURCE_DIR}/Libs/assimp/include/)
+
+target_link_libraries(Utils
+    PRIVATE
+    assimp)

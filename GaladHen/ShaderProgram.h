@@ -1,7 +1,7 @@
 
 #pragma once
 
-// This class represents a complete rendering pipeline
+// These classes represent a complete shader pipeline and a compute shader program
 
 namespace GaladHen
 {
@@ -14,15 +14,32 @@ namespace GaladHen
 
         ShaderProgram();
 
-        ShaderProgram(Shader* vertex, Shader* tesselation, Shader* geometry, Shader* fragment);
+        unsigned int ShaderProgramID; // 0 means -1, so the low level pair is not already been created
+    };
+
+    class ShaderPipeline : public ShaderProgram
+    {
+    public:
+
+        ShaderPipeline();
+
+        ShaderPipeline(Shader* vertex, Shader* tessCont, Shader* tessEval, Shader* geometry, Shader* fragment);
 
         Shader* VertexShader;
-        Shader* TesselationShader;
+        Shader* TessContShader;
+        Shader* TessEvalShader;
         Shader* GeometryShader;
         Shader* FragmentShader;
+    };
 
-    protected:
+    class ComputeShader : public ShaderProgram
+    {
+    public:
 
-        unsigned int ShaderProgramID; // 0 means -1, so the low level pair is not already been created
+        ComputeShader();
+
+        ComputeShader(Shader* compute);
+
+        Shader* CompShader;
     };
 }

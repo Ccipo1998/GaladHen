@@ -2,7 +2,6 @@
 #include "ShaderProgramGL.h"
 
 #include <glm/gtc/type_ptr.hpp> // for value_ptr() and stuff
-#include <Renderer/LayerAPI/IMaterialDataAPI.h>
 #include <Renderer/LayerAPI/OpenGL/MaterialDataGL.h>
 #include <Renderer/LayerAPI/OpenGL/TextureGL.h>
 
@@ -24,55 +23,75 @@ namespace GaladHen
         const char* gCode = geometryCode.c_str();
         const char* fCode = fragmentCode.c_str();
 
-        // compile the shaders
-        GLuint vShader, tcShader, teShader, gShader, fShader;
-
-        // Vertex Shader
-        vShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vShader, 1, &vCode, NULL);
-        glCompileShader(vShader);
-        // check compilation errors
-        res.vSuccess = CheckCompilation(vShader, res.vLog);
-
-        // Tesselation control Shader
-        tcShader = glCreateShader(GL_TESS_CONTROL_SHADER);
-        glShaderSource(tcShader, 1, &tcCode, NULL);
-        glCompileShader(tcShader);
-        // check compilation errors
-        res.tcSuccess = CheckCompilation(tcShader, res.tcLog);
-
-        // Tesselation evaluation Shader
-        teShader = glCreateShader(GL_TESS_EVALUATION_SHADER);
-        glShaderSource(teShader, 1, &teCode, NULL);
-        glCompileShader(teShader);
-        // check compilation errors
-        res.teSuccess = CheckCompilation(teShader, res.teLog);
-
-        // Geometry Shader
-        gShader = glCreateShader(GL_GEOMETRY_SHADER);
-        glShaderSource(gShader, 1, &gCode, NULL);
-        glCompileShader(gShader);
-        // check compilation errors
-        res.gSuccess = CheckCompilation(gShader, res.gLog);
-
-        // Tesselation control Shader
-        fShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fShader, 1, &fCode, NULL);
-        glCompileShader(fShader);
-        // check compilation errors
-        res.fSuccess = CheckCompilation(fShader, res.fLog);
-
         // previous shader program delete
         if (Program)
             Delete();
 
         // shader program creation
         Program = glCreateProgram();
-        glAttachShader(Program, vShader);
-        glAttachShader(Program, tcShader);
-        glAttachShader(Program, teShader);
-        glAttachShader(Program, gShader);
-        glAttachShader(Program, fShader);
+
+        // compile the shaders
+        GLuint vShader, tcShader, teShader, gShader, fShader;
+
+        // Vertex Shader
+        if (vertexCode.length() > 0)
+        {
+            vShader = glCreateShader(GL_VERTEX_SHADER);
+            glShaderSource(vShader, 1, &vCode, NULL);
+            glCompileShader(vShader);
+            // check compilation errors
+            res.vSuccess = CheckCompilation(vShader, res.vLog);
+
+            glAttachShader(Program, vShader);
+        }
+
+        // Tesselation control Shader
+        if (tessContCode.length() > 0)
+        {
+            tcShader = glCreateShader(GL_TESS_CONTROL_SHADER);
+            glShaderSource(tcShader, 1, &tcCode, NULL);
+            glCompileShader(tcShader);
+            // check compilation errors
+            res.tcSuccess = CheckCompilation(tcShader, res.tcLog);
+
+            glAttachShader(Program, tcShader);
+        }
+
+        // Tesselation evaluation Shader
+        if (tessEvalCode.length() > 0)
+        {
+            teShader = glCreateShader(GL_TESS_EVALUATION_SHADER);
+            glShaderSource(teShader, 1, &teCode, NULL);
+            glCompileShader(teShader);
+            // check compilation errors
+            res.teSuccess = CheckCompilation(teShader, res.teLog);
+
+            glAttachShader(Program, teShader);
+        }
+
+        // Geometry Shader
+        if (geometryCode.length() > 0)
+        {
+            gShader = glCreateShader(GL_GEOMETRY_SHADER);
+            glShaderSource(gShader, 1, &gCode, NULL);
+            glCompileShader(gShader);
+            // check compilation errors
+            res.gSuccess = CheckCompilation(gShader, res.gLog);
+
+            glAttachShader(Program, gShader);
+        }
+
+        // Fragment Shader
+        if (fragmentCode.length() > 0)
+        {
+            fShader = glCreateShader(GL_FRAGMENT_SHADER);
+            glShaderSource(fShader, 1, &fCode, NULL);
+            glCompileShader(fShader);
+            // check compilation errors
+            res.fSuccess = CheckCompilation(fShader, res.fLog);
+
+            glAttachShader(Program, fShader);
+        }
 
         // link
         glLinkProgram(Program);
@@ -80,11 +99,63 @@ namespace GaladHen
         res.linkSuccess = CheckLinking(Program, res.linkLog);
 
         // delete the shaders because they are linked to the Shader Program, and we do not need them anymore
-        glDeleteShader(vShader);
-        glDeleteShader(tcShader);
-        glDeleteShader(teShader);
-        glDeleteShader(gShader);
-        glDeleteShader(fShader);
+        if (vertexCode.length() > 0)
+        {
+            glDeleteShader(vShader);
+        }
+        if (tessContCode.length() > 0)
+        {
+            glDeleteShader(tcShader);
+        }
+        if (tessEvalCode.length() > 0)
+        {
+            glDeleteShader(teShader);
+        }
+        if (geometryCode.length() > 0)
+        {
+            glDeleteShader(gShader);
+        }
+        if (fragmentCode.length() > 0)
+        {
+            glDeleteShader(fShader);
+        }
+
+        return res;
+    }
+
+    CompilationResult ShaderProgramGL::CompileCompute(std::string& computeCode)
+    {
+        // result
+        CompilationResult res;
+
+        // Convert strings to char pointers
+        const char* cCode = computeCode.c_str();
+
+        // compile the shaders
+        GLuint cShader;
+
+        // Compute Shader
+        cShader = glCreateShader(GL_COMPUTE_SHADER);
+        glShaderSource(cShader, 1, &cCode, NULL);
+        glCompileShader(cShader);
+        // check compilation errors
+        res.cSuccess = CheckCompilation(cShader, res.cLog);
+
+        // previous shader program delete
+        if (Program)
+            Delete();
+
+        // shader program creation
+        Program = glCreateProgram();
+        glAttachShader(Program, cShader);
+
+        // link
+        glLinkProgram(Program);
+        // check linking errors
+        res.linkSuccess = CheckLinking(Program, res.linkLog);
+
+        // delete the shader because it is linked to the Shader Program, and we do not need it anymore
+        glDeleteShader(cShader);
 
         return res;
     }

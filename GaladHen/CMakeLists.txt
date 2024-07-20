@@ -39,13 +39,11 @@ add_library(GaladHenLib STATIC
 target_include_directories(GaladHenLib PRIVATE
     ${CMAKE_SOURCE_DIR}/
     ${CMAKE_SOURCE_DIR}/Libs/
-    ${CMAKE_SOURCE_DIR}/Libs/assimp/include/
     ${CMAKE_SOURCE_DIR}/Utils/
     ${CMAKE_SOURCE_DIR}/Renderer/LayerAPI/)
 
 target_link_libraries(GaladHenLib
     PRIVATE
-    assimp
     glfw
     gl3w
     glm

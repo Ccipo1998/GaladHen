@@ -18,6 +18,8 @@ namespace GaladHen
     class Mesh;
     class Scene;
     class SceneStatus;
+    class ShaderPipeline;
+    class ComputeShader;
 
     class Renderer final
     {
@@ -55,6 +57,16 @@ namespace GaladHen
         // @brief
         // Free gpu memory from mesh data, plus clearing internal data
         void FreeMeshDataFromGPU(Mesh& mesh);
+
+        // @brief
+        // Compile a shader pipeline program
+        // @returns: compilation result
+        bool CompileShaderPipeline(ShaderPipeline& program);
+
+        // @brief
+        // Compile a compute shader program
+        // @returns: compilation result
+        bool CompileComputeShader(ComputeShader& program);
 
         // @brief
         // Enable or disable depth testing

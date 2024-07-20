@@ -5,6 +5,7 @@
 
 #include <Renderer/LayerAPI/IRendererAPI.h>
 #include <Renderer/LayerAPI/OpenGL/MeshGL.h>
+#include <Renderer/LayerAPI/OpenGL/ShaderProgramGL.h>
 
 #include <vector>
 
@@ -28,6 +29,14 @@ namespace GaladHen
 		virtual void LoadLighingDataIntoGPU(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) override;
 
 		virtual void FreeLightingDataFromGPU() override;
+
+		virtual unsigned int CreateLowLevelShaderProgram() override;
+
+		virtual void DestroyLowLevelShaderProgram(unsigned int shaderID) override;
+
+		virtual CompilationResult CompileShaderProgramPipeline(std::string& vertexCode, std::string& tessContCode, std::string& tessEvalCode, std::string& geometryCode, std::string& fragmentCode, unsigned int shaderID) override;
+
+		virtual CompilationResult CompilerShaderProgram(std::string& computeCode, unsigned int shaderID) override;
 
 		virtual void EnableDepthTest(bool enable) override;
 
@@ -70,8 +79,10 @@ namespace GaladHen
 
 		std::vector<GLuint> Buffers;
 		unsigned int BufferIndex;
-
 		unsigned int LightingBufferID;
+
+		std::vector<ShaderProgramGL> Shaders;
+		unsigned int ShaderIndex;
 
 	};
 }

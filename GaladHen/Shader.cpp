@@ -8,8 +8,8 @@ namespace GaladHen
         , ShaderID(0)
         {}
 
-    Shader::Shader(std::string& shaderFilePath, ShaderStage shaderType)
-        : ShaderFilePath(shaderFilePath)
+    Shader::Shader(const char* shaderFilePath, ShaderStage shaderType)
+        : ShaderFilePath(std::string{ shaderFilePath })
         , ShaderType(shaderType)
         , ShaderID(0)
         {}

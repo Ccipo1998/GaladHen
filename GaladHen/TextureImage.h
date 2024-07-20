@@ -15,8 +15,8 @@ namespace GaladHen
         TextureImage();
 
         // @brief
-        // Create a texture image from an image file
-        TextureImage(const std::string& textureImagePath);
+        // Create a texture image from image data
+        TextureImage(unsigned char* textureBytes, int widht, int height, int channels);
 
         // TextureImage has not copy constructor and assignments -> a TextureImage cannot be duplicated
         TextureImage(const TextureImage& OtherTexture) = delete;
@@ -35,8 +35,6 @@ namespace GaladHen
         ~TextureImage();
 
     protected:
-
-        void LoadTexture(const char* imagePath);
 
         unsigned char* TextureBytes;
         int Width, Height, NumberOfChannels;

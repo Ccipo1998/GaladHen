@@ -2,7 +2,6 @@
 #include "TextureImage.h"
 
 #include <Utils/stb_image.h>
-#include <Utils/Log.h>
 
 namespace GaladHen
 {
@@ -13,10 +12,12 @@ namespace GaladHen
         , NumberOfChannels(-1)
         {}
 
-    TextureImage::TextureImage(const std::string& textureImagePath)
-    {
-        LoadTexture(textureImagePath.data());
-    }
+    TextureImage::TextureImage(unsigned char* textureBytes, int widht, int height, int channels)
+        : TextureBytes(textureBytes)
+        , Width(widht)
+        , Height(height)
+        , NumberOfChannels(channels)
+        {}
 
     TextureImage::TextureImage(TextureImage&& OtherTexture) noexcept
     {
@@ -44,19 +45,6 @@ namespace GaladHen
         OtherTexture.NumberOfChannels = 0;
 
         return *this;
-    }
-
-    void TextureImage::LoadTexture(const char* imagePath)
-    {
-        TextureBytes = stbi_load(imagePath, &Width, &Height, &NumberOfChannels, 0);
-
-        if (TextureBytes == nullptr)
-        {
-            std::string error;
-            error.append("Unable to open file with path: ");
-            error.append(imagePath);
-            Log::Error("TextureImage", error);
-        }
     }
 
     const unsigned char* TextureImage::GetTextureData()

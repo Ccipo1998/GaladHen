@@ -9,7 +9,7 @@ namespace GaladHen
         , MaterialShadingMode(ShadingMode::SmoothShading)
         {}
 
-    Material::Material(ShaderProgram* materialShader, ShadingMode shadingMode)
+    Material::Material(ShaderPipeline* materialShader, ShadingMode shadingMode)
         : MaterialShader(materialShader)
         , MaterialShadingMode(shadingMode)
         {}

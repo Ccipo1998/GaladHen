@@ -24,7 +24,7 @@ namespace GaladHen
 
         // @brief
         // Construction of a shader object with a shader file and a shader type, no compilation call
-        Shader(std::string& shaderFilePath, ShaderStage shaderType);
+        Shader(const char* shaderFilePath, ShaderStage shaderType);
 
         // Copy ctor
         Shader(const Shader& shader) noexcept;

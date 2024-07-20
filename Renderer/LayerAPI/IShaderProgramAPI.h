@@ -5,16 +5,25 @@
 
 #include <string>
 #include <GaladHen/MaterialData.h>
+#include <Renderer/LayerAPI/IMaterialDataAPI.h>
 
 namespace GaladHen
 {
-    class IMaterialDataAPI;
-
     struct CompilationResult
     {
+        CompilationResult()
+            : vSuccess(true)
+            , tcSuccess(true)
+            , teSuccess(true)
+            , gSuccess(true)
+            , fSuccess(true)
+            , cSuccess(true)
+            , linkSuccess(true)
+        {}
+
         // @brief
         // True if the compilation was successful, false otherwise
-        bool Success();
+        bool Success() { return vSuccess && tcSuccess && teSuccess && gSuccess && fSuccess && cSuccess && linkSuccess; }
 
         bool vSuccess;
         bool tcSuccess;
@@ -40,7 +49,7 @@ namespace GaladHen
 
         virtual CompilationResult Compile(std::string& vertexCode, std::string& tessContCode, std::string& tessEvalCode, std::string& geometryCode, std::string& fragmentCode) = 0;
         
-        virtual CompilationResult Compile(std::string& computeCode) = 0;
+        virtual CompilationResult CompileCompute(std::string& computeCode) = 0;
 
         virtual void LoadShaderData(IMaterialDataAPI* data) = 0;
 

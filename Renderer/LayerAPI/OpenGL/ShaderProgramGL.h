@@ -31,13 +31,13 @@ namespace GaladHen
         // Compile compute shader and assign program
         // @param computeCode: compute shader code
         // @param [out]: info of compilation result
-        virtual CompilationResult Compile(std::string& computeCode) override;
+        virtual CompilationResult CompileCompute(std::string& computeCode) override;
 
         //@brief
         // Load material data for shader in GPU memory
-        void LoadShaderData(IMaterialDataAPI* data) override;
+        virtual void LoadShaderData(IMaterialDataAPI* data) override;
 
-        void SetShadingMode(ShadingMode mode) override;
+        virtual void SetShadingMode(ShadingMode mode) override;
 
         // @brief
         // Set shader program as current active

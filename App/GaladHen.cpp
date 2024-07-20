@@ -36,11 +36,6 @@ int main()
     // create scene
     Scene scene{};
 
-    // load shaders
-    Shader pbrVertex{std::string{"../Shaders/pbr/Pbr.vert"}, ShaderStage::Vertex};
-    Shader pbrFragment{std::string{"../Shaders/pbr/Pbr.frag"}, ShaderStage::Fragment};
-    ShaderProgram pbr{&pbrVertex, nullptr, nullptr, &pbrFragment};
-
     // load textures
     TextureImage* texImgAlbedo = AssetsManager::LoadAndStoreTexImage(
         std::string{"../Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png"},
@@ -51,6 +46,9 @@ int main()
     TextureImage* texImgRoughness = AssetsManager::LoadAndStoreTexImage(
         std::string{"../Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png"},
         std::string{"StuccoRoughness"});
+
+    // get pbr shader pipeline
+    ShaderPipeline pbr = AssetsManager::GetPipelinePBR();
 
     // materials
     Material bunnyMat{&pbr, ShadingMode::SmoothShading};
