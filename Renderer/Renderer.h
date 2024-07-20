@@ -16,6 +16,8 @@
 namespace GaladHen
 {
     class Mesh;
+    class Scene;
+    class SceneStatus;
 
     class Renderer final
     {
@@ -27,12 +29,28 @@ namespace GaladHen
         Renderer(API apiToUse);
 
         // @brief
-        // Perform initialization operations
+        // Perform generic initialization operations
         void Init();
 
         // @brief
-        // Load mesh data into gpu memory, plus assigning a mesh id for internal use
-        void SendMeshDataToGPU(Mesh& mesh);
+        // Perform initialization operations needed from the renderer to render the scene
+        void InitScene(Scene& scene);
+
+        // @brief
+        // Update renderer data basing on updated scene data
+        void UpdateFromScene(Scene& scene, SceneStatus& status);
+
+        // @brief
+        // Draw calls on each scene object of the scene
+        void Draw(Scene& scene);
+
+        // @brief
+        // Clear memory of all objects and data inside the scene
+        void ClearScene(Scene& scene);
+
+        // @brief
+        // First load or update of mesh data into gpu memory, basing on mesh id
+        void LoadMeshDataIntoGPU(Mesh& mesh);
 
         // @brief
         // Free gpu memory from mesh data, plus clearing internal data

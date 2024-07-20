@@ -18,6 +18,34 @@ namespace GaladHen
         LoadTexture(textureImagePath.data());
     }
 
+    TextureImage::TextureImage(TextureImage&& OtherTexture) noexcept
+    {
+        TextureBytes = OtherTexture.TextureBytes;
+        Width = OtherTexture.Width;
+        Height = OtherTexture.Height;
+        NumberOfChannels = OtherTexture.NumberOfChannels;
+
+        OtherTexture.TextureBytes = nullptr;
+        OtherTexture.Width = 0;
+        OtherTexture.Height = 0;
+        OtherTexture.NumberOfChannels = 0;
+    }
+
+    TextureImage& TextureImage::operator=(TextureImage&& OtherTexture) noexcept
+    {
+        TextureBytes = OtherTexture.TextureBytes;
+        Width = OtherTexture.Width;
+        Height = OtherTexture.Height;
+        NumberOfChannels = OtherTexture.NumberOfChannels;
+
+        OtherTexture.TextureBytes = nullptr;
+        OtherTexture.Width = 0;
+        OtherTexture.Height = 0;
+        OtherTexture.NumberOfChannels = 0;
+
+        return *this;
+    }
+
     void TextureImage::LoadTexture(const char* imagePath)
     {
         TextureBytes = stbi_load(imagePath, &Width, &Height, &NumberOfChannels, 0);

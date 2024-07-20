@@ -27,7 +27,7 @@ namespace GaladHen
     
     Model* AssetsManager::LoadAndStoreModel(const std::string& modelPath, const std::string& modelName)
     {
-        const auto& res = AssetsManager::Models.emplace(std::pair<const std::string, Model>(modelName, Model{ modelPath }));
+        const auto& res = AssetsManager::Models.emplace(modelName, Model{ modelPath });
 
         if (!res.second)
         {
@@ -45,7 +45,7 @@ namespace GaladHen
 
     TextureImage* AssetsManager::LoadAndStoreTexImage(const std::string& texImgPath, const std::string& texImgName)
     {
-        const auto& res = AssetsManager::TextureImages.emplace(std::pair<const std::string, TextureImage>(texImgName, TextureImage{ texImgPath }));
+        const auto& res = AssetsManager::TextureImages.emplace(texImgName, TextureImage{ texImgPath });
 
         if (!res.second)
         {

@@ -8,11 +8,11 @@ namespace GaladHen
 {
     SceneObject::SceneObject()
         : Transform(TransformQuat{})
-        // , SceneObjectModel() // TODO: get default model in assets manager
+        , SceneObjectModel(nullptr) // TODO: get default model in assets manager
         // , SceneObjectMaterials() // TODO: get default materials in assets manager
         {}
 
-    SceneObject::SceneObject(SceneObject& sceneObject) noexcept
+    SceneObject::SceneObject(const SceneObject& sceneObject) noexcept
         : Transform(sceneObject.Transform)
         , SceneObjectModel(sceneObject.SceneObjectModel)
         , SceneObjectMaterials(sceneObject.SceneObjectMaterials)

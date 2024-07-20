@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <GaladHen/MeshData.h>
+#include <GaladHen/Light.h>
 
 namespace GaladHen
 {
@@ -27,6 +28,10 @@ namespace GaladHen
 		virtual void DestroyLowLevelMesh(unsigned int meshID) = 0;
 
 		virtual void LoadMeshDataIntoGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, unsigned int meshID) = 0;
+
+		virtual void LoadLighingDataIntoGPU(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) = 0;
+
+		virtual void FreeLightingDataFromGPU() = 0;
 
 		virtual void EnableDepthTest(bool enable) = 0;
 

@@ -19,10 +19,10 @@ namespace GaladHen
         TextureImage(const std::string& textureImagePath);
 
         // TextureImage has not copy constructor and assignments -> a TextureImage cannot be duplicated
-        TextureImage(TextureImage& OtherTexture) = delete;
+        TextureImage(const TextureImage& OtherTexture) = delete;
         TextureImage& operator=(TextureImage& OtherTexture) = delete;
-        TextureImage(TextureImage&& OtherTexture) = default;
-        TextureImage& operator=(TextureImage&& OtherTexture) noexcept = default;
+        TextureImage(TextureImage&& OtherTexture) noexcept;
+        TextureImage& operator=(TextureImage&& OtherTexture) noexcept;
 
         const unsigned char* GetTextureData();
 

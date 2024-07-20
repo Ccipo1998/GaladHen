@@ -33,7 +33,8 @@ add_library(GaladHenLib STATIC
     AssetsManager.h
     MaterialData.h
     MeshData.h
-    TextureData.h)
+    TextureData.h
+    SceneData.h)
 
 target_include_directories(GaladHenLib PRIVATE
     ${CMAKE_SOURCE_DIR}/

@@ -19,7 +19,7 @@ namespace GaladHen
         SceneObject();
 
         // Copy ctor
-        SceneObject(SceneObject& sceneObject) noexcept;
+        SceneObject(const SceneObject& sceneObject) noexcept;
         // Copy assignment
         SceneObject& operator=(SceneObject& sceneObject) noexcept;
         // Move ctor
