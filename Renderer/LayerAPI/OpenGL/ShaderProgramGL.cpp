@@ -160,36 +160,35 @@ namespace GaladHen
         return res;
     }
 
-    void ShaderProgramGL::LoadShaderData(IMaterialDataAPI* data)
+    void ShaderProgramGL::LoadMaterialData(MaterialData& data, std::vector<TextureDataGL>& textureData)
     {
-        MaterialDataGL* dataGL = static_cast<MaterialDataGL*>(data);
-        for (MaterialScalarGL& scalar : dataGL->ScalarData)
+        for (MaterialDataScalar& scalar : data.GetScalarData())
         {
-            glProgramUniform1f(Program, glGetUniformLocation(Program, scalar.Name), scalar.Scalar);
+            glProgramUniform1f(Program, glGetUniformLocation(Program, scalar.Name.data()), scalar.Scalar);
         }
-        for (MaterialVector2GL& vec2 : dataGL->Vector2Data)
+        for (MaterialDataVector2& vec2 : data.GetVector2Data())
         {
-            glProgramUniform2fv(Program, glGetUniformLocation(Program, vec2.Name), 1, glm::value_ptr(glm::vec2(vec2.Vector[0], vec2.Vector[1])));
+            glProgramUniform2fv(Program, glGetUniformLocation(Program, vec2.Name.data()), 1, glm::value_ptr(glm::vec2(vec2.Vector.x, vec2.Vector.y)));
         }
-        for (MaterialVector3GL& vec3 : dataGL->Vector3Data)
+        for (MaterialDataVector3& vec3 : data.GetVector3Data())
         {
-            glProgramUniform3fv(Program, glGetUniformLocation(Program, vec3.Name), 1, glm::value_ptr(glm::vec3(vec3.Vector[0], vec3.Vector[1], vec3.Vector[2])));
+            glProgramUniform3fv(Program, glGetUniformLocation(Program, vec3.Name.data()), 1, glm::value_ptr(glm::vec3(vec3.Vector.x, vec3.Vector.y, vec3.Vector.z)));
         }
-        for (MaterialVector4GL& vec4 : dataGL->Vector4Data)
+        for (MaterialDataVector4& vec4 : data.GetVector4Data())
         {
-            glProgramUniform4fv(Program, glGetUniformLocation(Program, vec4.Name), 1, glm::value_ptr(glm::vec4(vec4.Vector[0], vec4.Vector[1], vec4.Vector[2], vec4.Vector[3])));
+            glProgramUniform4fv(Program, glGetUniformLocation(Program, vec4.Name.data()), 1, glm::value_ptr(glm::vec4(vec4.Vector.x, vec4.Vector.y, vec4.Vector.z, vec4.Vector.w)));
         }
 
         int texUnit = 0;
-        for (std::pair<TextureGL*, TextureParameters>& tex : dataGL->TextureData)
+        for (TextureDataGL& tex : textureData)
         {
-            TextureGL* texImage = tex.first;
-            TextureParameters& params = tex.second;
+            TextureGL* texImage = tex.Texture;
+            TextureParameters* params = tex.Parameters;
             
-            // tex image must be already loaded when arriving here -> this is load shader data, for textures it is for parameters
-            assert(texImage->IsLoaded());
+            // tex image should be already loaded when arriving here
+            //assert(texImage->IsLoaded());
 
-            texImage->LoadTextureParameters(this, texUnit, params.HorizontalWrapping, params.Filtering, params.MipMapMode); // TODO: here should be wrapping for both horizontal and vertical axes
+            texImage->LoadTextureParameters(this, texUnit, params->HorizontalWrapping, params->Filtering, params->MipMapMode); // TODO: here should be wrapping for both horizontal and vertical axes
             
         }
     }

@@ -10,6 +10,9 @@
 
 #include <Utils/Log.h>
 
+#include <GaladHen/Material.h>
+#include <GaladHen/TextureImage.h>
+
 namespace GaladHen
 {
 	RendererGL::RendererGL()
@@ -17,6 +20,7 @@ namespace GaladHen
 		, BufferIndex(0)
 		, LightingBufferID(0)
 		, ShaderIndex(0)
+		, TextureIndex(0)
 	{}
 
 	void RendererGL::Init()
@@ -140,9 +144,61 @@ namespace GaladHen
 		return program.CompileCompute(computeCode);
 	}
 
+	unsigned int RendererGL::CreateLowLevelTexture()
+	{
+		if (TextureIndex >= Textures.size())
+		{
+			Textures.push_back(TextureGL{});
+
+			return ++TextureIndex;
+		}
+
+		unsigned int next = *(unsigned int*)(&Textures[TextureIndex]);
+		Textures[TextureIndex] = TextureGL{};
+		unsigned int old = TextureIndex;
+		TextureIndex = next;
+
+		return old + 1;
+	}
+
+	void RendererGL::DestroyLowLevelTexture(unsigned int textureID)
+	{
+		Textures[textureID - 1].FreeMemoryGPU();
+
+		*(unsigned int*)(&Textures[textureID - 1]) = TextureIndex;
+		TextureIndex = textureID - 1;
+	}
+
+	void RendererGL::LoadTextureIntoGPU(unsigned int textureID, const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps)
+	{
+		TextureGL& tex = Textures[textureID - 1];
+		tex.LoadMemoryGPU(textureBytes, width, height, textureFormat, pixelFormat, pixelType, generateMipMaps);
+	}
+
+
 	void RendererGL::EnableDepthTest(bool enable)
 	{
 		glEnable(GL_DEPTH_TEST);
+	}
+
+	void RendererGL::LoadMaterialData(unsigned int shaderID, Material& material)
+	{
+		std::vector<TextureDataGL> texs;
+		for (MaterialDataTexture& tex : material.Data->GetTextureData())
+		{
+			TextureDataGL dataGL{};
+			dataGL.Texture = &Textures[tex.Tex.TextureData->TextureID - 1];
+			dataGL.Parameters = &tex.Tex.Parameters;
+			texs.emplace_back(dataGL);
+		}
+
+		ShaderProgramGL& program = Shaders[shaderID - 1];
+		program.LoadMaterialData(*material.Data, texs);
+	}
+
+	void Draw(unsigned int meshID, unsigned int shaderID)
+	{
+
 	}
 
 	unsigned int RendererGL::LoadBufferData(GLuint binding, GLenum usage, size_t totalSizeBytes, void* data)

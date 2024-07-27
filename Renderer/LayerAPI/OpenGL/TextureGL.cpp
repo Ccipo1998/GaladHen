@@ -80,4 +80,9 @@ namespace GaladHen
         int loc = glGetUniformLocation((static_cast<ShaderProgramGL*>(shaderProgram))->GetShaderProgram(), samplerName);
         glUniform1i(loc, 1);
     }
+
+    void TextureGL::FreeMemoryGPU()
+    {
+        // TODO
+    }
 }

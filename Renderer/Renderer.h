@@ -16,16 +16,16 @@
 namespace GaladHen
 {
     class Mesh;
+    class Model;
     class Scene;
     class SceneStatus;
     class ShaderPipeline;
     class ComputeShader;
+    class Material;
+    class Texture;
 
     class Renderer final
     {
-
-        friend class Mesh;
-
     public:
 
         Renderer(API apiToUse);
@@ -35,28 +35,52 @@ namespace GaladHen
         void Init();
 
         // @brief
-        // Perform initialization operations needed from the renderer to render the scene
-        void InitScene(Scene& scene);
+        // Load all the models used by the scene
+        void LoadModels(Scene& scene);
 
         // @brief
-        // Update renderer data basing on updated scene data
-        void UpdateFromScene(Scene& scene, SceneStatus& status);
+        // Free memory of all models used by the scene
+        void FreeModels(Scene& scene);
+
+        // brief
+        // Load all lighting data used inside the scene
+        void LoadLightingData(Scene& scene);
+
+        // @brief
+        // Free alla lighting data used by the scene
+        void FreeLightingData(Scene& scene);
+
+        // @brief
+        // Compile all the shaders used by the scene
+        void CompileShaders(Scene& scene);
+
+        // @brief
+        // Load of mesh data into gpu memory
+        void LoadMesh(Mesh& mesh);
+
+        // @brief
+        // Free gpu memory from mesh data, plus clearing internal data
+        void FreeMesh(Mesh& mesh);
+
+        // @brief
+        // Load of model data into gpu memory
+        void LoadModel(Model& model);
+
+        // @brief
+        // Free gpu memory from model data, plus clearing internal data
+        void FreeModel(Model& model);
+
+        // @brief
+        // Load texture data into GPU memory
+        void LoadTexture(Texture& texture);
+
+        // @brief
+        // Load material data into GPU memory
+        void LoadMaterialData(Material& material);
 
         // @brief
         // Draw calls on each scene object of the scene
         void Draw(Scene& scene);
-
-        // @brief
-        // Clear memory of all objects and data inside the scene
-        void ClearScene(Scene& scene);
-
-        // @brief
-        // First load or update of mesh data into gpu memory, basing on mesh id
-        void LoadMeshDataIntoGPU(Mesh& mesh);
-
-        // @brief
-        // Free gpu memory from mesh data, plus clearing internal data
-        void FreeMeshDataFromGPU(Mesh& mesh);
 
         // @brief
         // Compile a shader pipeline program

@@ -10,6 +10,7 @@ namespace GaladHen
         , Width(-1)
         , Height(-1)
         , NumberOfChannels(-1)
+        , TextureID(0)
         {}
 
     TextureImage::TextureImage(unsigned char* textureBytes, int widht, int height, int channels)
@@ -17,6 +18,7 @@ namespace GaladHen
         , Width(widht)
         , Height(height)
         , NumberOfChannels(channels)
+        , TextureID(0)
         {}
 
     TextureImage::TextureImage(TextureImage&& OtherTexture) noexcept
@@ -25,11 +27,13 @@ namespace GaladHen
         Width = OtherTexture.Width;
         Height = OtherTexture.Height;
         NumberOfChannels = OtherTexture.NumberOfChannels;
+        TextureID = OtherTexture.TextureID;
 
         OtherTexture.TextureBytes = nullptr;
         OtherTexture.Width = 0;
         OtherTexture.Height = 0;
         OtherTexture.NumberOfChannels = 0;
+        OtherTexture.TextureID = 0;
     }
 
     TextureImage& TextureImage::operator=(TextureImage&& OtherTexture) noexcept
@@ -38,11 +42,13 @@ namespace GaladHen
         Width = OtherTexture.Width;
         Height = OtherTexture.Height;
         NumberOfChannels = OtherTexture.NumberOfChannels;
+        TextureID = OtherTexture.TextureID;
 
         OtherTexture.TextureBytes = nullptr;
         OtherTexture.Width = 0;
         OtherTexture.Height = 0;
         OtherTexture.NumberOfChannels = 0;
+        OtherTexture.TextureID = 0;
 
         return *this;
     }

@@ -35,7 +35,7 @@ namespace GaladHen
 
         //@brief
         // Load material data for shader in GPU memory
-        virtual void LoadShaderData(IMaterialDataAPI* data) override;
+        virtual void LoadMaterialData(MaterialData& data, std::vector<TextureDataGL>& textureData) override;
 
         virtual void SetShadingMode(ShadingMode mode) override;
 

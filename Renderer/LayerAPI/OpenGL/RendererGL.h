@@ -6,6 +6,7 @@
 #include <Renderer/LayerAPI/IRendererAPI.h>
 #include <Renderer/LayerAPI/OpenGL/MeshGL.h>
 #include <Renderer/LayerAPI/OpenGL/ShaderProgramGL.h>
+#include <Renderer/LayerAPI/OpenGL/TextureGL.h>
 
 #include <vector>
 
@@ -38,7 +39,17 @@ namespace GaladHen
 
 		virtual CompilationResult CompilerShaderProgram(std::string& computeCode, unsigned int shaderID) override;
 
+		virtual unsigned int CreateLowLevelTexture() override;
+
+		virtual void DestroyLowLevelTexture(unsigned int textureID) override;
+
+		virtual void LoadTextureIntoGPU(unsigned int textureID, const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps) override;
+
 		virtual void EnableDepthTest(bool enable) override;
+
+		virtual void LoadMaterialData(unsigned int shaderID, Material& material) override;
+
+		virtual void Draw(unsigned int meshID, unsigned int shaderID) override;
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -83,6 +94,9 @@ namespace GaladHen
 
 		std::vector<ShaderProgramGL> Shaders;
 		unsigned int ShaderIndex;
+
+		std::vector<TextureGL> Textures;
+		unsigned int TextureIndex;
 
 	};
 }

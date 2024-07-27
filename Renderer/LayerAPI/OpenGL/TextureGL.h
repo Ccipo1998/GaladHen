@@ -27,6 +27,8 @@ namespace GaladHen
 
         virtual void SetTextureSamplerName(IShaderProgramAPI* shaderProgram, unsigned int unit, char* samplerName) override;
 
+        virtual void FreeMemoryGPU() override;
+
     protected:
 
         GLuint TextureID;

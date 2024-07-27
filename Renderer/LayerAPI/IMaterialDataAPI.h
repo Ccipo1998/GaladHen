@@ -3,32 +3,13 @@
 
 #pragma once
 
-#include <vector>
-#include "ITextureAPI.h"
-
 namespace GaladHen
 {
-    // material data parameter types
-    struct IMaterialScalar
-    {
-        float Scalar;
-    };
-    struct IMaterialVector2
-    {
-        float Vector[2];
-    };
-    struct IMaterialVector3
-    {
-        float Vector[3];
-    };
-    struct IMaterialVector4
-    {
-        float Vector[4];
-    };
+    class TextureParameters;
 
     // material data interface
-    struct IMaterialDataAPI
+    struct ITextureDataAPI
     {
-        // void to avoid vectors of pointers
+        TextureParameters* Parameters;
     };
 }

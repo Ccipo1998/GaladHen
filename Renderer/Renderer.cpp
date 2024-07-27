@@ -2,7 +2,10 @@
 #include "Renderer.h"
 
 #include <Renderer/LayerAPI/OpenGL/RendererGL.h>
+#include <Renderer/LayerAPI/OpenGL/MaterialDataGL.h>
+
 #include <GaladHen/Mesh.h>
+#include <GaladHen/Model.h>
 #include <GaladHen/Scene.h>
 #include <GaladHen/SceneObject.h>
 #include <GaladHen/Model.h>
@@ -12,6 +15,8 @@
 
 #include <Utils/Log.h>
 #include <Utils/FileLoader.h>
+
+#include <unordered_set>
 
 namespace GaladHen
 {
@@ -40,64 +45,65 @@ namespace GaladHen
         RendererAPI->Init();
     }
 
-    void Renderer::Draw(Scene& scene)
-    {
-        
-    }
-
-    void Renderer::InitScene(Scene& scene)
+    void Renderer::LoadModels(Scene& scene)
     {
         // Load mesh data
+        for (SceneObject& sceneObj : scene.SceneObjects)
+        {
+            LoadModel(*sceneObj.GetSceneObjectModel());
+        }
+    }
+
+    void Renderer::FreeModels(Scene& scene)
+    {
+        // Free mesh data
+        for (SceneObject& sceneObj : scene.SceneObjects)
+        {
+            Model* mod = sceneObj.GetSceneObjectModel();
+
+            for (Mesh& mesh : mod->Meshes)
+            {
+                FreeMesh(mesh);
+            }
+        }
+    }
+
+    void Renderer::LoadLightingData(Scene& scene)
+    {
+        // Allocate and populate memory for lighting
+        RendererAPI->LoadLighingDataIntoGPU(scene.PointLights, scene.DirectionalLights);
+    }
+
+    void Renderer::FreeLightingData(Scene& scene)
+    {
+        // Free lighting data
+        RendererAPI->FreeLightingDataFromGPU();
+    }
+
+    void Renderer::CompileShaders(Scene& scene)
+    {
+        // shaders already compiled
+        std::unordered_set<unsigned int> compiled;
+
         for (SceneObject& sceneObj : scene.SceneObjects)
         {
             Model* mod = sceneObj.GetSceneObjectModel();
 
             for (unsigned int i = 0; i < mod->Meshes.size(); ++i)
             {
-                // mesh data
-                LoadMeshDataIntoGPU(mod->Meshes[i]);
-
-                // shader
                 if (Material* mat = sceneObj.GetMaterial(i))
                 {
-                    CompileShaderPipeline(*mat->MaterialShader);
+                    if (compiled.find(mat->MaterialShader->ShaderProgramID) == compiled.end())
+                    {
+                        compiled.insert(mat->MaterialShader->ShaderProgramID);
+                        CompileShaderPipeline(*mat->MaterialShader);
+                    }
                 }
             }
-
-            for (Mesh& mesh : mod->Meshes)
-            {
-                // mesh data
-                LoadMeshDataIntoGPU(mesh);
-            }
         }
-
-        // Allocate and populate memory for lighting
-        RendererAPI->LoadLighingDataIntoGPU(scene.PointLights, scene.DirectionalLights);
     }
 
-    void Renderer::UpdateFromScene(Scene& scene, SceneStatus& status)
-    {
-        // TODO
-    }
-
-    void Renderer::ClearScene(Scene& scene)
-    {
-        // Clear mesh data
-        for (SceneObject& sceneObj : scene.SceneObjects)
-        {
-            Model* mod = sceneObj.GetSceneObjectModel();
-
-            for (Mesh& mesh : mod->Meshes)
-            {
-                FreeMeshDataFromGPU(mesh);
-            }
-        }
-
-        // Free lighting data
-        RendererAPI->FreeLightingDataFromGPU();
-    }
-
-    void Renderer::LoadMeshDataIntoGPU(Mesh& mesh)
+    void Renderer::LoadMesh(Mesh& mesh)
     {
         if (mesh.MeshID == 0)
         {
@@ -108,9 +114,46 @@ namespace GaladHen
         RendererAPI->LoadMeshDataIntoGPU(mesh.Vertices, mesh.Indices, mesh.MeshID);
     }
 
-    void Renderer::FreeMeshDataFromGPU(Mesh& mesh)
+    void Renderer::FreeMesh(Mesh& mesh)
     {
         RendererAPI->DestroyLowLevelMesh(mesh.MeshID);
+    }
+
+    void Renderer::LoadModel(Model& model)
+    {
+        for (Mesh& mesh : model.Meshes)
+        {
+            LoadMesh(mesh);
+        }
+    }
+
+    void Renderer::FreeModel(Model& model)
+    {
+        for (Mesh& mesh : model.Meshes)
+        {
+            FreeMesh(mesh);
+        }
+    }
+
+    void Renderer::LoadMaterialData(Material& material)
+    {
+        RendererAPI->LoadMaterialData(material.MaterialShader->ShaderProgramID, material);
+    }
+
+    void Renderer::Draw(Scene& scene)
+    {
+        for (SceneObject& sceneObj : scene.SceneObjects)
+        {
+            Model* mod = sceneObj.GetSceneObjectModel();
+
+            for (unsigned int i = 0; i < mod->Meshes.size(); ++i)
+            {
+                if (Material* mat = sceneObj.GetMaterial(i))
+                {
+                    RendererAPI->Draw(mod->Meshes[i].MeshID, mat->MaterialShader->ShaderProgramID);
+                }
+            }
+        }
     }
 
     bool Renderer::CompileShaderPipeline(ShaderPipeline& program)
@@ -207,6 +250,52 @@ namespace GaladHen
                 error.append(result.fLog);
                 error.append("\n");
             }
+
+            Log::Error("Renderer", error);
+        }
+
+        return result.Success();
+    }
+
+    bool Renderer::CompileComputeShader(ComputeShader& program)
+    {
+        if (program.ShaderProgramID == 0)
+        {
+            // New shader program -> create low level shader program
+            program.ShaderProgramID = RendererAPI->CreateLowLevelShaderProgram();
+        }
+
+        // Read files
+
+        std::string compute;
+        std::string computePath; // For error log
+
+        if (program.CompShader)
+        {
+            computePath = program.CompShader->ShaderFilePath;
+            compute = FileLoader::ReadTextFile(computePath.data());
+        }
+
+        CompilationResult result = RendererAPI->CompilerShaderProgram(compute, program.ShaderProgramID);
+
+        if (!result.Success())
+        {
+            std::string error;
+
+            if (result.linkSuccess)
+            {
+                error = "Compilation error for compute shader:\n";
+            }
+            else
+            {
+                error = "Linking error for compute shader:\n";
+            }
+
+            error.append("ERROR in compute shader ");
+            error.append(computePath);
+            error.append(": ");
+            error.append(result.cLog);
+            error.append("\n");
 
             Log::Error("Renderer", error);
         }

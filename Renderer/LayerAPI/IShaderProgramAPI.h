@@ -4,8 +4,9 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <GaladHen/MaterialData.h>
-#include <Renderer/LayerAPI/IMaterialDataAPI.h>
+#include <Renderer/LayerAPI/OpenGL/MaterialDataGL.h>
 
 namespace GaladHen
 {
@@ -51,7 +52,7 @@ namespace GaladHen
         
         virtual CompilationResult CompileCompute(std::string& computeCode) = 0;
 
-        virtual void LoadShaderData(IMaterialDataAPI* data) = 0;
+        virtual void LoadMaterialData(MaterialData& data, std::vector<TextureDataGL>& textureData) = 0;
 
         virtual void SetShadingMode(ShadingMode mode) = 0;
 

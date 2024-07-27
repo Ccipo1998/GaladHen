@@ -8,10 +8,12 @@
 
 #include <GaladHen/MeshData.h>
 #include <GaladHen/Light.h>
+#include <GaladHen/TextureData.h>
 
 namespace GaladHen
 {
 	class CompilationResult;
+	class Material;
 
 	class IRendererAPI
 	{
@@ -49,7 +51,17 @@ namespace GaladHen
 
 		virtual CompilationResult CompilerShaderProgram(std::string& computeCode, unsigned int shaderID) = 0;
 
+		virtual unsigned int CreateLowLevelTexture() = 0;
+
+		virtual void DestroyLowLevelTexture(unsigned int textureID) = 0;
+
+		virtual void LoadTextureIntoGPU(unsigned int textureID, const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps) = 0;
+
 		virtual void EnableDepthTest(bool enable) = 0;
+
+		virtual void LoadMaterialData(unsigned int shaderID, Material& material) = 0;
+
+		virtual void Draw(unsigned int meshID, unsigned int shaderID) = 0;
 
 	};
 }

@@ -65,7 +65,9 @@ int main()
     scene.SceneObjects.push_back(objBunny);
 
     // init scene for renderer
-    renderer.InitScene(scene);
+    renderer.LoadModels(scene);
+    renderer.LoadLightingData(scene);
+    renderer.CompileShaders(scene);
 
     while (!input.IsCloseWindowRequested())
     {

@@ -34,6 +34,8 @@ namespace GaladHen
         // Free texture resources
         ~TextureImage();
 
+        unsigned int TextureID; // 0 means -1, so the low level pair is not already been created
+
     protected:
 
         unsigned char* TextureBytes;

@@ -50,5 +50,7 @@ namespace GaladHen
         // @param samplerName: the name of the sampler inside the shader program
         virtual void SetTextureSamplerName(IShaderProgramAPI* shaderProgram, unsigned int unit, char* samplerName) = 0;
 
+        virtual void FreeMemoryGPU() = 0;
+
     };
 }
