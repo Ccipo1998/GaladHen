@@ -1,7 +1,7 @@
 
 #include "WindowGL.h"
 
-#include <GaladHen/Input.h>
+#include <Core/Input.h>
 
 // glfw
 #include <GLFW/glfw3.h>

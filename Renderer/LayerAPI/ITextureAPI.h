@@ -3,11 +3,12 @@
 
 #pragma once
 
-#include <GaladHen/TextureData.h>
+#include <Core/TextureData.h>
 
 namespace GaladHen
 {
     class IShaderProgramAPI;
+    enum class TextureFormat;
 
     class ITextureAPI
     {
@@ -22,7 +23,7 @@ namespace GaladHen
         // @param textureFormat: format used to load entire texture data
         // @param pixelFormat: format used to interpret pixel data
         // @param pixelType: data type of a single pixel
-        virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps = false) = 0;
+        virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, bool generateMipMaps) = 0;
 
         // @brief
         // Load texture parameters to use with texture data

@@ -5,8 +5,8 @@
 
 #include <vector>
 
-#include <GaladHen/MeshData.h>
-#include <GaladHen/MaterialData.h>
+#include <Core/MeshData.h>
+#include <Core/MaterialData.h>
 
 namespace GaladHen
 {
@@ -19,7 +19,7 @@ namespace GaladHen
 
         // @brief
         // Drawcall
-        virtual void Draw(MaterialData& data, ShadingMode mode, IShaderProgramAPI* shader) = 0;
+        virtual void Draw(IShaderProgramAPI* shader) = 0;
 
         // @brief
         // Load mesh data in GPU memory

@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "MaterialData.h"
-#include "Texture.h"
+#include "TextureData.h"
 
 namespace GaladHen
 {
@@ -48,12 +48,12 @@ namespace GaladHen
         virtual std::vector<MaterialDataTexture> GetTextureData() override;
 
         glm::vec4 DiffuseColor;
-        Texture DiffuseTexture;
-        Texture NormalMap;
+        TextureParameters DiffuseTexture;
+        TextureParameters NormalMap;
         float Metallic;
-        Texture MetallicTexture;
+        TextureParameters MetallicTexture;
         float Roughness;
-        Texture RoughnessTexture;
+        TextureParameters RoughnessTexture;
         //GLfloat Specular;
     };
 

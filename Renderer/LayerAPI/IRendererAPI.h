@@ -6,14 +6,17 @@
 #include <vector>
 #include <string>
 
-#include <GaladHen/MeshData.h>
-#include <GaladHen/Light.h>
-#include <GaladHen/TextureData.h>
+#include <Core/Light.h>
 
 namespace GaladHen
 {
 	class CompilationResult;
 	class Material;
+	class Mesh;
+	class ShaderPipeline;
+	class ComputeShader;
+	class Texture;
+	class ShaderProgram;
 
 	class IRendererAPI
 	{
@@ -23,45 +26,28 @@ namespace GaladHen
 		// Init operations
 		virtual void Init() = 0;
 
-		// @brief
-		// Create a low level mesh
-		// @return The ID of the newly created low level mesh
-		virtual unsigned int CreateLowLevelMesh() = 0;
+		virtual void LoadMeshDataIntoGPU(Mesh& mesh) = 0;
 
-		// @brief
-		// Destroy a low level mesh, freeing gpu memory
-		virtual void DestroyLowLevelMesh(unsigned int meshID) = 0;
-
-		virtual void LoadMeshDataIntoGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, unsigned int meshID) = 0;
+		virtual void FreeMeshDataFromGPU(Mesh& mesh) = 0;
 
 		virtual void LoadLighingDataIntoGPU(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) = 0;
 
 		virtual void FreeLightingDataFromGPU() = 0;
 
-		// @brief
-		// Create a low level shader program
-		// @return The ID of the newly created low level shader program
-		virtual unsigned int CreateLowLevelShaderProgram() = 0;
+		virtual CompilationResult CompileShaderPipeline(ShaderPipeline& pipeline) = 0;
 
-		// @brief
-		// Destroy a low level shader program, freeing gpu memory
-		virtual void DestroyLowLevelShaderProgram(unsigned int shaderID) = 0;
+		virtual CompilationResult CompileComputeShader(ComputeShader& compute) = 0;
 
-		virtual CompilationResult CompileShaderProgramPipeline(std::string& vertexCode, std::string& tessContCode, std::string& tessEvalCode, std::string& geometryCode, std::string& fragmentCode, unsigned int shaderID) = 0;
+		virtual void FreeShaderProgram(ShaderProgram* program) = 0;
 
-		virtual CompilationResult CompilerShaderProgram(std::string& computeCode, unsigned int shaderID) = 0;
+		virtual void LoadTextureIntoGPU(Texture& texture) = 0;
 
-		virtual unsigned int CreateLowLevelTexture() = 0;
-
-		virtual void DestroyLowLevelTexture(unsigned int textureID) = 0;
-
-		virtual void LoadTextureIntoGPU(unsigned int textureID, const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps) = 0;
+		virtual void FreeTextureFromGPU(Texture& texture) = 0;
 
 		virtual void EnableDepthTest(bool enable) = 0;
 
-		virtual void LoadMaterialData(unsigned int shaderID, Material& material) = 0;
+		virtual void LoadMaterialData(Material& material) = 0;
 
-		virtual void Draw(unsigned int meshID, unsigned int shaderID) = 0;
-
+		virtual void Draw(Mesh& mesh, Material& material) = 0;
 	};
 }

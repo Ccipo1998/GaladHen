@@ -7,11 +7,12 @@
 namespace GaladHen
 {
     class Model;
-    class TextureImage;
+    class Texture;
     class Shader;
     class ShaderPipeline;
     class ComputeShader;
     enum ShaderStage;
+    enum class TextureFormat;
 
     class AssetsManager
     {
@@ -33,8 +34,8 @@ namespace GaladHen
         static Model* LoadAndStoreModel(const std::string& modelPath, const std::string& modelName);
 
         // @brief
-        // Load a texture image from a file and make it owned by assets manager
-        static TextureImage* LoadAndStoreTexImage(const std::string& texImgPath, const std::string& texImgName);
+        // Load a texture from a file and make it owned by assets manager
+        static Texture* LoadAndStoreTexture(const std::string& texImgPath, const std::string& texImgName, TextureFormat textureFormat);
 
         // @brief
        // Load a shader from a file and make it owned by assets manager
@@ -45,8 +46,8 @@ namespace GaladHen
         static Model* GetModelByName(const std::string& assetName);
 
         // @brief
-        // Get a reference to a texture image owned by assets manager by its name
-        static TextureImage* GetTexImageByName(const std::string& assetName);
+        // Get a reference to a texture owned by assets manager by its name
+        static Texture* GetTextureByName(const std::string& assetName);
 
         // DEFAULTS --------------------------------------------------------------------------------------------------
 
@@ -58,7 +59,7 @@ namespace GaladHen
 
         // General assets
         static std::map<const std::string, Model> Models;
-        static std::map<const std::string, TextureImage> TextureImages;
+        static std::map<const std::string, Texture> Textures;
         static std::map<const std::string, Shader> Shaders;
 
         // Default assets

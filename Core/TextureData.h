@@ -7,24 +7,7 @@
 
 namespace GaladHen
 {
-    enum class TextureFormat
-    {
-        RGB = 0,
-        SRGB = 1
-    };
-
-    enum class PixelDataFormat
-    {
-        R = 0,
-        RG = 1,
-        RGB = 2,
-        RGBA = 3
-    };
-
-    enum class PixelDataType
-    {
-        UnsignedByte = 0
-    };
+    class Texture;
 
     enum class TextureWrapping
     {
@@ -52,11 +35,14 @@ namespace GaladHen
     struct TextureParameters
     {
         TextureParameters()
-            : HorizontalWrapping(TextureWrapping::Repeat)
+            : Texture(nullptr)
+            , HorizontalWrapping(TextureWrapping::Repeat)
             , VerticalWrapping(TextureWrapping::Repeat)
             , Filtering(TextureFiltering::Linear)
             , MipMapMode(TextureMipMap::LinearLinear) // defaults 
             {}
+
+        Texture* Texture;
 
         TextureWrapping HorizontalWrapping;
         TextureWrapping VerticalWrapping;

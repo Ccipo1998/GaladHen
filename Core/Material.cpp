@@ -16,12 +16,12 @@ namespace GaladHen
 
     PBRMaterialData:: PBRMaterialData()
         : DiffuseColor(glm::vec4(0.3f, 0.9f, 0.3f, 1.0f))
-        , DiffuseTexture(Texture{})
-        , NormalMap(Texture{})
+        , DiffuseTexture(TextureParameters{})
+        , NormalMap(TextureParameters{})
         , Metallic(0.0f)
-        , MetallicTexture(Texture{})
+        , MetallicTexture(TextureParameters{})
         , Roughness(0.0f)
-        , RoughnessTexture(Texture{})
+        , RoughnessTexture(TextureParameters{})
         {}
 
     std::vector<MaterialDataScalar> PBRMaterialData::GetScalarData()

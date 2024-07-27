@@ -3,6 +3,7 @@
 
 #include <Renderer/LayerAPI/IShaderProgramAPI.h>
 #include <Renderer/LayerAPI/OpenGL/ShaderProgramGL.h>
+#include <Core/Texture.h>
 
 namespace GaladHen
 {
@@ -13,12 +14,19 @@ namespace GaladHen
         TextureFormatAssociations[(int)TextureFormat::RGB] = GL_RGB;
         TextureFormatAssociations[(int)TextureFormat::SRGB] = GL_SRGB;
         
-        PixelFormatAssociations[(int)PixelDataFormat::R] = GL_RED;
-        PixelFormatAssociations[(int)PixelDataFormat::RG] = GL_RED;
-        PixelFormatAssociations[(int)PixelDataFormat::RGB] = GL_RED;
-        PixelFormatAssociations[(int)PixelDataFormat::RGBA] = GL_RED;
+        /*PixelChannelsAssociations[(int)PixelDataFormat::R] = GL_RED;
+        PixelChannelsAssociations[(int)PixelDataFormat::RG] = GL_RG;
+        PixelChannelsAssociations[(int)PixelDataFormat::RGB] = GL_RGB;
+        PixelChannelsAssociations[(int)PixelDataFormat::RGBA] = GL_RGBA;
 
-        PixelDataTypeAssociations[(int)PixelDataType::UnsignedByte] = GL_UNSIGNED_BYTE;
+        PixelChannelDepthAssociations[(int)PixelDataType::UnsignedByte] = GL_UNSIGNED_BYTE;*/
+
+        PixelChannelsAssociations[0] = GL_RED;
+        PixelChannelsAssociations[1] = GL_RG;
+        PixelChannelsAssociations[2] = GL_RGB;
+        PixelChannelsAssociations[3] = GL_RGBA;
+
+        PixelChannelDepthAssociations[0] = GL_UNSIGNED_BYTE;
 
         WrappingAssociations[(int)TextureWrapping::Repeat] = GL_REPEAT;
         WrappingAssociations[(int)TextureWrapping::ClampToBorder] = GL_CLAMP_TO_BORDER;
@@ -26,7 +34,7 @@ namespace GaladHen
         WrappingAssociations[(int)TextureWrapping::MirroredRepeat] = GL_MIRRORED_REPEAT;
     }
 
-    void TextureGL::LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps)
+    void TextureGL::LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, bool generateMipMaps)
     {
         // create new texture object
         glGenTextures(1, &TextureID);
@@ -38,7 +46,7 @@ namespace GaladHen
         glTexStorage2D(GL_TEXTURE_2D, 1, TextureFormatAssociations[(int)textureFormat], width, height);
 
         // copy texture data to texture object
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PixelFormatAssociations[(int)pixelFormat], PixelDataTypeAssociations[(int)pixelType], textureBytes);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PixelChannelsAssociations[numberOfChannels - 1], PixelChannelDepthAssociations[0], textureBytes);
 
         if (generateMipMaps)
             glGenerateTextureMipmap(TextureID);

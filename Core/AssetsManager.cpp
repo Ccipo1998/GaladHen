@@ -1,21 +1,21 @@
 
 #include "AssetsManager.h"
 #include "Model.h"
-#include "TextureImage.h"
+#include "Texture.h"
 #include "Shader.h"
 #include "ShaderProgram.h"
+#include "FileLoader.h"
 
 #include <utility>
 #include <iterator>
 #include <Utils/Log.h>
-#include <Utils/FileLoader.h>
 
 namespace GaladHen
 {
 
     // Inits
     std::map<const std::string, Model> AssetsManager::Models = std::map<const std::string, Model>{};
-    std::map<const std::string, TextureImage> AssetsManager::TextureImages = std::map<const std::string, TextureImage>{};
+    std::map<const std::string, Texture> AssetsManager::Textures = std::map<const std::string, Texture>{};
     std::map<const std::string, Shader> AssetsManager::Shaders = std::map<const std::string, Shader>{};
     Shader AssetsManager::PBR_VertexShader = Shader("../Shaders/pbr/Pbr.vert", ShaderStage::Vertex); // default
     Shader AssetsManager::PBR_FragmentShader = Shader("../Shaders/pbr/Pbr.frag", ShaderStage::Fragment); // default
@@ -23,7 +23,8 @@ namespace GaladHen
     void AssetsManager::FreeAssets()
     {
         AssetsManager::Models.clear();
-        AssetsManager::TextureImages.clear();
+        AssetsManager::Textures.clear();
+        AssetsManager::Shaders.clear();
     }
     
     Model* AssetsManager::LoadAndStoreModel(const std::string& modelPath, const std::string& modelName)
@@ -44,9 +45,9 @@ namespace GaladHen
         return &Models[assetName];
     }
 
-    TextureImage* AssetsManager::LoadAndStoreTexImage(const std::string& texImgPath, const std::string& texImgName)
+    Texture* AssetsManager::LoadAndStoreTexture(const std::string& texImgPath, const std::string& texImgName, TextureFormat textureFormat)
     {
-        const auto& res = AssetsManager::TextureImages.emplace(texImgName, FileLoader::ReadImageFile(texImgPath.data()));
+        const auto& res = AssetsManager::Textures.emplace(texImgName, FileLoader::ReadImageFile(texImgPath.data(), textureFormat));
 
         if (!res.second)
         {
@@ -70,9 +71,9 @@ namespace GaladHen
         return &(*res.first).second;
     }
 
-    TextureImage* AssetsManager::GetTexImageByName(const std::string& assetName)
+    Texture* AssetsManager::GetTextureByName(const std::string& assetName)
     {
-        return &TextureImages[assetName];
+        return &Textures[assetName];
     }
 
     ShaderPipeline AssetsManager::GetPipelinePBR()

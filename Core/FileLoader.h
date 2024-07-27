@@ -10,7 +10,8 @@ struct aiMesh;
 namespace GaladHen
 {
     class Model;
-    class TextureImage;
+    class Texture;
+    enum class TextureFormat;
 
     class FileLoader
     {
@@ -20,7 +21,7 @@ namespace GaladHen
 
         static Model ReadModelFile(const char* filePath);
 
-        static TextureImage ReadImageFile(const char* filePath);
+        static Texture ReadImageFile(const char* filePath, TextureFormat textureFormat);
 
     protected:
 

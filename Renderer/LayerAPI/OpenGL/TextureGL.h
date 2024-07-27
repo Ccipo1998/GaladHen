@@ -17,7 +17,7 @@ namespace GaladHen
 
         TextureGL();
 
-        virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps) override;
+        virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, bool generateMipMaps) override;
 
         virtual void LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, TextureWrapping wrapping, TextureFiltering filtering, TextureMipMap mipmap) override;
 
@@ -41,11 +41,11 @@ namespace GaladHen
         // OpenGL pixel formats are called Base Internal Formats
         // https://www.khronos.org/opengl/wiki/Image_Format
         // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexStorage2D.xhtml
-        int PixelFormatAssociations[4];
+        int PixelChannelsAssociations[4];
 
         // OpenGL pixel data type
         // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml (type parameter)
-        int PixelDataTypeAssociations[19];
+        int PixelChannelDepthAssociations[19];
 
         // OpenGL wrapping parameters
         int WrappingAssociations[4];

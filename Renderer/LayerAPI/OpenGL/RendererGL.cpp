@@ -10,8 +10,12 @@
 
 #include <Utils/Log.h>
 
-#include <GaladHen/Material.h>
-#include <GaladHen/TextureImage.h>
+#include <Core/Mesh.h>
+#include <Core/Material.h>
+#include <Core/Texture.h>
+#include <Core/ShaderProgram.h>
+#include <Core/Shader.h>
+#include <Core/FileLoader.h>
 
 namespace GaladHen
 {
@@ -50,34 +54,19 @@ namespace GaladHen
 		}
 	}
 
-	unsigned int RendererGL::CreateLowLevelMesh()
+	void RendererGL::LoadMeshDataIntoGPU(Mesh& mesh)
 	{
-		if (MeshIndex >= Meshes.size())
+		if (mesh.MeshID == 0)
 		{
-			Meshes.push_back(MeshGL{});
-			
-			return ++MeshIndex;
+			mesh.MeshID= CreateLowLevelMesh();
 		}
 
-		unsigned int next = *(unsigned int*)(&Meshes[MeshIndex]);
-		Meshes[MeshIndex] = MeshGL{};
-		unsigned int old = MeshIndex;
-		MeshIndex = next;
-
-		return old + 1;
+		Meshes[mesh.MeshID - 1].LoadMemoryGPU(mesh.Vertices, mesh.Indices);
 	}
 
-	void RendererGL::DestroyLowLevelMesh(unsigned int meshID)
+	void RendererGL::FreeMeshDataFromGPU(Mesh& mesh)
 	{
-		Meshes[meshID - 1].FreeMemoryGPU();
-
-		*(unsigned int*)(&Meshes[meshID - 1]) = MeshIndex;
-		MeshIndex = meshID - 1;
-	}
-
-	void RendererGL::LoadMeshDataIntoGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, unsigned int meshID)
-	{
-		Meshes[meshID - 1].LoadMemoryGPU(vertices, indices);
+		Meshes[mesh.MeshID - 1].FreeMemoryGPU();
 	}
 
 	void RendererGL::LoadLighingDataIntoGPU(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights)
@@ -107,98 +96,115 @@ namespace GaladHen
 		FreeBufferData(LightingBufferID);
 	}
 
-	unsigned int RendererGL::CreateLowLevelShaderProgram()
+	CompilationResult RendererGL::CompileShaderPipeline(ShaderPipeline& pipeline)
 	{
-		if (ShaderIndex >= Shaders.size())
+		if (pipeline.ShaderProgramID == 0)
 		{
-			Shaders.push_back(ShaderProgramGL{});
-
-			return ++ShaderIndex;
+			pipeline.ShaderProgramID = CreateLowLevelShaderProgram();
 		}
 
-		unsigned int next = *(unsigned int*)(&Shaders[ShaderIndex]);
-		Shaders[ShaderIndex] = ShaderProgramGL{};
-		unsigned int old = ShaderIndex;
-		ShaderIndex = next;
+		ShaderProgramGL& program = Shaders[pipeline.ShaderProgramID - 1];
 
-		return old + 1;
+		// Read files
+
+		std::string vertex, tessCont, tessEval, geometry, fragment;
+
+		if (pipeline.VertexShader)
+		{
+			vertex = FileLoader::ReadTextFile(pipeline.VertexShader->ShaderFilePath.data());
+		}
+		if (pipeline.TessContShader)
+		{
+			tessCont = FileLoader::ReadTextFile(pipeline.TessContShader->ShaderFilePath.data());
+		}
+		if (pipeline.TessEvalShader)
+		{
+			tessEval = FileLoader::ReadTextFile(pipeline.TessEvalShader->ShaderFilePath.data());
+		}
+		if (pipeline.GeometryShader)
+		{
+			geometry = FileLoader::ReadTextFile(pipeline.GeometryShader->ShaderFilePath.data());
+		}
+		if (pipeline.FragmentShader)
+		{
+			fragment = FileLoader::ReadTextFile(pipeline.FragmentShader->ShaderFilePath.data());
+		}
+
+		return program.Compile(vertex, tessCont, tessEval, geometry, fragment);
 	}
 
-	void RendererGL::DestroyLowLevelShaderProgram(unsigned int shaderID)
+	CompilationResult RendererGL::CompileComputeShader(ComputeShader& compute)
 	{
-		Shaders[shaderID - 1].Delete();
+		if (compute.ShaderProgramID == 0)
+		{
+			compute.ShaderProgramID = CreateLowLevelShaderProgram();
+		}
 
-		*(unsigned int*)(&Shaders[shaderID - 1]) = ShaderIndex;
-		ShaderIndex = shaderID - 1;
-	}
+		ShaderProgramGL& program = Shaders[compute.ShaderProgramID - 1];
 
-	CompilationResult RendererGL::CompileShaderProgramPipeline(std::string& vertexCode, std::string& tessContCode, std::string& tessEvalCode, std::string& geometryCode, std::string& fragmentCode, unsigned int shaderID)
-	{
-		ShaderProgramGL& program = Shaders[shaderID - 1];
-		return program.Compile(vertexCode, tessContCode, tessEvalCode, geometryCode, fragmentCode);
-	}
+		std::string computeCode;
 
-	CompilationResult RendererGL::CompilerShaderProgram(std::string& computeCode, unsigned int shaderID)
-	{
-		ShaderProgramGL& program = Shaders[shaderID - 1];
+		if (compute.CompShader)
+		{
+			computeCode = FileLoader::ReadTextFile(compute.CompShader->ShaderFilePath.data());
+		}
+
 		return program.CompileCompute(computeCode);
 	}
 
-	unsigned int RendererGL::CreateLowLevelTexture()
+	void RendererGL::FreeShaderProgram(ShaderProgram* program)
 	{
-		if (TextureIndex >= Textures.size())
-		{
-			Textures.push_back(TextureGL{});
+		ShaderProgramGL& prog = Shaders[program->ShaderProgramID - 1];
+		prog.Delete();
 
-			return ++TextureIndex;
+		DestroyLowLevelShaderProgram(program->ShaderProgramID);
+	}
+
+	void RendererGL::LoadTextureIntoGPU(Texture& texture)
+	{
+		if (texture.TextureID == 0)
+		{
+			texture.TextureID = CreateLowLevelTexture();
 		}
 
-		unsigned int next = *(unsigned int*)(&Textures[TextureIndex]);
-		Textures[TextureIndex] = TextureGL{};
-		unsigned int old = TextureIndex;
-		TextureIndex = next;
-
-		return old + 1;
+		TextureGL& tex = Textures[texture.TextureID - 1];
+		tex.LoadMemoryGPU(texture.GetTextureData(), texture.GetTextureWidth(), texture.GetTextureHeight(), texture.GetNumberOfChannels(), texture.GetTextureFormat(), texture.GenerateMipMaps);
 	}
 
-	void RendererGL::DestroyLowLevelTexture(unsigned int textureID)
+	void RendererGL::FreeTextureFromGPU(Texture& texture)
 	{
-		Textures[textureID - 1].FreeMemoryGPU();
+		TextureGL& tex = Textures[texture.TextureID - 1];
+		tex.FreeMemoryGPU();
 
-		*(unsigned int*)(&Textures[textureID - 1]) = TextureIndex;
-		TextureIndex = textureID - 1;
+		DestroyLowLevelTexture(texture.TextureID);
 	}
-
-	void RendererGL::LoadTextureIntoGPU(unsigned int textureID, const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps)
-	{
-		TextureGL& tex = Textures[textureID - 1];
-		tex.LoadMemoryGPU(textureBytes, width, height, textureFormat, pixelFormat, pixelType, generateMipMaps);
-	}
-
 
 	void RendererGL::EnableDepthTest(bool enable)
 	{
 		glEnable(GL_DEPTH_TEST);
 	}
 
-	void RendererGL::LoadMaterialData(unsigned int shaderID, Material& material)
+	void RendererGL::LoadMaterialData(Material& material)
 	{
 		std::vector<TextureDataGL> texs;
 		for (MaterialDataTexture& tex : material.Data->GetTextureData())
 		{
 			TextureDataGL dataGL{};
-			dataGL.Texture = &Textures[tex.Tex.TextureData->TextureID - 1];
-			dataGL.Parameters = &tex.Tex.Parameters;
+			dataGL.Texture = &Textures[tex.Tex.Texture->TextureID - 1];
+			dataGL.Parameters = &tex.Tex;
 			texs.emplace_back(dataGL);
 		}
 
-		ShaderProgramGL& program = Shaders[shaderID - 1];
+		ShaderProgramGL& program = Shaders[material.MaterialShader->ShaderProgramID - 1];
 		program.LoadMaterialData(*material.Data, texs);
 	}
 
-	void Draw(unsigned int meshID, unsigned int shaderID)
+	void RendererGL::Draw(Mesh& mesh, Material& material)
 	{
+		MeshGL& meshGL = Meshes[mesh.MeshID - 1];
+		ShaderProgramGL& shaderGL = Shaders[material.MaterialShader->ShaderProgramID - 1];
 
+		meshGL.Draw(&shaderGL);
 	}
 
 	unsigned int RendererGL::LoadBufferData(GLuint binding, GLenum usage, size_t totalSizeBytes, void* data)
@@ -294,6 +300,79 @@ namespace GaladHen
 	void RendererGL::FreeBufferData(unsigned int bufferID)
 	{
 		glDeleteBuffers(1, &Buffers[bufferID - 1]);
+	}
+
+	unsigned int RendererGL::CreateLowLevelMesh()
+	{
+		if (MeshIndex >= Meshes.size())
+		{
+			Meshes.push_back(MeshGL{});
+
+			return ++MeshIndex;
+		}
+
+		unsigned int next = *(unsigned int*)(&Meshes[MeshIndex]);
+		Meshes[MeshIndex] = MeshGL{};
+		unsigned int old = MeshIndex;
+		MeshIndex = next;
+
+		return old + 1;
+	}
+
+	void RendererGL::DestroyLowLevelMesh(unsigned int meshID)
+	{
+		*(unsigned int*)(&Meshes[meshID - 1]) = MeshIndex;
+		MeshIndex = meshID - 1;
+	}
+
+	unsigned int RendererGL::CreateLowLevelShaderProgram()
+	{
+		if (ShaderIndex >= Shaders.size())
+		{
+			Shaders.push_back(ShaderProgramGL{});
+
+			return ++ShaderIndex;
+		}
+
+		unsigned int next = *(unsigned int*)(&Shaders[ShaderIndex]);
+		Shaders[ShaderIndex] = ShaderProgramGL{};
+		unsigned int old = ShaderIndex;
+		ShaderIndex = next;
+
+		return old + 1;
+	}
+
+	void RendererGL::DestroyLowLevelShaderProgram(unsigned int shaderID)
+	{
+		Shaders[shaderID - 1].Delete();
+
+		*(unsigned int*)(&Shaders[shaderID - 1]) = ShaderIndex;
+		ShaderIndex = shaderID - 1;
+	}
+
+	unsigned int RendererGL::CreateLowLevelTexture()
+	{
+		if (TextureIndex >= Textures.size())
+		{
+			Textures.push_back(TextureGL{});
+
+			return ++TextureIndex;
+		}
+
+		unsigned int next = *(unsigned int*)(&Textures[TextureIndex]);
+		Textures[TextureIndex] = TextureGL{};
+		unsigned int old = TextureIndex;
+		TextureIndex = next;
+
+		return old + 1;
+	}
+
+	void RendererGL::DestroyLowLevelTexture(unsigned int textureID)
+	{
+		Textures[textureID - 1].FreeMemoryGPU();
+
+		*(unsigned int*)(&Textures[textureID - 1]) = TextureIndex;
+		TextureIndex = textureID - 1;
 	}
 }
 

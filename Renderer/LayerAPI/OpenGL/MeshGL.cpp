@@ -11,12 +11,10 @@ namespace GaladHen
         , EBO(0)
         {}
 
-    void MeshGL::Draw(MaterialData& data, ShadingMode mode, IShaderProgramAPI* shader)
+    void MeshGL::Draw(IShaderProgramAPI* shader)
     {
         // shader functionalities
         shader->Use();
-        shader->LoadMaterialData(data, )
-        shader->SetShadingMode(mode);
 
         // draw
         glBindVertexArray(VAO);

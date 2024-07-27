@@ -1,20 +1,20 @@
 
 #include "Renderer.h"
+#include "LayerAPI/OpenGL/RendererGL.h"
+#include "LayerAPI/OpenGL/MaterialDataGL.h"
 
-#include <Renderer/LayerAPI/OpenGL/RendererGL.h>
-#include <Renderer/LayerAPI/OpenGL/MaterialDataGL.h>
-
-#include <GaladHen/Mesh.h>
-#include <GaladHen/Model.h>
-#include <GaladHen/Scene.h>
-#include <GaladHen/SceneObject.h>
-#include <GaladHen/Model.h>
-#include <GaladHen/ShaderProgram.h>
-#include <GaladHen/Shader.h>
-#include <GaladHen/Material.h>
+#include <Core/Mesh.h>
+#include <Core/Model.h>
+#include <Core/Scene.h>
+#include <Core/SceneObject.h>
+#include <Core/Model.h>
+#include <Core/ShaderProgram.h>
+#include <Core/Shader.h>
+#include <Core/Material.h>
+#include <Core/FileLoader.h>
+#include <Core/Texture.h>
 
 #include <Utils/Log.h>
-#include <Utils/FileLoader.h>
 
 #include <unordered_set>
 
@@ -105,18 +105,12 @@ namespace GaladHen
 
     void Renderer::LoadMesh(Mesh& mesh)
     {
-        if (mesh.MeshID == 0)
-        {
-            // New mesh -> create low level mesh
-            mesh.MeshID = RendererAPI->CreateLowLevelMesh();
-        }
-
-        RendererAPI->LoadMeshDataIntoGPU(mesh.Vertices, mesh.Indices, mesh.MeshID);
+        RendererAPI->LoadMeshDataIntoGPU(mesh);
     }
 
     void Renderer::FreeMesh(Mesh& mesh)
     {
-        RendererAPI->DestroyLowLevelMesh(mesh.MeshID);
+        RendererAPI->FreeMeshDataFromGPU(mesh);
     }
 
     void Renderer::LoadModel(Model& model)
@@ -135,9 +129,19 @@ namespace GaladHen
         }
     }
 
+    void Renderer::LoadTexture(Texture& texture)
+    {
+        RendererAPI->LoadTextureIntoGPU(texture);
+    }
+
+    void Renderer::FreeTexture(Texture& texture)
+    {
+        RendererAPI->FreeTextureFromGPU(texture);
+    }
+
     void Renderer::LoadMaterialData(Material& material)
     {
-        RendererAPI->LoadMaterialData(material.MaterialShader->ShaderProgramID, material);
+        RendererAPI->LoadMaterialData(material);
     }
 
     void Renderer::Draw(Scene& scene)
@@ -150,7 +154,7 @@ namespace GaladHen
             {
                 if (Material* mat = sceneObj.GetMaterial(i))
                 {
-                    RendererAPI->Draw(mod->Meshes[i].MeshID, mat->MaterialShader->ShaderProgramID);
+                    RendererAPI->Draw(mod->Meshes[i], *mat);
                 }
             }
         }
@@ -158,44 +162,30 @@ namespace GaladHen
 
     bool Renderer::CompileShaderPipeline(ShaderPipeline& program)
     {
-        if (program.ShaderProgramID == 0)
-        {
-            // New shader program -> create low level shader program
-            program.ShaderProgramID = RendererAPI->CreateLowLevelShaderProgram();
-        }
-
-        // Read files
-        
-        std::string vertex, tessCont, tessEval, geometry, fragment;
         std::string vertPath, tessContPath, tessEvalPath, geomPath, fragPath; // For error log
 
         if (program.VertexShader)
         {
             vertPath = program.VertexShader->ShaderFilePath;
-            vertex = FileLoader::ReadTextFile(vertPath.data());
         }
         if (program.TessContShader)
         {
             tessContPath = program.TessContShader->ShaderFilePath;
-            tessCont = FileLoader::ReadTextFile(tessContPath.data());
         }
         if (program.TessEvalShader)
         {
             tessEvalPath = program.TessEvalShader->ShaderFilePath;
-            tessEval = FileLoader::ReadTextFile(tessEvalPath.data());
         }
         if (program.GeometryShader)
         {
             geomPath = program.GeometryShader->ShaderFilePath;
-            geometry = FileLoader::ReadTextFile(geomPath.data());
         }
         if (program.FragmentShader)
         {
             fragPath = program.FragmentShader->ShaderFilePath;
-            fragment = FileLoader::ReadTextFile(fragPath.data());
         }
 
-        CompilationResult result = RendererAPI->CompileShaderProgramPipeline(vertex, tessCont, tessEval, geometry, fragment, program.ShaderProgramID);
+        CompilationResult result = RendererAPI->CompileShaderPipeline(program);
 
         if (!result.Success())
         {
@@ -259,24 +249,16 @@ namespace GaladHen
 
     bool Renderer::CompileComputeShader(ComputeShader& program)
     {
-        if (program.ShaderProgramID == 0)
-        {
-            // New shader program -> create low level shader program
-            program.ShaderProgramID = RendererAPI->CreateLowLevelShaderProgram();
-        }
-
         // Read files
 
-        std::string compute;
         std::string computePath; // For error log
 
         if (program.CompShader)
         {
             computePath = program.CompShader->ShaderFilePath;
-            compute = FileLoader::ReadTextFile(computePath.data());
         }
 
-        CompilationResult result = RendererAPI->CompilerShaderProgram(compute, program.ShaderProgramID);
+        CompilationResult result = RendererAPI->CompileComputeShader(program);
 
         if (!result.Success())
         {

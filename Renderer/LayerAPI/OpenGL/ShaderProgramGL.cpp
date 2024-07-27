@@ -5,6 +5,8 @@
 #include <Renderer/LayerAPI/OpenGL/MaterialDataGL.h>
 #include <Renderer/LayerAPI/OpenGL/TextureGL.h>
 
+#include <Core/Material.h>
+
 namespace GaladHen
 {
     ShaderProgramGL::ShaderProgramGL()

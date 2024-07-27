@@ -13,15 +13,11 @@ target_include_directories(GaladHenApp PRIVATE
 
 set_target_properties(GaladHenApp
     PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 target_link_libraries(GaladHenApp
     PRIVATE
-    GaladHenLib
+    GaladHenCore
     Renderer
-    assimp
-    glfw
-    gl3w
-    glm
-    imgui
-    Utils)
+    glm)

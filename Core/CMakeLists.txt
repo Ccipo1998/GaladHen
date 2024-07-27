@@ -1,8 +1,7 @@
 
-project(GaladHenLib VERSION 0.1.0)
+project(GaladHenCore VERSION 0.1.0)
 
-add_library(GaladHenLib STATIC
-    #ui.cpp
+add_library(GaladHenCore STATIC
     Input.cpp
     Input.h
     Scene.cpp
@@ -25,8 +24,6 @@ add_library(GaladHenLib STATIC
     Model.h
     Mesh.cpp
     Mesh.h
-    TextureImage.cpp
-    TextureImage.h
     Texture.cpp
     Texture.h
     AssetsManager.cpp
@@ -34,17 +31,18 @@ add_library(GaladHenLib STATIC
     MaterialData.h
     MeshData.h
     TextureData.h
-    SceneData.h)
+    SceneData.h
+    FileLoader.h
+    FileLoader.cpp)
 
-target_include_directories(GaladHenLib PRIVATE
+target_include_directories(GaladHenCore PRIVATE
     ${CMAKE_SOURCE_DIR}/
     ${CMAKE_SOURCE_DIR}/Libs/
     ${CMAKE_SOURCE_DIR}/Utils/
-    ${CMAKE_SOURCE_DIR}/Renderer/LayerAPI/)
+    ${CMAKE_SOURCE_DIR}/Libs/assimp/include/)
 
-target_link_libraries(GaladHenLib
+target_link_libraries(GaladHenCore
     PRIVATE
-    glfw
-    gl3w
     glm
+    assimp
     Utils)

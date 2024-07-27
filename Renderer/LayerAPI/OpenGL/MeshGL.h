@@ -17,7 +17,7 @@ namespace GaladHen
 
         MeshGL();
 
-        virtual void Draw(MaterialData& data, ShadingMode mode, IShaderProgramAPI* shader) override;
+        virtual void Draw(IShaderProgramAPI* shader) override;
 
         virtual void LoadMemoryGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices) override;
 

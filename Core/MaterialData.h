@@ -8,7 +8,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Texture.h"
+#include "TextureData.h"
 
 namespace GaladHen
 {
@@ -41,14 +41,14 @@ namespace GaladHen
     };
     struct MaterialDataTexture
     {
-        MaterialDataTexture(std::string& name, Texture texture)
+        MaterialDataTexture(std::string& name, TextureParameters textureParams)
         {
             Name = name;
-            Tex = texture;
+            Tex = textureParams;
         }
 
         std::string Name;
-        Texture Tex;
+        TextureParameters Tex;
     };
 
     // Material data interface

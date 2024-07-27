@@ -10,6 +10,8 @@
 
 namespace GaladHen
 {
+    class MaterialData;
+
     class ShaderProgramGL : public IShaderProgramAPI
     {
 

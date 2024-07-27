@@ -11,7 +11,7 @@
 #include <glm/glm.hpp>
 
 #include "Common.h"
-#include <Renderer/LayerAPI/IRendererAPI.h>
+#include "LayerAPI/IRendererAPI.h"
 
 namespace GaladHen
 {
@@ -73,6 +73,8 @@ namespace GaladHen
         // @brief
         // Load texture data into GPU memory
         void LoadTexture(Texture& texture);
+
+        void FreeTexture(Texture& texture);
 
         // @brief
         // Load material data into GPU memory

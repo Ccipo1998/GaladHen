@@ -21,35 +21,29 @@ namespace GaladHen
 
 		virtual void Init() override;
 
-		virtual unsigned int CreateLowLevelMesh() override;
+		virtual void LoadMeshDataIntoGPU(Mesh& mesh) override;
 
-		virtual void DestroyLowLevelMesh(unsigned int meshID) override;
-
-		virtual void LoadMeshDataIntoGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, unsigned int meshID) override;
+		virtual void FreeMeshDataFromGPU(Mesh& mesh) override;
 
 		virtual void LoadLighingDataIntoGPU(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) override;
 
 		virtual void FreeLightingDataFromGPU() override;
 
-		virtual unsigned int CreateLowLevelShaderProgram() override;
+		virtual CompilationResult CompileShaderPipeline(ShaderPipeline& pipeline) override;
 
-		virtual void DestroyLowLevelShaderProgram(unsigned int shaderID) override;
+		virtual CompilationResult CompileComputeShader(ComputeShader& compute) override;
 
-		virtual CompilationResult CompileShaderProgramPipeline(std::string& vertexCode, std::string& tessContCode, std::string& tessEvalCode, std::string& geometryCode, std::string& fragmentCode, unsigned int shaderID) override;
+		virtual void FreeShaderProgram(ShaderProgram* program) override;
 
-		virtual CompilationResult CompilerShaderProgram(std::string& computeCode, unsigned int shaderID) override;
-
-		virtual unsigned int CreateLowLevelTexture() override;
-
-		virtual void DestroyLowLevelTexture(unsigned int textureID) override;
-
-		virtual void LoadTextureIntoGPU(unsigned int textureID, const void* textureBytes, unsigned int width, unsigned int height, TextureFormat textureFormat, PixelDataFormat pixelFormat, PixelDataType pixelType, bool generateMipMaps) override;
+		virtual void LoadTextureIntoGPU(Texture& texture) override;
+		
+		virtual void FreeTextureFromGPU(Texture& texture) override;
 
 		virtual void EnableDepthTest(bool enable) override;
 
-		virtual void LoadMaterialData(unsigned int shaderID, Material& material) override;
+		virtual void LoadMaterialData(Material& material) override;
 
-		virtual void Draw(unsigned int meshID, unsigned int shaderID) override;
+		virtual void Draw(Mesh& mesh, Material& material) override;
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -84,6 +78,13 @@ namespace GaladHen
 		void FreeBufferData(unsigned int bufferID);
 
 	protected:
+
+		unsigned int CreateLowLevelMesh();
+		void DestroyLowLevelMesh(unsigned int meshID);
+		unsigned int CreateLowLevelShaderProgram();
+		void DestroyLowLevelShaderProgram(unsigned int shaderID);
+		unsigned int CreateLowLevelTexture();
+		void DestroyLowLevelTexture(unsigned int textureID);
 
 		std::vector<MeshGL> Meshes;
 		unsigned int MeshIndex;

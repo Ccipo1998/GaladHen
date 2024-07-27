@@ -4,10 +4,9 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "Log.h"
 
-#include <GaladHen/Model.h>
-#include <GaladHen/TextureImage.h>
+#include "Model.h"
+#include "Texture.h"
 
 // assimp
 #include <assimp/Importer.hpp>      // C++ importer interface
@@ -16,7 +15,8 @@
 
 #include <glm/glm.hpp>
 
-#include "stb_image.h"
+#include <Utils/Log.h>
+#include <Utils/stb_image.h>
 
 namespace GaladHen
 {
@@ -70,7 +70,7 @@ namespace GaladHen
         return modelToReturn;
     }
 
-    TextureImage FileLoader::ReadImageFile(const char* filePath)
+    Texture FileLoader::ReadImageFile(const char* filePath, TextureFormat textureFormat)
     {
         int width, height, channels;
         unsigned char* bytes = stbi_load(filePath, &width, &height, &channels, 0);
@@ -83,7 +83,7 @@ namespace GaladHen
             Log::Error("FileLoader", error);
         }
 
-        return TextureImage{ bytes, width, height, channels };
+        return Texture{ bytes, width, height, channels, textureFormat };
     }
 
     void FileLoader::ProcessAssimpNode(aiNode* node, const aiScene* scene, Model* model)

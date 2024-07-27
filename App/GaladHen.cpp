@@ -1,12 +1,13 @@
 
 #include <Renderer/Renderer.h>
 #include <Renderer/Window.h>
-#include <GaladHen/Input.h>
-#include <GaladHen/Scene.h>
-#include <GaladHen/ShaderProgram.h>
-#include <GaladHen/Shader.h>
-#include <GaladHen/AssetsManager.h>
-#include <GaladHen/Material.h>
+#include <Core/Input.h>
+#include <Core/Scene.h>
+#include <Core/ShaderProgram.h>
+#include <Core/Shader.h>
+#include <Core/AssetsManager.h>
+#include <Core/Material.h>
+#include <Core/Texture.h>
 
 #include <glm/glm.hpp>
 
@@ -37,15 +38,18 @@ int main()
     Scene scene{};
 
     // load textures
-    TextureImage* texImgAlbedo = AssetsManager::LoadAndStoreTexImage(
+    Texture* texAlbedo = AssetsManager::LoadAndStoreTexture(
         std::string{"../Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png"},
-        std::string{"StuccoAlbedo"});
-    TextureImage* texImgNormal = AssetsManager::LoadAndStoreTexImage(
+        std::string{"StuccoAlbedo"},
+        TextureFormat::RGB);
+    Texture* texNormal = AssetsManager::LoadAndStoreTexture(
         std::string{"../Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png"},
-        std::string{"StuccoNormal"});
-    TextureImage* texImgRoughness = AssetsManager::LoadAndStoreTexImage(
+        std::string{"StuccoNormal"},
+        TextureFormat::SRGB);
+    Texture* texRoughness = AssetsManager::LoadAndStoreTexture(
         std::string{"../Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png"},
-        std::string{"StuccoRoughness"});
+        std::string{"StuccoRoughness"},
+        TextureFormat::RGB);
 
     // get pbr shader pipeline
     ShaderPipeline pbr = AssetsManager::GetPipelinePBR();

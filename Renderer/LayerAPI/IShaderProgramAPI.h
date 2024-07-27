@@ -5,7 +5,7 @@
 
 #include <string>
 #include <vector>
-#include <GaladHen/MaterialData.h>
+#include <Core/MaterialData.h>
 #include <Renderer/LayerAPI/OpenGL/MaterialDataGL.h>
 
 namespace GaladHen
