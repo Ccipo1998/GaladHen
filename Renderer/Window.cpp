@@ -31,6 +31,32 @@ namespace GaladHen
         }
     }
 
+    Window::Window(API apiToUse, const std::string& windowName)
+        : WindowName(windowName)
+        , Width(1280)
+        , Height(720)
+        , OutKeyboardCallback(nullptr)
+        , OutMouseKeyCallback(nullptr)
+        , OutMousePosCallback(nullptr)
+        , OutClosingWindowCallback(nullptr)
+        , OutKeyboardCallbackOwner(nullptr)
+        , OutMouseKeyCallbackOwner(nullptr)
+        , OutMousePosCallbackOwner(nullptr)
+    {
+        switch (apiToUse)
+        {
+        case API::OpenGL:
+
+            // Create OpenGL window
+            WinAPI = new WindowGL(1280, 720, windowName.data());
+
+            break;
+
+        default:
+            break;
+        }
+    }
+
     Window::Window(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height)
         : WindowName(windowName)
         , Width(width)

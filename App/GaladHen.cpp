@@ -18,13 +18,13 @@ using namespace GaladHen;
 int main()
 {
     // create opengl renderer
-    Renderer renderer{API::OpenGL};
+    Renderer renderer{ API::OpenGL };
     renderer.Init();
     // renderer settings
     renderer.EnableDepthTest(true);
 
     // make window
-    Window window{API::OpenGL};
+    Window window{ API::OpenGL, "GaladHen" };
     window.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
 
     // input to link to the window
@@ -52,10 +52,15 @@ int main()
         TextureFormat::RGB);
 
     // get pbr shader pipeline
-    ShaderPipeline pbr = AssetsManager::GetPipelinePBR();
+    //ShaderPipeline pbr = AssetsManager::GetPipelinePBR();
+    Shader vertex{ "../Shaders/test/VertexShader.vert", ShaderStage::Vertex };
+    Shader fragment{ "../Shaders/test/FragmentShader.frag", ShaderStage::Fragment };
+    ShaderPipeline test{};
+    test.VertexShader = &vertex;
+    test.FragmentShader = &fragment;
 
     // materials
-    Material bunnyMat{&pbr, ShadingMode::SmoothShading};
+    Material bunnyMat{&test, ShadingMode::SmoothShading};
     PBRMaterialData bunnyMatData{};
     bunnyMat.Data = &bunnyMatData;
 
@@ -72,6 +77,7 @@ int main()
     renderer.LoadModels(scene);
     renderer.LoadLightingData(scene);
     renderer.CompileShaders(scene);
+    renderer.LoadCameraData(scene.MainCamera);
 
     while (!input.IsCloseWindowRequested())
     {

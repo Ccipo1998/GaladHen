@@ -109,7 +109,7 @@ namespace GaladHen
 
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
-            Vertex vertex;
+            VertexData vertex;
             glm::vec3 vector;
             // vertices coordinates
             vector.x = mesh->mVertices[i].x;

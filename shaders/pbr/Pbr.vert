@@ -12,10 +12,19 @@ layout (location = 3) in vec3 Tangent;
 layout (location = 4) in vec3 Bitangent;
 
 // uniforms
-uniform mat4 ViewMatrix;
-uniform mat4 ProjectionMatrix;
-uniform mat4 NormalMatrix;
-uniform vec3 WCameraPosition;
+
+layout (std140, binding = 0) uniform CameraData
+{
+    uniform mat4 ViewMatrix;
+    uniform mat4 ProjectionMatrix;
+    uniform vec3 WCameraPosition;
+};
+
+layout (std140, binding = 1) uniform ModelData
+{
+    uniform mat4 NormalMatrix;
+};
+
 
 // output
 out vec3 SmoothWNormal;

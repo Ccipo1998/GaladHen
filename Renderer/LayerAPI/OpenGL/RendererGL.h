@@ -43,6 +43,8 @@ namespace GaladHen
 
 		virtual void LoadMaterialData(Material& material) override;
 
+		virtual void LoadCameraData(Camera& camera) override;
+
 		virtual void Draw(Mesh& mesh, Material& material) override;
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
@@ -91,13 +93,16 @@ namespace GaladHen
 
 		std::vector<GLuint> Buffers;
 		unsigned int BufferIndex;
-		unsigned int LightingBufferID;
 
 		std::vector<ShaderProgramGL> Shaders;
 		unsigned int ShaderIndex;
 
 		std::vector<TextureGL> Textures;
 		unsigned int TextureIndex;
+
+		// const data
+		unsigned int LightingBufferID;
+		unsigned int CameraDataUniformBufferID;
 
 	};
 }

@@ -144,6 +144,11 @@ namespace GaladHen
         RendererAPI->LoadMaterialData(material);
     }
 
+    void Renderer::LoadCameraData(Camera& camera)
+    {
+        RendererAPI->LoadCameraData(camera);
+    }
+
     void Renderer::Draw(Scene& scene)
     {
         for (SceneObject& sceneObj : scene.SceneObjects)

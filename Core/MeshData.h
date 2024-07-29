@@ -7,7 +7,7 @@
 
 namespace GaladHen
 {
-    struct Vertex
+    struct VertexData
     {
         glm::vec3 Position;
         glm::vec3 Normal;

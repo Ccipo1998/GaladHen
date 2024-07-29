@@ -19,7 +19,7 @@ namespace GaladHen
 
         virtual void Draw(IShaderProgramAPI* shader) override;
 
-        virtual void LoadMemoryGPU(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices) override;
+        virtual void LoadMemoryGPU(const std::vector<VertexData>& vertices, const std::vector<unsigned int>& indices) override;
 
         virtual void FreeMemoryGPU() override;
 
@@ -27,6 +27,6 @@ namespace GaladHen
 
         GLuint VAO, VBO, EBO;
         
-        unsigned int NumberOfFaces;
+        unsigned int NumberOfIndices;
     };
 }

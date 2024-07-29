@@ -8,6 +8,8 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include <glm/gtc/type_ptr.hpp> // for value_ptr() and stuff
+
 #include <Utils/Log.h>
 
 #include <Core/Mesh.h>
@@ -16,15 +18,17 @@
 #include <Core/ShaderProgram.h>
 #include <Core/Shader.h>
 #include <Core/FileLoader.h>
+#include <Core/Camera.h>
 
 namespace GaladHen
 {
 	RendererGL::RendererGL()
 		: MeshIndex(0)
 		, BufferIndex(0)
-		, LightingBufferID(0)
 		, ShaderIndex(0)
 		, TextureIndex(0)
+		, LightingBufferID(0)
+		, CameraDataUniformBufferID(0)
 	{}
 
 	void RendererGL::Init()
@@ -197,6 +201,31 @@ namespace GaladHen
 
 		ShaderProgramGL& program = Shaders[material.MaterialShader->ShaderProgramID - 1];
 		program.LoadMaterialData(*material.Data, texs);
+	}
+
+	void RendererGL::LoadCameraData(Camera& camera)
+	{
+		if (CameraDataUniformBufferID == 0)
+		{
+			// create uniform buffer
+			glGenBuffers(1, &CameraDataUniformBufferID);
+			glBindBuffer(GL_UNIFORM_BUFFER, CameraDataUniformBufferID);
+			// 144 bytes = 64 for projection matrix + 64 for view matrix + 16 for camera position (vec3 rounded up to vec4 for std140) https://www.oreilly.com/library/view/opengl-programming-guide/9780132748445/app09lev1sec2.html
+			glBufferData(GL_UNIFORM_BUFFER, 144, nullptr, GL_STATIC_DRAW);
+			glBindBufferBase(GL_UNIFORM_BUFFER, 0, CameraDataUniformBufferID); // NB: camera data always at binding point 0
+		}
+
+		// load data
+
+		glBindBuffer(GL_UNIFORM_BUFFER, CameraDataUniformBufferID);
+
+		glm::mat4 view = camera.GetViewMatrix();
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(view), glm::value_ptr(view));
+		glm::mat4 proj = camera.GetProjectionMatrix();
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(view), sizeof(proj), glm::value_ptr(proj));
+		glm::vec3 pos = camera.Transform.GetPosition();
+		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(view) + sizeof(proj), sizeof(pos), glm::value_ptr(pos));
+		glBindBuffer(GL_UNIFORM_BUFFER, 0); // unbind
 	}
 
 	void RendererGL::Draw(Mesh& mesh, Material& material)

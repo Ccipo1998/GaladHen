@@ -23,6 +23,7 @@ namespace GaladHen
     class ComputeShader;
     class Material;
     class Texture;
+    class Camera;
 
     class Renderer final
     {
@@ -74,11 +75,17 @@ namespace GaladHen
         // Load texture data into GPU memory
         void LoadTexture(Texture& texture);
 
+        // @brief
+        // Free texture data from GPU memory
         void FreeTexture(Texture& texture);
 
         // @brief
         // Load material data into GPU memory
         void LoadMaterialData(Material& material);
+
+        // @brief
+        // Load camera data (position, orientation, ...) into GPU memory
+        void LoadCameraData(Camera& camera);
 
         // @brief
         // Draw calls on each scene object of the scene

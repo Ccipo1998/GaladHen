@@ -17,6 +17,8 @@ namespace GaladHen
     public:
 
         Window(API apiToUse);
+        
+        Window(API apiToUse, const std::string& windowName);
 
         Window(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height);
 

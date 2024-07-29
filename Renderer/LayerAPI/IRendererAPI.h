@@ -17,13 +17,12 @@ namespace GaladHen
 	class ComputeShader;
 	class Texture;
 	class ShaderProgram;
+	class Camera;
 
 	class IRendererAPI
 	{
 	public:
 
-		// @brief
-		// Init operations
 		virtual void Init() = 0;
 
 		virtual void LoadMeshDataIntoGPU(Mesh& mesh) = 0;
@@ -47,6 +46,8 @@ namespace GaladHen
 		virtual void EnableDepthTest(bool enable) = 0;
 
 		virtual void LoadMaterialData(Material& material) = 0;
+
+		virtual void LoadCameraData(Camera& camera) = 0;
 
 		virtual void Draw(Mesh& mesh, Material& material) = 0;
 	};

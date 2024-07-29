@@ -27,7 +27,7 @@ namespace GaladHen
         // Move assignment
         Mesh& operator=(Mesh&& other) noexcept;
 
-        std::vector<Vertex> Vertices;
+        std::vector<VertexData> Vertices;
         std::vector<unsigned int> Indices;
 
         unsigned int MeshID; // 0 means -1, so the low level pair is not already been created

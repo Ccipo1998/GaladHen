@@ -1,13 +1,17 @@
 // Test vertex shader
 
-#version 450 core // --> version of the GLSL version we want to use (ex: 450 = OpenGL version 4.5)
+#version 450 core
 
-layout (location = 0) in vec3 vPosition; // layout qualifier + shader variable (convention: prefixing a vertex attribute with the letter 'v')
+layout (location = 0) in vec3 Position;
 
-uniform mat4 viewMatrix;
-uniform mat4 projectionMatrix;
+layout (std140, binding = 0) uniform CameraData
+{
+    uniform mat4 ViewMatrix;
+    uniform mat4 ProjectionMatrix;
+    uniform vec3 WCameraPosition;
+};
 
 void main()
 {
-    gl_Position = projectionMatrix * viewMatrix * vec4(vPosition, 1.0);
+    gl_Position = ProjectionMatrix * ViewMatrix * vec4(Position, 1.0);
 }
