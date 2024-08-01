@@ -1,7 +1,6 @@
 
 #include <Renderer/Renderer.h>
 #include <Renderer/Window.h>
-#include <Core/Input.h>
 #include <Core/Scene.h>
 #include <Core/ShaderProgram.h>
 #include <Core/Shader.h>
@@ -26,13 +25,6 @@ int main()
     // make window
     Window window{ API::OpenGL, "GaladHen" };
     window.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
-
-    // input to link to the window
-    Input input{};
-    window.SetKeyboardCallback(&Input::KeyboardCallback, &input);
-    window.SetMouseKeyCallback(&Input::MouseKeyCallback, &input);
-    window.SetMousePositionCallback(&Input::MousePositionCallback, &input);
-    window.SetClosingWindowCallback(&Input::ClosingWindowCallback, &input);
 
     // create scene
     Scene scene{};
@@ -79,9 +71,43 @@ int main()
     renderer.CompileShaders(scene);
     renderer.LoadCameraData(scene.MainCamera);
 
-    while (!input.IsCloseWindowRequested())
+    while (!window.IsCloseWindowRequested())
     {
         window.BeginFrame();
+
+        glm::vec3 cameraMov = glm::vec3(0.0f);
+        if (window.IsKeyPressed(KeyboardKey::W))
+        {
+            cameraMov.z += 1.0f;
+        }
+        if (window.IsKeyPressed(KeyboardKey::S))
+        {
+            cameraMov.z += -1.0f;
+        }
+        if (window.IsKeyPressed(KeyboardKey::D))
+        {
+            cameraMov.x += 1.0f;
+        }
+        if (window.IsKeyPressed(KeyboardKey::A))
+        {
+            cameraMov.x += -1.0f;
+        }
+        if (window.IsKeyPressed(KeyboardKey::E))
+        {
+            cameraMov.y += 1.0f;
+        }
+        if (window.IsKeyPressed(KeyboardKey::Q))
+        {
+            cameraMov.y += -1.0f;
+        }
+        glm::vec2 cameraRot = glm::vec2(0.0f);
+        if (window.IsKeyPressed(MouseKey::Right))
+        {
+            window.GetMousePositionDelta(cameraRot.x, cameraRot.y);
+        }
+
+        scene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
+        renderer.LoadCameraData(scene.MainCamera);
 
         renderer.Draw(scene);
 

@@ -12,7 +12,7 @@ namespace GaladHen
 
     TransformQuat::TransformQuat()
         : Position(glm::vec3{})
-        , Rotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+        , Orientation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
         , Pitch(0.0f)
         , Yaw(0.0f)
         , Roll(0.0f)
@@ -20,26 +20,48 @@ namespace GaladHen
 
     void TransformQuat::Rotate(float deltaPitch, float deltaYaw, float deltaRoll)
     {
-        Pitch += deltaPitch;
-        Yaw += deltaYaw;
-        Roll += deltaRoll;
+        RotatePitch(deltaPitch);
+        RotateYaw(deltaYaw);
+        RotateRoll(deltaRoll);
+    }
 
-        UpdateRotation();
+    void TransformQuat::RotatePitch(float deltaPitch)
+    {
+        glm::quat rotate = glm::angleAxis(glm::radians(deltaPitch), GlobalRight);
+        Orientation *= rotate;
+
+        UpdateEulerAngles();
+    }
+
+    void TransformQuat::RotateYaw(float deltaYaw)
+    {
+        glm::quat rotate = glm::angleAxis(glm::radians(deltaYaw), GlobalUp);
+        Orientation *= rotate;
+
+        UpdateEulerAngles();
+    }
+
+    void TransformQuat::RotateRoll(float deltaRoll)
+    {
+        glm::quat rotate = glm::angleAxis(glm::radians(deltaRoll), GlobalFront);
+        Orientation *= rotate;
+
+        UpdateEulerAngles();
     }
 
     glm::vec3 TransformQuat::GetFront()
     {
-        return Rotation * GlobalFront;
+        return Orientation * GlobalFront;
     }
 
     glm::vec3 TransformQuat::GetUp()
     {
-        return Rotation * GlobalUp;
+        return Orientation * GlobalUp;
     }
 
     glm::vec3 TransformQuat::GetRight()
     {
-        return Rotation * GlobalRight;
+        return Orientation * GlobalRight;
     }
 
     glm::vec3 TransformQuat::GetPosition()
@@ -47,9 +69,9 @@ namespace GaladHen
         return Position;
     }
 
-    glm::quat TransformQuat::GetRotation()
+    glm::quat TransformQuat::GetOrientation()
     {
-        return Rotation;
+        return Orientation;
     }
 
     float TransformQuat::GetPitch()
@@ -72,55 +94,39 @@ namespace GaladHen
         Position = position;
     }
 
-    void TransformQuat::SetRotation(const glm::quat& rotation)
+    void TransformQuat::SetOrientation(const glm::quat& orientation)
     {
-        Rotation = rotation;
+        Orientation = orientation;
+
         UpdateEulerAngles();
     }
 
     void TransformQuat::SetPitch(float angle)
     {
-        Pitch = glm::mod(angle, 359.9999999f);
-        UpdateRotation();
+        angle = glm::mod(angle, 359.9999999f);
+
+        RotatePitch(angle - Pitch);
     }
 
     void TransformQuat::SetYaw(float angle)
     {
-        Yaw = glm::mod(angle, 359.9999999f);
-        UpdateRotation();
+        angle = glm::mod(angle, 359.9999999f);
+        
+        RotateYaw(angle - Yaw);
     }
 
     void TransformQuat::SetRoll(float angle)
     {
-        Roll = glm::mod(angle, 359.9999999f);
-        UpdateRotation();
+        angle = glm::mod(angle, 359.9999999f);
+        
+        RotateRoll(angle - Roll);
     }
 
     // privates
 
-    void TransformQuat::UpdateRotation()
-    {
-        float halfPitch = glm::radians(Pitch) * 0.5f;
-        float sinPitch = glm::sin(halfPitch);
-        float cosPitch = glm::cos(halfPitch);
-
-        float halfYaw = glm::radians(Yaw) * 0.5f;
-        float sinYaw = glm::sin(halfYaw);
-        float cosYaw = glm::cos(halfYaw);
-
-        float halfRoll = glm::radians(Roll) * 0.5f;
-        float sinRoll = glm::sin(halfRoll);
-        float cosRoll = glm::cos(halfRoll);
-
-        Rotation.x = ((cosYaw * sinPitch) * cosRoll) + ((sinYaw * cosPitch) * sinRoll);
-        Rotation.y = ((sinYaw * cosPitch) * cosRoll) - ((cosYaw * sinPitch) * sinRoll);
-        Rotation.z = ((cosYaw * cosPitch) * sinRoll) - ((sinYaw * sinPitch) * cosRoll);
-        Rotation.w = ((cosYaw * cosPitch) * cosRoll) + ((sinYaw * sinPitch) * sinRoll);
-    }
-
     void TransformQuat::UpdateEulerAngles()
     {
-        glm::vec3 eulers = glm::eulerAngles(Rotation);
+        glm::vec3 eulers = glm::eulerAngles(Orientation);
         Pitch = eulers.x;
         Yaw = eulers.y;
         Roll = eulers.z;

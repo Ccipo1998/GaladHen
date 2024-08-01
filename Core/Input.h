@@ -23,75 +23,15 @@ namespace GaladHen
 
     enum class KeyAction
     {
-        Pressed = 0,
-        Released = 1
+        Released = 0,
+        Pressed = 1
     };
 }
 
 namespace GaladHen
 {
-    class Input
+    struct Input
     {
-    public:
-
-        Input();
-
-        // @brief
-        // Keyboard callback response
-        // @param sender: a generic pointer to the object invoking the callback
-        // @param key: integer representing the activated key
-        // @param action: the action type on the key
-        void KeyboardCallback(void* sender, unsigned int key, unsigned int action);
-
-        // @brief
-        // Mouse key callback response
-        // @param sender: a generic pointer to the object invoking the callback
-        // @param button: integer representing the activated mouse key
-        // @param action: the action type on the key
-        void MouseKeyCallback(void* sender, unsigned int key, unsigned int action);
-
-        // @brief
-        // Mouse position callback response
-        // @param sender: a generic pointer to the object invoking the callback
-        // @param mouseX: new mouse x coordinate
-        // @param mouseY: new mouse y coordinate
-        void MousePositionCallback(void* sender, float mouseX, float mouseY);
-
-        // @brief
-        // Closing window callback response
-        // @param sender: a generic pointer to the object invoking the callback
-        void ClosingWindowCallback(void* sender);
-
-        // @brief
-        // Return the status of the keyboard's key
-        bool GetKeyboardKey(unsigned int key);
-
-        // @brief
-        // Return the status of the mouse's key
-        bool GetMouseKey(unsigned int key);
-
-        // @brief
-        // Return current mouse x coordinate
-        float GetMouseX();
-
-        // @brief
-        // Return current mouse y coordinate
-        float GetMouseY();
-
-        // @brief
-        // Return delta mouse x coordinate between previous and current positions
-        float GetDeltaMouseX();
-
-        // @brief
-        // Return delta mouse y coordinate between previous and current positions
-        float GetDeltaMouseY();
-
-        // @brief
-        // Check if a close window request arrived
-        bool IsCloseWindowRequested();
-
-    protected:
-
         // array of booleans for each keybord key
         bool Keyboard[1024];
 

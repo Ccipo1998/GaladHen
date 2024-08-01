@@ -9,13 +9,7 @@ namespace GaladHen
         : WindowName("")
         , Width(1280)
         , Height(720)
-        , OutKeyboardCallback(nullptr)
-        , OutMouseKeyCallback(nullptr)
-        , OutMousePosCallback(nullptr)
-        , OutClosingWindowCallback(nullptr)
-        , OutKeyboardCallbackOwner(nullptr)
-        , OutMouseKeyCallbackOwner(nullptr)
-        , OutMousePosCallbackOwner(nullptr)
+        , WindowInput(Input{})
     {
         switch (apiToUse)
         {
@@ -29,19 +23,15 @@ namespace GaladHen
         default:
             break;
         }
+
+        RegisterInputCallbacks();
     }
 
     Window::Window(API apiToUse, const std::string& windowName)
         : WindowName(windowName)
         , Width(1280)
         , Height(720)
-        , OutKeyboardCallback(nullptr)
-        , OutMouseKeyCallback(nullptr)
-        , OutMousePosCallback(nullptr)
-        , OutClosingWindowCallback(nullptr)
-        , OutKeyboardCallbackOwner(nullptr)
-        , OutMouseKeyCallbackOwner(nullptr)
-        , OutMousePosCallbackOwner(nullptr)
+        , WindowInput(Input{})
     {
         switch (apiToUse)
         {
@@ -55,19 +45,15 @@ namespace GaladHen
         default:
             break;
         }
+
+        RegisterInputCallbacks();
     }
 
     Window::Window(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height)
         : WindowName(windowName)
         , Width(width)
         , Height(height)
-        , OutKeyboardCallback(nullptr)
-        , OutMouseKeyCallback(nullptr)
-        , OutMousePosCallback(nullptr)
-        , OutClosingWindowCallback(nullptr)
-        , OutKeyboardCallbackOwner(nullptr)
-        , OutMouseKeyCallbackOwner(nullptr)
-        , OutMousePosCallbackOwner(nullptr)
+        , WindowInput(Input{})
     {
         switch (apiToUse)
         {
@@ -81,6 +67,8 @@ namespace GaladHen
         default:
             break;
         }
+
+        RegisterInputCallbacks();
     }
 
     float Window::GetAspectRatio()
@@ -92,68 +80,59 @@ namespace GaladHen
     {
         WinAPI->CloseWindow();
     }
-    
-    void Window::SetKeyboardCallback(void (Input::*callback)(void* sender, unsigned int key, unsigned int action), Input* owner)
+
+    void Window::CallKeyboardCallback(KeyboardKey key, KeyAction action)
     {
-        OutKeyboardCallback = callback;
-        OutKeyboardCallbackOwner = owner;
-        WinAPI->RegisterKeyboardCallback((void (*)(void*, unsigned int, unsigned int))&Window::KeyboardCallback, this);
+        Window::KeyboardCallback(this, (int)key, (int)action);
     }
 
-    void Window::SetMouseKeyCallback(void (Input::*callback)(void* sender, unsigned int key, unsigned int action), Input* owner)
+    void Window::CallMouseKeyCallback(MouseKey key, KeyAction action)
     {
-        OutMouseKeyCallback = callback;
-        OutMouseKeyCallbackOwner = owner;
-        WinAPI->RegisterMouseKeyCallback((void (*)(void*, unsigned int, unsigned int))&Window::MouseKeyCallback, this);
-    }
-
-    void Window::SetMousePositionCallback(void (Input::* callback)(void* sender, float mouseX, float mouseY), Input* owner)
-    {
-        OutMousePosCallback = callback;
-        OutMousePosCallbackOwner = owner;
-        WinAPI->RegisterMousePositionCallback((void (*)(void*, float, float)) & Window::MousePosCallback, this);
-    }
-
-    void Window::SetClosingWindowCallback(void(Input::* callback)(void* sender), Input* owner)
-    {
-        OutClosingWindowCallback = callback;
-        OutClosingWindowCallbackOwner = owner;
-        WinAPI->RegisterClosingWindowCallback((void (*)(void*))&Window::ClosingWindowCallback, this);
-    }
-
-    void Window::CallKeyboardCallback(unsigned int key, unsigned int action)
-    {
-        (OutKeyboardCallbackOwner->*OutKeyboardCallback)(this, key, action);
-    }
-
-    void Window::CallMouseKeyCallback(unsigned int key, unsigned int action)
-    {
-        (OutMouseKeyCallbackOwner->*OutMouseKeyCallback)(this, key, action);
+        Window::MouseKeyCallback(this, (int)key, (int)action);
     }
 
     void Window::CallMousePositionCallback(float mouseX, float mouseY)
     {
-        (OutMousePosCallbackOwner->*OutMousePosCallback)(this, mouseX, mouseY);
+        Window::MousePosCallback(this, mouseX, mouseY);
     }
 
     void Window::CallClosingWindowCallback()
     {
-        (OutClosingWindowCallbackOwner->*OutClosingWindowCallback)(this);
+        Window::ClosingWindowCallback(this);
+    }
+
+    bool Window::IsKeyPressed(KeyboardKey key)
+    {
+        return WindowInput.Keyboard[(int)key];
+    }
+
+    bool Window::IsKeyPressed(MouseKey key)
+    {
+        return WindowInput.Mouse[(int)key];
+    }
+
+    void Window::RegisterInputCallbacks()
+    {
+        WinAPI->RegisterKeyboardCallback((void (*)(void*, unsigned int, unsigned int)) & Window::KeyboardCallback, this);
+        WinAPI->RegisterMouseKeyCallback((void (*)(void*, unsigned int, unsigned int)) & Window::MouseKeyCallback, this);
+        //WinAPI->RegisterMousePositionCallback((void (*)(void*, float, float)) & Window::MousePosCallback, this);
+        WinAPI->RegisterClosingWindowCallback((void (*)(void*)) & Window::ClosingWindowCallback, this);
     }
 
     void Window::KeyboardCallback(Window* owner, unsigned int key, unsigned int action)
     {
-        owner->CallKeyboardCallback(key, action);
+        owner->WindowInput.Keyboard[key] = action;
     }
     
     void Window::MouseKeyCallback(Window* owner, unsigned int key, unsigned int action)
     {
-        owner->CallMouseKeyCallback(key, action);
+        owner->WindowInput.Mouse[key] = action;
     }
 
     void Window::MousePosCallback(Window* owner, float mouseX, float mouseY)
     {
-        owner->CallMousePositionCallback(mouseX, mouseY);
+        owner->WindowInput.MouseX = mouseX;
+        owner->WindowInput.MouseY = mouseY;
     }
 
     void Window::ClosingWindowCallback(Window* owner)
@@ -164,6 +143,14 @@ namespace GaladHen
     void Window::BeginFrame()
     {
         WinAPI->ClearFrontBuffers(true, true, true); // TODO: clear parameters exposed in Window class?
+
+        // update mouse position
+        float currentX, currentY;
+        GetMousePosition(currentX, currentY);
+        WindowInput.LastMouseX = WindowInput.MouseX;
+        WindowInput.LastMouseY = WindowInput.MouseY;
+        WindowInput.MouseX = currentX;
+        WindowInput.MouseY = currentY;
     }
 
     void Window::EndFrame()
@@ -175,6 +162,22 @@ namespace GaladHen
     void Window::SetColorBufferClearColor(glm::vec4 color)
     {
         WinAPI->SetColorBufferClearColor(color);
+    }
+
+    void Window::GetMousePosition(float& mouseX, float& mouseY)
+    {
+        WinAPI->GetCursorPosition(mouseX, mouseY);
+    }
+
+    void Window::GetMousePositionDelta(float& deltaX, float& deltaY)
+    {
+        deltaX = WindowInput.MouseX - WindowInput.LastMouseX;
+        deltaY = WindowInput.MouseY - WindowInput.LastMouseY;
+    }
+
+    bool Window::IsCloseWindowRequested()
+    {
+        return WindowInput.CloseWindowRequested;
     }
 
     Window::~Window()

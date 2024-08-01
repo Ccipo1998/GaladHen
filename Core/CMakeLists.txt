@@ -2,7 +2,6 @@
 project(GaladHenCore VERSION 0.1.0)
 
 add_library(GaladHenCore STATIC
-    Input.cpp
     Input.h
     Scene.cpp
     Scene.h

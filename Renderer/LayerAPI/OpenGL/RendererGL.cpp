@@ -210,8 +210,8 @@ namespace GaladHen
 			// create uniform buffer
 			glGenBuffers(1, &CameraDataUniformBufferID);
 			glBindBuffer(GL_UNIFORM_BUFFER, CameraDataUniformBufferID);
-			// 144 bytes = 64 for projection matrix + 64 for view matrix + 16 for camera position (vec3 rounded up to vec4 for std140) https://www.oreilly.com/library/view/opengl-programming-guide/9780132748445/app09lev1sec2.html
-			glBufferData(GL_UNIFORM_BUFFER, 144, nullptr, GL_STATIC_DRAW);
+			// 208 bytes = 64 for projection matrix + 64 for view matrix + 64 for normal matrix + 16 for camera position (vec3 rounded up to vec4 for std140) https://www.oreilly.com/library/view/opengl-programming-guide/9780132748445/app09lev1sec2.html
+			glBufferData(GL_UNIFORM_BUFFER, 208, nullptr, GL_STATIC_DRAW);
 			glBindBufferBase(GL_UNIFORM_BUFFER, 0, CameraDataUniformBufferID); // NB: camera data always at binding point 0
 		}
 
@@ -220,11 +220,10 @@ namespace GaladHen
 		glBindBuffer(GL_UNIFORM_BUFFER, CameraDataUniformBufferID);
 
 		glm::mat4 view = camera.GetViewMatrix();
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(view), glm::value_ptr(view));
-		glm::mat4 proj = camera.GetProjectionMatrix();
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(view), sizeof(proj), glm::value_ptr(proj));
-		glm::vec3 pos = camera.Transform.GetPosition();
-		glBufferSubData(GL_UNIFORM_BUFFER, sizeof(view) + sizeof(proj), sizeof(pos), glm::value_ptr(pos));
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, glm::value_ptr(view));
+		glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, glm::value_ptr(camera.GetProjectionMatrix()));
+		glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, glm::value_ptr(camera.GetNormalMatrix()));
+		glBufferSubData(GL_UNIFORM_BUFFER, 192, 16, glm::value_ptr(camera.Transform.GetPosition()));
 		glBindBuffer(GL_UNIFORM_BUFFER, 0); // unbind
 	}
 

@@ -1,7 +1,6 @@
 
 #include "Camera.h"
 
-#include "Input.h"
 #include <glm/gtx/transform.hpp> // for lookat() and perspective()
 #include <glm/gtx/quaternion.hpp>
 #include <glm/ext/quaternion_trigonometric.hpp>
@@ -18,6 +17,7 @@ namespace GaladHen
         , Far(100.0f) // defaults
     {
         Transform.SetYaw(-90.0f); // because of global axes orientations -> in this way the default camera looks towards negative x axis, so potentially in front of a model
+        Transform.SetPitch(25.0f);
         UpdateProjectionMatrix();
     }
 
@@ -31,36 +31,29 @@ namespace GaladHen
         UpdateProjectionMatrix();
     }
 
-    void Camera::ProcessInput(Input& input, float deltaTime)
+    void Camera::ApplyCameraMovements(glm::vec3 linearMovement, glm::vec2 angularMovement, float deltaTime)
     {
-        // keys
-        if (input.GetKeyboardKey((int)KeyboardKey::W))
-            Transform.SetPosition(Transform.GetPosition() + Transform.GetFront() * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey((int)KeyboardKey::S))
-            Transform.SetPosition(Transform.GetPosition() - Transform.GetFront() * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey((int)KeyboardKey::D))
-            Transform.SetPosition(Transform.GetPosition() + Transform.GetRight() * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey((int)KeyboardKey::A))
-            Transform.SetPosition(Transform.GetPosition() - Transform.GetRight() * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey((int)KeyboardKey::E))
-            Transform.SetPosition(Transform.GetPosition() + TransformQuat::GlobalUp * LinearSpeed * deltaTime);
-        if (input.GetKeyboardKey((int)KeyboardKey::Q))
-            Transform.SetPosition(Transform.GetPosition() - TransformQuat::GlobalUp * LinearSpeed * deltaTime);
-
-        // rotation
-        if (input.GetKeyboardKey((int)MouseKey::Right))
+        // Linear movement
+        if (glm::length(linearMovement) > 0.0f)
         {
-            // calculate delta radians within limits
-            float deltaYaw = -float(AngularSpeed * deltaTime * input.GetDeltaMouseX());
-            float deltaPitch = -float(AngularSpeed * deltaTime * input.GetDeltaMouseY());
-
-            // pitch with limits
-            float newPitch = Transform.GetPitch() + deltaPitch;
-            deltaPitch = glm::clamp(newPitch, -MaxPitchAngle, MaxPitchAngle) - Transform.GetPitch();
-
-            // apply rotation
-            Transform.Rotate(deltaPitch, deltaYaw, 0.0f);
+            glm::vec3 linearNormalized = glm::normalize(linearMovement);
+            glm::vec3 movement = (Transform.GetFront() * linearNormalized.z + Transform.GetRight() * linearNormalized.x + Transform.GetUp() * linearNormalized.y)
+                * LinearSpeed * deltaTime;
+            Transform.SetPosition(Transform.GetPosition() + movement);
         }
+
+        // Angular movement 
+
+        // calculate delta radians within limits
+        float deltaYaw = -float(AngularSpeed * deltaTime * angularMovement.x);
+        float deltaPitch = -float(AngularSpeed * deltaTime * angularMovement.y);
+
+        // pitch with limits
+        float newPitch = Transform.GetPitch() + deltaPitch;
+        deltaPitch = glm::clamp(newPitch, -MaxPitchAngle, MaxPitchAngle) - Transform.GetPitch();
+
+        // apply rotation
+        Transform.Rotate(deltaPitch, deltaYaw, 0.0f);
     }
 
     void Camera::SetFovY(float fovy)
@@ -93,12 +86,18 @@ namespace GaladHen
 
     glm::mat4 Camera::GetViewMatrix()
     {
-        return glm::lookAt(Transform.GetPosition(), Transform.GetPosition() + Transform.GetFront(), TransformQuat::GlobalUp);;
+        glm::vec3 front = Transform.GetFront();
+        return glm::lookAt(Transform.GetPosition(), Transform.GetPosition() + front, TransformQuat::GlobalUp);
     }
 
     glm::mat4 Camera::GetProjectionMatrix()
     {
         return ProjectionMatrix;
+    }
+
+    glm::mat4 Camera::GetNormalMatrix()
+    {
+        return glm::transpose(glm::inverse(GetViewMatrix()));
     }
 
     float Camera::GetFovY()

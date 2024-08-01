@@ -23,6 +23,10 @@ namespace GaladHen
         // Rotate the transform by delta pitch, yaw and roll angles (in degrees)
         void Rotate(float deltaPitch, float deltaYaw, float deltaRoll);
 
+        void RotatePitch(float deltaPitch);
+        void RotateYaw(float deltaYaw);
+        void RotateRoll(float deltaRoll);
+
         // getters
 
         glm::vec3 GetFront();
@@ -30,7 +34,7 @@ namespace GaladHen
         glm::vec3 GetRight();
 
         glm::vec3 GetPosition();
-        glm::quat GetRotation();
+        glm::quat GetOrientation();
 
         // @brief
         // Get pitch angle
@@ -47,7 +51,7 @@ namespace GaladHen
         // setters
 
         void SetPosition(const glm::vec3& position);
-        void SetRotation(const glm::quat& rotation);
+        void SetOrientation(const glm::quat& orientation);
 
         // @brief
         // Set pitch angle
@@ -64,15 +68,11 @@ namespace GaladHen
     protected:
 
         // @brief
-        // Update rotation quaternion basing on Pitch, Yaw and Roll angles
-        void UpdateRotation();
-
-        // @brief
         // Update euler angles basing on pitch, yaw and roll
         void UpdateEulerAngles();
 
         glm::vec3 Position;
-        glm::quat Rotation;
+        glm::quat Orientation;
 
         // euler angles
         float Pitch; // around X axis

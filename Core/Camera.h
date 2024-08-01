@@ -5,22 +5,12 @@
 
 #pragma once
 
-// gl3w MUST be included before any other OpenGL-related header
-// #include <GL/gl3w.h>
-
-// #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-// #include <gtx/transform.hpp> // for lookat() and perspective()
-// #include <gtx/quaternion.hpp>
-// #include <ext/quaternion_trigonometric.hpp>
-// #include <ext/quaternion_float.hpp>
 
 #include "transform.h"
 
 namespace GaladHen
 {
-    class Input;
-
     class Camera
     {
     public:
@@ -39,8 +29,10 @@ namespace GaladHen
         // Copy constructor, Copy assignment, Move constructor and Move assignment are defaulted
 
         // @brief
-        // Move and rotate camera basing on inputs
-        void ProcessInput(Input& input, float deltaTime);
+        // Move and rotate camera, within limits
+        // @param linearMovement: vector representing movement of camera position on the three axes
+        // @param angularMovement: vector representing movement of camera orietation (Yaw, Pitch)
+        void ApplyCameraMovements(glm::vec3 linearMovement, glm::vec2 angularMovement, float deltaTime);
 
         // setters
 
@@ -53,6 +45,7 @@ namespace GaladHen
 
         glm::mat4 GetViewMatrix(); // the transform is used to calculate the view matrix
         glm::mat4 GetProjectionMatrix();
+        glm::mat4 GetNormalMatrix();
 
         float GetFovY();
         float GetAspectRatio();

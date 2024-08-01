@@ -130,7 +130,7 @@ namespace GaladHen
         unsigned int ghAction = winGL->TranslateKeyAction(action);
 
         // send callback
-        winGL->SendKeyboardCallback(ghKey, ghAction);
+        winGL->SendMouseKeyCallback(ghKey, ghAction);
     }
 
     void WindowGL::MousePosCallbackGL(GLFWwindow* window, double xpos, double ypos)

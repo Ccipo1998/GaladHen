@@ -17,14 +17,9 @@ layout (std140, binding = 0) uniform CameraData
 {
     uniform mat4 ViewMatrix;
     uniform mat4 ProjectionMatrix;
+    uniform mat4 NormalMatrix;
     uniform vec3 WCameraPosition;
 };
-
-layout (std140, binding = 1) uniform ModelData
-{
-    uniform mat4 NormalMatrix;
-};
-
 
 // output
 out vec3 SmoothWNormal;

@@ -34,7 +34,7 @@ namespace GaladHen
     void DirectionalLight::SetDirection(const glm::vec3& direction)
     {
         glm::quat rot = glm::lookAt(Transform.GetPosition(), Transform.GetPosition() + direction, TransformQuat::GlobalUp);
-        Transform.SetRotation(rot);
+        Transform.SetOrientation(rot);
     }
 
     PointLight::PointLight()
