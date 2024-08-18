@@ -19,12 +19,11 @@ int main()
     // create opengl renderer
     Renderer renderer{ API::OpenGL };
     renderer.Init();
-    // renderer settings
-    renderer.EnableDepthTest(true);
 
     // make window
     Window window{ API::OpenGL, "GaladHen" };
     window.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
+    window.EnableDepthTest(true);
 
     // create scene
     Scene scene{};
@@ -33,11 +32,11 @@ int main()
     Texture* texAlbedo = AssetsManager::LoadAndStoreTexture(
         std::string{"../Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png"},
         std::string{"StuccoAlbedo"},
-        TextureFormat::RGB);
+        TextureFormat::SRGB8);
     Texture* texNormal = AssetsManager::LoadAndStoreTexture(
         std::string{"../Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png"},
         std::string{"StuccoNormal"},
-        TextureFormat::SRGB);
+        TextureFormat::RGB8);
     Texture* texRoughness = AssetsManager::LoadAndStoreTexture(
         std::string{"../Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png"},
         std::string{"StuccoRoughness"},
@@ -45,8 +44,8 @@ int main()
 
     // get pbr shader pipeline
     //ShaderPipeline pbr = AssetsManager::GetPipelinePBR();
-    Shader vertex{ "../Shaders/test/VertexShader.vert", ShaderStage::Vertex };
-    Shader fragment{ "../Shaders/test/FragmentShader.frag", ShaderStage::Fragment };
+    Shader vertex{ "../Shaders/pbr/Pbr.vert", ShaderStage::Vertex };
+    Shader fragment{ "../Shaders/pbr/Pbr.frag", ShaderStage::Fragment };
     ShaderPipeline test{};
     test.VertexShader = &vertex;
     test.FragmentShader = &fragment;
@@ -54,6 +53,16 @@ int main()
     // materials
     Material bunnyMat{&test, ShadingMode::SmoothShading};
     PBRMaterialData bunnyMatData{};
+    TextureParameters diffuse{};
+    diffuse.TextureSource = texAlbedo;
+    TextureParameters normal{};
+    normal.TextureSource = texNormal;
+    TextureParameters roughness{};
+    roughness.TextureSource = texRoughness;
+    bunnyMatData.DiffuseTexture = diffuse;
+    bunnyMatData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    bunnyMatData.NormalMap = normal;
+    bunnyMatData.RoughnessTexture = roughness;
     bunnyMat.Data = &bunnyMatData;
 
     // load models
@@ -70,6 +79,9 @@ int main()
     renderer.LoadLightingData(scene);
     renderer.CompileShaders(scene);
     renderer.LoadCameraData(scene.MainCamera);
+    renderer.LoadTexture(*texAlbedo);
+    renderer.LoadTexture(*texNormal);
+    renderer.LoadTexture(*texRoughness);
 
     while (!window.IsCloseWindowRequested())
     {
@@ -105,9 +117,8 @@ int main()
         {
             window.GetMousePositionDelta(cameraRot.x, cameraRot.y);
         }
-
         scene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
-        renderer.LoadCameraData(scene.MainCamera);
+        renderer.UpdateCameraData(scene.MainCamera);
 
         renderer.Draw(scene);
 

@@ -65,6 +65,8 @@ namespace GaladHen
 
         virtual void SetColorBufferClearColor(glm::vec4 color) override;
 
+        virtual void EnableDephtTest(bool enable) override;
+
         virtual void CloseWindow() override;
 
         virtual ~WindowGL() override;

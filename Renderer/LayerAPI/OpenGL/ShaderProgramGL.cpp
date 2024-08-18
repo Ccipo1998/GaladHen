@@ -181,18 +181,23 @@ namespace GaladHen
             glProgramUniform4fv(Program, glGetUniformLocation(Program, vec4.Name.data()), 1, glm::value_ptr(glm::vec4(vec4.Vector.x, vec4.Vector.y, vec4.Vector.z, vec4.Vector.w)));
         }
 
-        int texUnit = 0;
         for (TextureDataGL& tex : textureData)
-        {
-            TextureGL* texImage = tex.Texture;
-            TextureParameters* params = tex.Parameters;
-            
+        {            
             // tex image should be already loaded when arriving here
             //assert(texImage->IsLoaded());
 
-            texImage->LoadTextureParameters(this, texUnit, params->HorizontalWrapping, params->Filtering, params->MipMapMode); // TODO: here should be wrapping for both horizontal and vertical axes
-            
+            tex.TextureGLObject->LoadTextureParameters(this, tex.TextureUnit, *tex.Parameters); // TODO: here should be wrapping for both horizontal and vertical axes
+            tex.TextureGLObject->SetTextureSamplerName(this, tex.TextureUnit, tex.SamplerName);
         }
+
+        // subroutine selection -> TEMP
+        GLuint SubroutineIndices[5];
+        SubroutineIndices[0] = 0;
+        SubroutineIndices[1] = 3;
+        SubroutineIndices[2] = 5;
+        SubroutineIndices[3] = 6;
+        SubroutineIndices[4] = 8;
+        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 5, SubroutineIndices);
     }
 
     void ShaderProgramGL::SetShadingMode(ShadingMode mode)

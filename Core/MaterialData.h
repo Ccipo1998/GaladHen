@@ -44,11 +44,11 @@ namespace GaladHen
         MaterialDataTexture(std::string& name, TextureParameters textureParams)
         {
             Name = name;
-            Tex = textureParams;
+            TexParams = textureParams;
         }
 
         std::string Name;
-        TextureParameters Tex;
+        TextureParameters TexParams;
     };
 
     // Material data interface

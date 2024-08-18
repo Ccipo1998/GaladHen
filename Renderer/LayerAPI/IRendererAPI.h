@@ -25,13 +25,15 @@ namespace GaladHen
 
 		virtual void Init() = 0;
 
-		virtual void LoadMeshDataIntoGPU(Mesh& mesh) = 0;
+		virtual void LoadMeshData(Mesh& mesh) = 0;
 
-		virtual void FreeMeshDataFromGPU(Mesh& mesh) = 0;
+		virtual void FreeMeshData(Mesh& mesh) = 0;
 
-		virtual void LoadLighingDataIntoGPU(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) = 0;
+		virtual void LoadLightingData(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) = 0;
 
-		virtual void FreeLightingDataFromGPU() = 0;
+		virtual void UpdateLightingData(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) = 0;
+
+		virtual void FreeLightingData() = 0;
 
 		virtual CompilationResult CompileShaderPipeline(ShaderPipeline& pipeline) = 0;
 
@@ -39,15 +41,15 @@ namespace GaladHen
 
 		virtual void FreeShaderProgram(ShaderProgram* program) = 0;
 
-		virtual void LoadTextureIntoGPU(Texture& texture) = 0;
+		virtual void LoadTexture(Texture& texture) = 0;
 
-		virtual void FreeTextureFromGPU(Texture& texture) = 0;
-
-		virtual void EnableDepthTest(bool enable) = 0;
+		virtual void FreeTexture(Texture& texture) = 0;
 
 		virtual void LoadMaterialData(Material& material) = 0;
 
 		virtual void LoadCameraData(Camera& camera) = 0;
+
+		virtual void UpdateCameraData(Camera& camera) = 0;
 
 		virtual void Draw(Mesh& mesh, Material& material) = 0;
 	};

@@ -16,8 +16,6 @@ namespace GaladHen
         , Near(0.1f)
         , Far(100.0f) // defaults
     {
-        Transform.SetYaw(-90.0f); // because of global axes orientations -> in this way the default camera looks towards negative x axis, so potentially in front of a model
-        Transform.SetPitch(25.0f);
         UpdateProjectionMatrix();
     }
 
@@ -84,18 +82,18 @@ namespace GaladHen
         UpdateProjectionMatrix();
     }
 
-    glm::mat4 Camera::GetViewMatrix()
+    glm::mat4 Camera::GetViewMatrix() const
     {
-        glm::vec3 front = Transform.GetFront();
-        return glm::lookAt(Transform.GetPosition(), Transform.GetPosition() + front, TransformQuat::GlobalUp);
+        glm::vec3 test = Transform.GetFront();
+        return glm::lookAt(Transform.GetPosition(), Transform.GetPosition() + Transform.GetFront(), TransformQuat::GlobalUp);
     }
 
-    glm::mat4 Camera::GetProjectionMatrix()
+    glm::mat4 Camera::GetProjectionMatrix() const
     {
         return ProjectionMatrix;
     }
 
-    glm::mat4 Camera::GetNormalMatrix()
+    glm::mat4 Camera::GetNormalMatrix() const
     {
         return glm::transpose(glm::inverse(GetViewMatrix()));
     }

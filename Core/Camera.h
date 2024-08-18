@@ -18,8 +18,8 @@ namespace GaladHen
         TransformQuat Transform;
 
         // movement parameters
-        float LinearSpeed = 2.5f;
-        float AngularSpeed = 100.0f;
+        float LinearSpeed = 5.0f;
+        float AngularSpeed = 500.0f;
         float MaxPitchAngle = 80.0f;
 
         Camera();
@@ -43,9 +43,9 @@ namespace GaladHen
 
         // getters
 
-        glm::mat4 GetViewMatrix(); // the transform is used to calculate the view matrix
-        glm::mat4 GetProjectionMatrix();
-        glm::mat4 GetNormalMatrix();
+        glm::mat4 GetViewMatrix() const; // the transform is used to calculate the view matrix
+        glm::mat4 GetProjectionMatrix() const;
+        glm::mat4 GetNormalMatrix() const;
 
         float GetFovY();
         float GetAspectRatio();

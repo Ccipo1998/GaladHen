@@ -35,19 +35,18 @@ namespace GaladHen
     struct TextureParameters
     {
         TextureParameters()
-            : Texture(nullptr)
+            : TextureSource(nullptr)
             , HorizontalWrapping(TextureWrapping::Repeat)
             , VerticalWrapping(TextureWrapping::Repeat)
             , Filtering(TextureFiltering::Linear)
             , MipMapMode(TextureMipMap::LinearLinear) // defaults 
             {}
 
-        Texture* Texture;
+        Texture* TextureSource;
 
         TextureWrapping HorizontalWrapping;
         TextureWrapping VerticalWrapping;
         TextureFiltering Filtering;
         TextureMipMap MipMapMode;
-        std::string SamplerName;
     };
 }

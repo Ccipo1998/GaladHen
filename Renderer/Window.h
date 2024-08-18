@@ -84,6 +84,8 @@ namespace GaladHen
 
         void SetColorBufferClearColor(glm::vec4 color);
 
+        void EnableDepthTest(bool enable);
+
         ~Window();
 
     protected:

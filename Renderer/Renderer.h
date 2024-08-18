@@ -47,6 +47,11 @@ namespace GaladHen
         // Load all lighting data used inside the scene
         void LoadLightingData(Scene& scene);
 
+        // brief
+        // Update all lighting data used inside the scene
+        // LoadLightingData() must be already called
+        void UpdateLightingData(Scene& scene);
+
         // @brief
         // Free alla lighting data used by the scene
         void FreeLightingData(Scene& scene);
@@ -88,6 +93,11 @@ namespace GaladHen
         void LoadCameraData(Camera& camera);
 
         // @brief
+        // Update camera data (position, orientation, ...) into GPU memory
+        // LoadCameraData() must be already called
+        void UpdateCameraData(Camera& camera);
+
+        // @brief
         // Draw calls on each scene object of the scene
         void Draw(Scene& scene);
 
@@ -100,10 +110,6 @@ namespace GaladHen
         // Compile a compute shader program
         // @returns: compilation result
         bool CompileComputeShader(ComputeShader& program);
-
-        // @brief
-        // Enable or disable depth testing
-        void EnableDepthTest(bool enable);
 
     protected:
 

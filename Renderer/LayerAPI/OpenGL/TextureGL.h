@@ -19,13 +19,13 @@ namespace GaladHen
 
         virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, bool generateMipMaps) override;
 
-        virtual void LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, TextureWrapping wrapping, TextureFiltering filtering, TextureMipMap mipmap) override;
+        virtual void LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, const TextureParameters& params) const override;
 
-        virtual void BindToTextureUnit(IShaderProgramAPI* shaderProgram, unsigned int unit) override;
+        virtual void BindToTextureUnit(IShaderProgramAPI* shaderProgram, unsigned int unit) const override;
 
         virtual bool IsLoaded() override;
 
-        virtual void SetTextureSamplerName(IShaderProgramAPI* shaderProgram, unsigned int unit, char* samplerName) override;
+        virtual void SetTextureSamplerName(IShaderProgramAPI* shaderProgram, unsigned int unit, const char* samplerName) const override;
 
         virtual void FreeMemoryGPU() override;
 
@@ -36,25 +36,27 @@ namespace GaladHen
         // OpenGL texture formats are called Sized Internal Formats
         // https://www.khronos.org/opengl/wiki/Image_Format
         // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexStorage2D.xhtml
-        int TextureFormatAssociations[61];
+        static GLenum TextureFormatAssociations[61];
 
         // OpenGL pixel formats are called Base Internal Formats
         // https://www.khronos.org/opengl/wiki/Image_Format
         // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexStorage2D.xhtml
-        int PixelChannelsAssociations[4];
+        static GLenum PixelChannelsAssociations[4];
 
         // OpenGL pixel data type
         // https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml (type parameter)
-        int PixelChannelDepthAssociations[19];
+        static GLenum PixelChannelDepthAssociations[19];
 
         // OpenGL wrapping parameters
-        int WrappingAssociations[4];
+        static GLint WrappingAssociations[4];
 
         // OpenGL filtering parameters
-        int FilteringAssociations[2];
+        static GLint FilteringAssociations[2];
 
         // OpenGL mipmapping filtering associations
-        int MipMapAssociations[4];
+        static int MipMapAssociations[4];
+
+        static GLenum TextureUnits[32]; // OpenGL has a maximum of 32 texture units
 
     };
 }

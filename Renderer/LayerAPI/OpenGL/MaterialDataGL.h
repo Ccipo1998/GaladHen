@@ -11,6 +11,6 @@ namespace GaladHen
 
     struct TextureDataGL : public ITextureDataAPI
     {
-        TextureGL* Texture;
+        const TextureGL* TextureGLObject;
     };
 }

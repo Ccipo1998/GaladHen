@@ -29,12 +29,12 @@ namespace GaladHen
 
         // getters
 
-        glm::vec3 GetFront();
-        glm::vec3 GetUp();
-        glm::vec3 GetRight();
+        glm::vec3 GetFront() const;
+        glm::vec3 GetUp() const;
+        glm::vec3 GetRight() const;
 
-        glm::vec3 GetPosition();
-        glm::quat GetOrientation();
+        glm::vec3 GetPosition() const;
+        glm::quat GetOrientation() const;
 
         // @brief
         // Get pitch angle

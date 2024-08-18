@@ -71,13 +71,18 @@ namespace GaladHen
     void Renderer::LoadLightingData(Scene& scene)
     {
         // Allocate and populate memory for lighting
-        RendererAPI->LoadLighingDataIntoGPU(scene.PointLights, scene.DirectionalLights);
+        RendererAPI->LoadLightingData(scene.PointLights, scene.DirectionalLights);
+    }
+
+    void Renderer::UpdateLightingData(Scene& scene)
+    {
+        RendererAPI->UpdateLightingData(scene.PointLights, scene.DirectionalLights);
     }
 
     void Renderer::FreeLightingData(Scene& scene)
     {
         // Free lighting data
-        RendererAPI->FreeLightingDataFromGPU();
+        RendererAPI->FreeLightingData();
     }
 
     void Renderer::CompileShaders(Scene& scene)
@@ -105,12 +110,12 @@ namespace GaladHen
 
     void Renderer::LoadMesh(Mesh& mesh)
     {
-        RendererAPI->LoadMeshDataIntoGPU(mesh);
+        RendererAPI->LoadMeshData(mesh);
     }
 
     void Renderer::FreeMesh(Mesh& mesh)
     {
-        RendererAPI->FreeMeshDataFromGPU(mesh);
+        RendererAPI->FreeMeshData(mesh);
     }
 
     void Renderer::LoadModel(Model& model)
@@ -131,12 +136,12 @@ namespace GaladHen
 
     void Renderer::LoadTexture(Texture& texture)
     {
-        RendererAPI->LoadTextureIntoGPU(texture);
+        RendererAPI->LoadTexture(texture);
     }
 
     void Renderer::FreeTexture(Texture& texture)
     {
-        RendererAPI->FreeTextureFromGPU(texture);
+        RendererAPI->FreeTexture(texture);
     }
 
     void Renderer::LoadMaterialData(Material& material)
@@ -147,6 +152,11 @@ namespace GaladHen
     void Renderer::LoadCameraData(Camera& camera)
     {
         RendererAPI->LoadCameraData(camera);
+    }
+
+    void Renderer::UpdateCameraData(Camera& camera)
+    {
+        RendererAPI->UpdateCameraData(camera);
     }
 
     void Renderer::Draw(Scene& scene)
@@ -202,7 +212,7 @@ namespace GaladHen
             }
             else
             {
-                error = "Linking error for shader pipeline:\n";
+                error = "Linking error in shader pipeline:\n";
             }
 
             if (!result.vSuccess)
@@ -244,6 +254,11 @@ namespace GaladHen
                 error.append(": ");
                 error.append(result.fLog);
                 error.append("\n");
+            }
+
+            if (!result.linkSuccess)
+            {
+                error.append(result.linkLog);
             }
 
             Log::Error("Renderer", error);
@@ -288,10 +303,5 @@ namespace GaladHen
         }
 
         return result.Success();
-    }
-
-    void Renderer::EnableDepthTest(bool enable)
-    {
-        RendererAPI->EnableDepthTest(enable);
     }
 }

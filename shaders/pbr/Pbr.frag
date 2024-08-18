@@ -1,7 +1,7 @@
 
 // PBR fragment shader
 
-#version 460 core
+#version 450 core
 
 subroutine vec3 ShadingMode();
 layout (location = 0) subroutine uniform ShadingMode CurrentShadingMode;
@@ -22,59 +22,63 @@ layout (location = 4) subroutine uniform RoughnessMode CurrentRoughnessMode;
 out vec4 color;
 
 // inputs
-in vec3 SmoothWNormal;
-flat in vec3 FlatWNormal;
-in vec3 WPosition;
-in vec3 WViewDirection;
-in vec2 TexCoord;
-in mat3 TBN;
+in VS_OUT
+{
+    in vec3 SmoothWNormal;
+    flat in vec3 FlatWNormal;
+    in vec3 WPosition;
+    in vec3 WViewDirection;
+    in vec2 TexCoord;
+    in mat3 TBN;
+} vs_out;
 
 // structs
 struct PointLight
 {
-    float[3] Position;
-    float[3] Color;
+    vec4 Color;
+    vec3 Position;
     float Intensity;
     float FallOffDistance;
 };
 
 struct DirectionalLight
 {
-    float[3] Position;
-    float[3] Color;
+    vec4 Color;
+    vec3 Position;
     float Intensity;
-    float[3] Direction;
+    vec3 Direction;
 };
 
 // buffers
-layout(std430, binding = 0) buffer PointLightsBuffer
+layout(std140, binding = 0) buffer PointLightBuffer
 {
-    uint PointLightsNumber;
     PointLight PointLights[];
 };
-
-layout(std430, binding = 1) buffer DirectionalLightsBuffer
+layout(std140, binding = 1) buffer DirectionalLightBuffer
 {
-    // directional lights
-    uint DirectionalLightsNumber;
     DirectionalLight DirectionalLights[];
 };
 
 // uniforms
-// material
-uniform vec3 DiffuseColor;
-uniform vec3 Specular;
-uniform float Metallic;
-uniform float Roughness;
-// matrix
-uniform mat4 ViewMatrix;
-uniform mat4 ProjectionMatrix;
-uniform mat4 NormalMatrix;
+layout (std140, binding = 0) uniform CameraData
+{
+    uniform mat4 ViewMatrix;
+    uniform mat4 ProjectionMatrix;
+    uniform mat4 NormalMatrix;
+    uniform vec3 WCameraPosition;
+};
+
 // textures
 uniform sampler2D DiffuseTexture;
 uniform sampler2D NormalMap;
 uniform sampler2D MetallicTexture;
 uniform sampler2D RoughnessTexture;
+
+// material
+uniform vec4 DiffuseColor;
+uniform vec4 Specular;
+uniform float Metallic;
+uniform float Roughness;
 
 // const
 const float pi = 3.141592653589793;
@@ -147,28 +151,28 @@ layout (index = 0)
 subroutine(ShadingMode)
 vec3 SmoothShading()
 {
-    return normalize(SmoothWNormal);
+    return normalize(vs_out.SmoothWNormal);
 }
 
 layout (index = 1)
 subroutine(ShadingMode)
 vec3 FlatShading()
 {
-    return normalize(FlatWNormal);
+    return normalize(vs_out.FlatWNormal);
 }
 
 layout (index = 2)
 subroutine(DiffuseColorMode)
 vec3 DiffuseColorConstant()
 {
-    return DiffuseColor;
+    return DiffuseColor.rgb;
 }
 
 layout (index = 3)
 subroutine(DiffuseColorMode)
 vec3 DiffuseColorSampling()
 {
-    return texture(DiffuseTexture, TexCoord).rgb;
+    return texture(DiffuseTexture, vs_out.TexCoord).rgb;
 }
 
 layout (index = 4)
@@ -182,9 +186,9 @@ layout (index = 5)
 subroutine(NormalMode)
 vec3 NormalSampling()
 {
-    vec3 normalSample = texture(NormalMap, TexCoord).rgb;
+    vec3 normalSample = texture(NormalMap, vs_out.TexCoord).rgb;
     normalSample = normalSample * 2.0 - 1.0;
-    normalSample = normalize(TBN * normalSample);
+    normalSample = normalize(vs_out.TBN * normalSample);
     return normalSample;
 }
 
@@ -199,7 +203,7 @@ layout (index = 7)
 subroutine(MetallicMode)
 float MetallicSampling()
 {
-    return texture(MetallicTexture, TexCoord).r;
+    return texture(MetallicTexture, vs_out.TexCoord).r;
 }
 
 layout (index = 8)
@@ -213,10 +217,10 @@ layout (index = 9)
 subroutine(RoughnessMode)
 float RoughnessSampling()
 {
-    return texture(RoughnessTexture, TexCoord).r;
+    return texture(RoughnessTexture, vs_out.TexCoord).r;
 }
 
-vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic, float roughness, vec3 nor)
+vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic, float roughness)
 {
     vec3 outgoing = vec3(0.0);
 
@@ -228,25 +232,25 @@ vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic
     vec3 wHalfDir = vec3(0.0);
 
     // point lights
-    for (uint i = 0; i < PointLightsNumber; ++i)
+    for (uint i = 0; i < 1; ++i)
     {
         diffuse = DiffuseBRDF(diffuseColor, metallic);
-        wLightPos = vec3(PointLights[i].Position[0], PointLights[i].Position[1], PointLights[i].Position[2]);
-        wLightDir = normalize(wLightPos - WPosition);
-        wHalfDir = normalize(wLightDir + WViewDirection);
-        specular = SpecularBRDF(wNormal, wLightDir, WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
-        outgoing += PointLights[i].Intensity * (diffuse + specular) * max(dot(nor, wLightDir), 0.0);
+        wLightPos = PointLights[i].Position;
+        wLightDir = normalize(wLightPos - vs_out.WPosition);
+        wHalfDir = normalize(wLightDir + vs_out.WViewDirection);
+        specular = SpecularBRDF(wNormal, wLightDir, vs_out.WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
+        outgoing += PointLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
     }
 
     // directional lights
-    for (uint i = 0; i < DirectionalLightsNumber; ++i)
+    for (uint i = 0; i < DirectionalLights.length(); ++i)
     {
         diffuse = DiffuseBRDF(diffuseColor, metallic);
-        wLightDir = -vec3(DirectionalLights[i].Direction[0], DirectionalLights[i].Direction[1], DirectionalLights[i].Direction[2]);
+        wLightDir = -DirectionalLights[i].Direction;
         //viewLightDir = (NormalMatrix * vec4(viewLightDir, 1.0)).xyz;
-        wHalfDir = normalize(wLightDir + WViewDirection);
-        specular = SpecularBRDF(wNormal, wLightDir, WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
-        outgoing += DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(nor, wLightDir), 0.0);
+        wHalfDir = normalize(wLightDir + vs_out.WViewDirection);
+        specular = SpecularBRDF(wNormal, wLightDir, vs_out.WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
+        outgoing += DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
     }
 
     return outgoing * pi;
@@ -263,7 +267,7 @@ void main()
     float roughness = CurrentRoughnessMode();
 
     // shading
-    vec3 shading = PhysicallyBasedShadingModel(normal, diffuse, metallic, roughness, normal);
+    vec3 shading = PhysicallyBasedShadingModel(normal, diffuse, metallic, roughness);
 
     // gamma correction
     shading = GammaCorrection(shading);

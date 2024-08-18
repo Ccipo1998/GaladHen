@@ -218,6 +218,11 @@ namespace GaladHen
         glClearColor(color.x, color.y, color.z, color.w);
     }
 
+    void WindowGL::EnableDephtTest(bool enable)
+    {
+        glEnable(GL_DEPTH_TEST);
+    }
+
     void WindowGL::CloseWindow()
     {
         glfwDestroyWindow(WinGL);

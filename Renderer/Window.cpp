@@ -137,7 +137,7 @@ namespace GaladHen
 
     void Window::ClosingWindowCallback(Window* owner)
     {
-        owner->CallClosingWindowCallback();
+        owner->WindowInput.CloseWindowRequested = true;
     }
 
     void Window::BeginFrame()
@@ -162,6 +162,11 @@ namespace GaladHen
     void Window::SetColorBufferClearColor(glm::vec4 color)
     {
         WinAPI->SetColorBufferClearColor(color);
+    }
+
+    void Window::EnableDepthTest(bool enable)
+    {
+        WinAPI->EnableDephtTest(enable);
     }
 
     void Window::GetMousePosition(float& mouseX, float& mouseY)

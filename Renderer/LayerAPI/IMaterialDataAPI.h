@@ -1,5 +1,5 @@
 
-// This is a pure virtual class (interface) to define generic material data
+// Wrappers for generic material data
 
 #pragma once
 
@@ -7,9 +7,11 @@ namespace GaladHen
 {
     class TextureParameters;
 
-    // material data interface
+    // texture data interface
     struct ITextureDataAPI
     {
-        TextureParameters* Parameters;
+        const char* SamplerName;
+        const TextureParameters* Parameters;
+        unsigned int TextureUnit;
     };
 }

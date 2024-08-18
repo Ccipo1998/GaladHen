@@ -32,13 +32,13 @@ namespace GaladHen
         // @param wrapping: wrapping mode
         // @param filtering: filtering mode
         // @param mipmap: mipmap filtering mode
-        virtual void LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, TextureWrapping wrapping, TextureFiltering filtering, TextureMipMap mipmap) = 0;
+        virtual void LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, const TextureParameters& params) const = 0;
 
         // @brief
         // Bind a texture to a specific texture unit to be used inside a shader
         // @param shaderProgram: the shader program which the unit refers to
         // @param unit: texture unit to which bind the texture
-        virtual void BindToTextureUnit(IShaderProgramAPI* shaderProgam, unsigned int unit) = 0;
+        virtual void BindToTextureUnit(IShaderProgramAPI* shaderProgam, unsigned int unit) const = 0;
 
         // @brief
         // Check if texture data is already loaded in GPU memory
@@ -49,7 +49,7 @@ namespace GaladHen
         // @param shaderProgram: the shader program in which the sampler is set
         // @param unit: the texture unit of the sampler
         // @param samplerName: the name of the sampler inside the shader program
-        virtual void SetTextureSamplerName(IShaderProgramAPI* shaderProgram, unsigned int unit, char* samplerName) = 0;
+        virtual void SetTextureSamplerName(IShaderProgramAPI* shaderProgram, unsigned int unit, const char* samplerName) const = 0;
 
         virtual void FreeMemoryGPU() = 0;
 

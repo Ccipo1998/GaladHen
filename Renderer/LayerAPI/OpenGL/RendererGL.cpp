@@ -27,7 +27,8 @@ namespace GaladHen
 		, BufferIndex(0)
 		, ShaderIndex(0)
 		, TextureIndex(0)
-		, LightingBufferID(0)
+		, PointLightBufferID(0)
+		, DirectionalLightBufferID(0)
 		, CameraDataUniformBufferID(0)
 	{}
 
@@ -58,7 +59,7 @@ namespace GaladHen
 		}
 	}
 
-	void RendererGL::LoadMeshDataIntoGPU(Mesh& mesh)
+	void RendererGL::LoadMeshData(Mesh& mesh)
 	{
 		if (mesh.MeshID == 0)
 		{
@@ -68,36 +69,56 @@ namespace GaladHen
 		Meshes[mesh.MeshID - 1].LoadMemoryGPU(mesh.Vertices, mesh.Indices);
 	}
 
-	void RendererGL::FreeMeshDataFromGPU(Mesh& mesh)
+	void RendererGL::FreeMeshData(Mesh& mesh)
 	{
 		Meshes[mesh.MeshID - 1].FreeMemoryGPU();
 	}
 
-	void RendererGL::LoadLighingDataIntoGPU(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights)
+	void RendererGL::LoadLightingData(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights)
 	{
-		std::vector<size_t> sizes;
-		sizes.push_back(pointLights.size() * sizeof(PointLight));
-		sizes.push_back(dirLights.size() * sizeof(DirectionalLight));
+		std::vector<PointLightData> pointLightDatas;
+		TranslateToShaderData(pointLights, pointLightDatas);
 
-		std::vector<void*> datas;
-		datas.push_back((void*)pointLights.data());
-		datas.push_back((void*)dirLights.data());
+		std::vector<DirectionalLightData> dirLightDatas;
+		TranslateToShaderData(dirLights, dirLightDatas);
 
-		if (LightingBufferID == 0)
+		if (PointLightBufferID == 0)
 		{
-			// Lighting data not created yet -> loading needed
-			LoadBufferData(0, GL_STATIC_DRAW, sizes, datas);
+			// first loading
+			PointLightBufferID = LoadBufferData( GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, pointLightDatas.size() * sizeof(PointLightData), (void*)pointLightDatas.data());
 		}
 		else
 		{
-			// Lighting data already created -> update needed
-			UpdateBufferData(LightingBufferID, 0, GL_STATIC_DRAW, sizes, datas);
+			LoadBufferData(PointLightBufferID, GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, pointLightDatas.size() * sizeof(PointLightData), (void*)pointLightDatas.data());
+		}
+
+		if (DirectionalLightBufferID == 0)
+		{
+			// first loading
+			DirectionalLightBufferID = LoadBufferData(GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, dirLightDatas.size() * sizeof(DirectionalLightData), (void*)dirLightDatas.data());
+		}
+		else
+		{
+			LoadBufferData(DirectionalLightBufferID, GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, dirLightDatas.size() * sizeof(DirectionalLightData), (void*)dirLightDatas.data());
 		}
 	}
 
-	void RendererGL::FreeLightingDataFromGPU()
+	void RendererGL::UpdateLightingData(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights)
 	{
-		FreeBufferData(LightingBufferID);
+		std::vector<PointLightData> pointLightDatas;
+		TranslateToShaderData(pointLights, pointLightDatas);
+
+		std::vector<DirectionalLightData> dirLightDatas;
+		TranslateToShaderData(dirLights, dirLightDatas);
+
+		UpdateBufferData(PointLightBufferID, GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, 0, dirLightDatas.size() * sizeof(DirectionalLightData), (void*)dirLightDatas.data());
+		UpdateBufferData(DirectionalLightBufferID, GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, 0, dirLightDatas.size() * sizeof(DirectionalLightData), (void*)dirLightDatas.data());
+	}
+
+	void RendererGL::FreeLightingData()
+	{
+		FreeBuffer(PointLightBufferID);
+		FreeBuffer(DirectionalLightBufferID);
 	}
 
 	CompilationResult RendererGL::CompileShaderPipeline(ShaderPipeline& pipeline)
@@ -164,7 +185,7 @@ namespace GaladHen
 		DestroyLowLevelShaderProgram(program->ShaderProgramID);
 	}
 
-	void RendererGL::LoadTextureIntoGPU(Texture& texture)
+	void RendererGL::LoadTexture(Texture& texture)
 	{
 		if (texture.TextureID == 0)
 		{
@@ -175,7 +196,7 @@ namespace GaladHen
 		tex.LoadMemoryGPU(texture.GetTextureData(), texture.GetTextureWidth(), texture.GetTextureHeight(), texture.GetNumberOfChannels(), texture.GetTextureFormat(), texture.GenerateMipMaps);
 	}
 
-	void RendererGL::FreeTextureFromGPU(Texture& texture)
+	void RendererGL::FreeTexture(Texture& texture)
 	{
 		TextureGL& tex = Textures[texture.TextureID - 1];
 		tex.FreeMemoryGPU();
@@ -183,20 +204,24 @@ namespace GaladHen
 		DestroyLowLevelTexture(texture.TextureID);
 	}
 
-	void RendererGL::EnableDepthTest(bool enable)
-	{
-		glEnable(GL_DEPTH_TEST);
-	}
-
 	void RendererGL::LoadMaterialData(Material& material)
 	{
 		std::vector<TextureDataGL> texs;
-		for (MaterialDataTexture& tex : material.Data->GetTextureData())
+		std::vector<MaterialDataTexture> matTexs = material.Data->GetTextureData();
+		unsigned int texUnit = 0;
+		for (MaterialDataTexture& texData : matTexs)
 		{
 			TextureDataGL dataGL{};
-			dataGL.Texture = &Textures[tex.Tex.Texture->TextureID - 1];
-			dataGL.Parameters = &tex.Tex;
-			texs.emplace_back(dataGL);
+			if (Texture* pointedTex = texData.TexParams.TextureSource)
+			{
+				dataGL.TextureGLObject = &Textures[pointedTex->TextureID - 1];
+				dataGL.Parameters = &texData.TexParams;
+				dataGL.TextureUnit = texUnit;
+				dataGL.SamplerName = texData.Name.data();
+				texs.emplace_back(dataGL);
+			}
+
+			++texUnit;
 		}
 
 		ShaderProgramGL& program = Shaders[material.MaterialShader->ShaderProgramID - 1];
@@ -205,26 +230,24 @@ namespace GaladHen
 
 	void RendererGL::LoadCameraData(Camera& camera)
 	{
+		CameraData data = TranslateToShaderData(camera);
+
 		if (CameraDataUniformBufferID == 0)
 		{
-			// create uniform buffer
-			glGenBuffers(1, &CameraDataUniformBufferID);
-			glBindBuffer(GL_UNIFORM_BUFFER, CameraDataUniformBufferID);
-			// 208 bytes = 64 for projection matrix + 64 for view matrix + 64 for normal matrix + 16 for camera position (vec3 rounded up to vec4 for std140) https://www.oreilly.com/library/view/opengl-programming-guide/9780132748445/app09lev1sec2.html
-			glBufferData(GL_UNIFORM_BUFFER, 208, nullptr, GL_STATIC_DRAW);
-			glBindBufferBase(GL_UNIFORM_BUFFER, 0, CameraDataUniformBufferID); // NB: camera data always at binding point 0
+			// first loading
+			CameraDataUniformBufferID = LoadBufferData(GL_UNIFORM_BUFFER, 0, GL_STATIC_DRAW, sizeof(CameraData), &data);
 		}
+		else
+		{
+			LoadBufferData(CameraDataUniformBufferID, GL_UNIFORM_BUFFER, 0, GL_STATIC_DRAW, sizeof(CameraData), &data);
+		}
+	}
 
-		// load data
+	void RendererGL::UpdateCameraData(Camera& camera)
+	{
+		CameraData data = TranslateToShaderData(camera);
 
-		glBindBuffer(GL_UNIFORM_BUFFER, CameraDataUniformBufferID);
-
-		glm::mat4 view = camera.GetViewMatrix();
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, 64, glm::value_ptr(view));
-		glBufferSubData(GL_UNIFORM_BUFFER, 64, 64, glm::value_ptr(camera.GetProjectionMatrix()));
-		glBufferSubData(GL_UNIFORM_BUFFER, 128, 64, glm::value_ptr(camera.GetNormalMatrix()));
-		glBufferSubData(GL_UNIFORM_BUFFER, 192, 16, glm::value_ptr(camera.Transform.GetPosition()));
-		glBindBuffer(GL_UNIFORM_BUFFER, 0); // unbind
+		UpdateBufferData(CameraDataUniformBufferID, GL_UNIFORM_BUFFER, 0, GL_STATIC_DRAW, 0, sizeof(CameraData), &data);
 	}
 
 	void RendererGL::Draw(Mesh& mesh, Material& material)
@@ -232,100 +255,98 @@ namespace GaladHen
 		MeshGL& meshGL = Meshes[mesh.MeshID - 1];
 		ShaderProgramGL& shaderGL = Shaders[material.MaterialShader->ShaderProgramID - 1];
 
+		LoadMaterialData(material);
 		meshGL.Draw(&shaderGL);
 	}
 
-	unsigned int RendererGL::LoadBufferData(GLuint binding, GLenum usage, size_t totalSizeBytes, void* data)
+	unsigned int RendererGL::LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, size_t totalSizeBytes, void* data)
 	{
-		unsigned int index;
+		unsigned int id = CreateBuffer();
 
-		if (BufferIndex >= Buffers.size())
-		{
-			GLuint ssbo;
-			glGenBuffers(1, &ssbo);
-			Buffers.push_back(ssbo);
-			
-			index = MeshIndex++;
-		}
-		else
-		{
-			unsigned int next = *(unsigned int*)(&Buffers[BufferIndex]);
-			
-			glGenBuffers(1, &Buffers[BufferIndex]);
-			index = MeshIndex;
-			BufferIndex = next;
-		}
+		glBindBufferBase(bufferType, binding, Buffers[id - 1]);
+		glBufferData(bufferType, totalSizeBytes, data, usage);
 
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, Buffers[index]);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, totalSizeBytes, data, usage);
-
-		return index + 1;
+		return id;
 	}
 
-	unsigned int RendererGL::LoadBufferData(GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> data)
+	unsigned int RendererGL::LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> data)
 	{
-		unsigned int index;
-
-		if (BufferIndex >= Buffers.size())
-		{
-			GLuint ssbo;
-			glGenBuffers(1, &ssbo);
-			Buffers.push_back(ssbo);
-
-			index = BufferIndex++;
-		}
-		else
-		{
-			unsigned int next = *(unsigned int*)(&Buffers[BufferIndex]);
-
-			glGenBuffers(1, &Buffers[BufferIndex]);
-			index = BufferIndex;
-			BufferIndex = next;
-		}
+		unsigned int id = CreateBuffer();
 
 		// init
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, Buffers[index]);
+		glBindBufferBase(bufferType, binding, Buffers[id - 1]);
 		size_t totalSizeBytes = 0;
 		for (unsigned int i = 0; i < sizesBytes.size(); ++i)
 		{
 			totalSizeBytes += sizesBytes[i];
 		}
-		glBufferData(GL_SHADER_STORAGE_BUFFER, totalSizeBytes, nullptr, usage);
+		glBufferData(bufferType, totalSizeBytes, nullptr, usage);
 
 		// fill
 		size_t offset = 0;
 		for (unsigned int i = 0; i < sizesBytes.size(); ++i)
 		{
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizesBytes[i], data[i]);
+			glBufferSubData(bufferType, offset, sizesBytes[i], data[i]);
+			offset += sizesBytes[i];
 		}
 
-		return index + 1;
+		return id;
 	}
 
-	void RendererGL::UpdateBufferData(unsigned int bufferID, GLuint binding, GLenum usage, size_t totalSizeBytes, void* newData)
+	void RendererGL::LoadBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, size_t totalSizeBytes, void* data)
 	{
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, Buffers[bufferID - 1]);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, totalSizeBytes, newData, usage);
+		DestroyBuffer(bufferID);
+		unsigned int newID = CreateBuffer();
+
+		assert(bufferID == newID); // If this fails -> something wrong in the "adding/removing ids from vectors" algorithm
+
+		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
+		glBufferData(bufferType, totalSizeBytes, data, usage);
 	}
 
-	void RendererGL::UpdateBufferData(unsigned int bufferID, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> data)
+	void RendererGL::LoadBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> data)
 	{
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, Buffers[bufferID - 1]);
+		DestroyBuffer(bufferID);
+		unsigned int newID = CreateBuffer();
+
+		assert(bufferID == newID); // If this fails -> something wrong in the "adding/removing ids from vectors" algorithm
+
+		// init
+		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
 		size_t totalSizeBytes = 0;
 		for (unsigned int i = 0; i < sizesBytes.size(); ++i)
 		{
 			totalSizeBytes += sizesBytes[i];
 		}
-		glBufferData(GL_SHADER_STORAGE_BUFFER, totalSizeBytes, nullptr, usage);
+		glBufferData(bufferType, totalSizeBytes, nullptr, usage);
 
+		// fill
 		size_t offset = 0;
 		for (unsigned int i = 0; i < sizesBytes.size(); ++i)
 		{
-			glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, sizesBytes[i], data[i]);
+			glBufferSubData(bufferType, offset, sizesBytes[i], data[i]);
+			offset += sizesBytes[i];
 		}
 	}
 
-	void RendererGL::FreeBufferData(unsigned int bufferID)
+	void RendererGL::UpdateBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, size_t offset, size_t totalSizeBytes, void* newData)
+	{
+		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
+		glBufferSubData(bufferType, offset, totalSizeBytes, newData);
+	}
+
+	void RendererGL::UpdateBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> newDatas)
+	{
+		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
+		size_t offset = 0;
+		for (unsigned int i = 0; i < sizesBytes.size(); ++i)
+		{
+			glBufferSubData(bufferType, offset, sizesBytes[i], newDatas[i]);
+			offset += sizesBytes[i];
+		}
+	}
+
+	void RendererGL::FreeBuffer(unsigned int bufferID)
 	{
 		glDeleteBuffers(1, &Buffers[bufferID - 1]);
 	}
@@ -401,6 +422,78 @@ namespace GaladHen
 
 		*(unsigned int*)(&Textures[textureID - 1]) = TextureIndex;
 		TextureIndex = textureID - 1;
+	}
+
+	unsigned int RendererGL::CreateBuffer()
+	{
+		unsigned int id;
+
+		if (BufferIndex >= Buffers.size())
+		{
+			GLuint ssbo;
+			glGenBuffers(1, &ssbo);
+			Buffers.push_back(ssbo);
+
+			id = BufferIndex++;
+		}
+		else
+		{
+			unsigned int next = *(unsigned int*)(&Buffers[BufferIndex]);
+
+			glGenBuffers(1, &Buffers[BufferIndex]);
+			id = BufferIndex;
+			BufferIndex = next;
+		}
+
+		return id + 1;
+	}
+
+	void RendererGL::DestroyBuffer(unsigned int bufferID)
+	{
+		FreeBuffer(bufferID);
+
+		*(unsigned int*)(&Buffers[bufferID - 1]) = BufferIndex;
+		BufferIndex = bufferID - 1;
+	}
+
+	void RendererGL::TranslateToShaderData(const std::vector<PointLight>& pointLights, std::vector<PointLightData>& outLightData)
+	{
+		for (const PointLight& pl : pointLights)
+		{
+			outLightData.emplace_back(
+				PointLightData
+				{
+					glm::vec4(pl.Color, 1.0),
+					pl.Transform.GetPosition(),
+					pl.Intensity,
+					pl.FallOffDistance
+				});
+		}
+	}
+
+	void RendererGL::TranslateToShaderData(const std::vector<DirectionalLight>& dirLights, std::vector<DirectionalLightData>& outLightData)
+	{
+		for (const DirectionalLight& dl : dirLights)
+		{
+			outLightData.emplace_back(
+				DirectionalLightData
+				{
+					glm::vec4(dl.Color, 1.0),
+					dl.Transform.GetPosition(),
+					dl.Intensity,
+					dl.Transform.GetFront()
+				});
+		}
+	}
+	CameraData RendererGL::TranslateToShaderData(const Camera& camera)
+	{
+		return CameraData
+		{
+			camera.GetViewMatrix(),
+			camera.GetProjectionMatrix(),
+			camera.GetNormalMatrix(),
+			camera.Transform.GetPosition()
+		};
 	}
 }
 

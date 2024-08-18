@@ -16,7 +16,7 @@ namespace GaladHen
         , Pitch(0.0f)
         , Yaw(0.0f)
         , Roll(0.0f)
-        {}
+    {}
 
     void TransformQuat::Rotate(float deltaPitch, float deltaYaw, float deltaRoll)
     {
@@ -49,27 +49,27 @@ namespace GaladHen
         UpdateEulerAngles();
     }
 
-    glm::vec3 TransformQuat::GetFront()
+    glm::vec3 TransformQuat::GetFront() const
     {
         return Orientation * GlobalFront;
     }
 
-    glm::vec3 TransformQuat::GetUp()
+    glm::vec3 TransformQuat::GetUp() const
     {
         return Orientation * GlobalUp;
     }
 
-    glm::vec3 TransformQuat::GetRight()
+    glm::vec3 TransformQuat::GetRight() const
     {
         return Orientation * GlobalRight;
     }
 
-    glm::vec3 TransformQuat::GetPosition()
+    glm::vec3 TransformQuat::GetPosition() const
     {
         return Position;
     }
 
-    glm::quat TransformQuat::GetOrientation()
+    glm::quat TransformQuat::GetOrientation() const
     {
         return Orientation;
     }
