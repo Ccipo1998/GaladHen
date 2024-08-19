@@ -3,20 +3,9 @@
 
 #version 450 core
 
+// standard subroutine
 subroutine vec3 ShadingMode();
-layout (location = 0) subroutine uniform ShadingMode CurrentShadingMode;
-
-subroutine vec3 DiffuseColorMode();
-layout (location = 1) subroutine uniform DiffuseColorMode CurrentDiffuseColorMode;
-
-subroutine vec3 NormalMode();
-layout (location = 2) subroutine uniform NormalMode CurrentNormalMode;
-
-subroutine float MetallicMode();
-layout (location = 3) subroutine uniform MetallicMode CurrentMetallicMode;
-
-subroutine float RoughnessMode();
-layout (location = 4) subroutine uniform RoughnessMode CurrentRoughnessMode;
+layout (location = 0) subroutine uniform ShadingMode GetShadingMode;
 
 // outputs
 out vec4 color;
@@ -64,21 +53,18 @@ layout (std140, binding = 0) uniform CameraData
 {
     uniform mat4 ViewMatrix;
     uniform mat4 ProjectionMatrix;
-    uniform mat4 NormalMatrix;
     uniform vec3 WCameraPosition;
 };
 
-// textures
-uniform sampler2D DiffuseTexture;
-uniform sampler2D NormalMap;
-uniform sampler2D MetallicTexture;
-uniform sampler2D RoughnessTexture;
-
-// material
-uniform vec4 DiffuseColor;
+// material data
+uniform vec4 Diffuse;
 uniform vec4 Specular;
 uniform float Metallic;
 uniform float Roughness;
+uniform sampler2D DiffuseTexture;
+uniform sampler2D NormalTexture;
+uniform sampler2D MetallicTexture;
+uniform sampler2D RoughnessTexture;
 
 // const
 const float pi = 3.141592653589793;
@@ -147,6 +133,18 @@ vec3 SpecularBRDF(vec3 viewNormal, vec3 lightDir, vec3 viewDir, vec3 halfDir, ve
 
 // subroutines
 
+subroutine vec3 DiffuseMode();
+layout (location = 1) subroutine uniform DiffuseMode GetDiffuse;
+
+subroutine vec3 NormalMode();
+layout (location = 2) subroutine uniform NormalMode GetNormal;
+
+subroutine float MetallicMode();
+layout (location = 3) subroutine uniform MetallicMode GetMetallic;
+
+subroutine float RoughnessMode();
+layout (location = 4) subroutine uniform RoughnessMode GetRoughness;
+
 layout (index = 0)
 subroutine(ShadingMode)
 vec3 SmoothShading()
@@ -162,15 +160,15 @@ vec3 FlatShading()
 }
 
 layout (index = 2)
-subroutine(DiffuseColorMode)
-vec3 DiffuseColorConstant()
+subroutine(DiffuseMode)
+vec3 DiffuseConstant()
 {
-    return DiffuseColor.rgb;
+    return Diffuse.rgb;
 }
 
 layout (index = 3)
-subroutine(DiffuseColorMode)
-vec3 DiffuseColorSampling()
+subroutine(DiffuseMode)
+vec3 DiffuseSampling()
 {
     return texture(DiffuseTexture, vs_out.TexCoord).rgb;
 }
@@ -179,14 +177,14 @@ layout (index = 4)
 subroutine(NormalMode)
 vec3 NormalInterpolated()
 {
-    return CurrentShadingMode();
+    return GetShadingMode();
 }
 
 layout (index = 5)
 subroutine(NormalMode)
 vec3 NormalSampling()
 {
-    vec3 normalSample = texture(NormalMap, vs_out.TexCoord).rgb;
+    vec3 normalSample = texture(NormalTexture, vs_out.TexCoord).rgb;
     normalSample = normalSample * 2.0 - 1.0;
     normalSample = normalize(vs_out.TBN * normalSample);
     return normalSample;
@@ -261,10 +259,10 @@ vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic
 void main()
 {
     // take PBR parameters
-    vec3 diffuse = CurrentDiffuseColorMode();
-    vec3 normal = CurrentNormalMode();
-    float metallic = CurrentMetallicMode();
-    float roughness = CurrentRoughnessMode();
+    vec3 diffuse = GetDiffuse();
+    vec3 normal = GetNormal();
+    float metallic = GetMetallic();
+    float roughness = GetRoughness();
 
     // shading
     vec3 shading = PhysicallyBasedShadingModel(normal, diffuse, metallic, roughness);

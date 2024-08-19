@@ -24,6 +24,11 @@ namespace GaladHen
         std::string Name;
         float Scalar;
     };
+    struct MaterialDataInteger
+    {
+        std::string Name;
+        int32_t Integer; // glsl int type is 32 bit long -> check on other apis
+    };
     struct MaterialDataVector2
     {
         std::string Name;
@@ -55,9 +60,11 @@ namespace GaladHen
     struct MaterialData
     {
         virtual std::vector<MaterialDataScalar> GetScalarData() = 0;
+        virtual std::vector<MaterialDataInteger> GetIntegerData() = 0;
         virtual std::vector<MaterialDataVector2> GetVector2Data() = 0;
         virtual std::vector<MaterialDataVector3> GetVector3Data() = 0;
         virtual std::vector<MaterialDataVector4> GetVector4Data() = 0;
         virtual std::vector<MaterialDataTexture> GetTextureData() = 0;
+        virtual std::vector<std::string> GetFunctions() = 0;
     };
 }

@@ -225,7 +225,7 @@ namespace GaladHen
 		}
 
 		ShaderProgramGL& program = Shaders[material.MaterialShader->ShaderProgramID - 1];
-		program.LoadMaterialData(*material.Data, texs);
+		program.LoadMaterialData(material.MaterialShadingMode, *material.Data, texs);
 	}
 
 	void RendererGL::LoadCameraData(Camera& camera)
@@ -491,7 +491,6 @@ namespace GaladHen
 		{
 			camera.GetViewMatrix(),
 			camera.GetProjectionMatrix(),
-			camera.GetNormalMatrix(),
 			camera.Transform.GetPosition()
 		};
 	}

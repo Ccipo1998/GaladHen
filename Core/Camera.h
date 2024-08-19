@@ -45,7 +45,6 @@ namespace GaladHen
 
         glm::mat4 GetViewMatrix() const; // the transform is used to calculate the view matrix
         glm::mat4 GetProjectionMatrix() const;
-        glm::mat4 GetNormalMatrix() const;
 
         float GetFovY();
         float GetAspectRatio();

@@ -1,4 +1,4 @@
-
+﻿
 #include "ShaderProgramGL.h"
 
 #include <glm/gtc/type_ptr.hpp> // for value_ptr() and stuff
@@ -162,11 +162,15 @@ namespace GaladHen
         return res;
     }
 
-    void ShaderProgramGL::LoadMaterialData(MaterialData& data, std::vector<TextureDataGL>& textureData)
+    void ShaderProgramGL::LoadMaterialData(ShadingMode shadingMode, MaterialData& data, std::vector<TextureDataGL>& textureData)
     {
         for (MaterialDataScalar& scalar : data.GetScalarData())
         {
             glProgramUniform1f(Program, glGetUniformLocation(Program, scalar.Name.data()), scalar.Scalar);
+        }
+        for (MaterialDataInteger& integer : data.GetIntegerData())
+        {
+            glProgramUniform1i(Program, glGetUniformLocation(Program, integer.Name.data()), integer.Integer);
         }
         for (MaterialDataVector2& vec2 : data.GetVector2Data())
         {
@@ -190,14 +194,16 @@ namespace GaladHen
             tex.TextureGLObject->SetTextureSamplerName(this, tex.TextureUnit, tex.SamplerName);
         }
 
-        // subroutine selection -> TEMP
-        GLuint SubroutineIndices[5];
-        SubroutineIndices[0] = 0;
-        SubroutineIndices[1] = 3;
-        SubroutineIndices[2] = 5;
-        SubroutineIndices[3] = 6;
-        SubroutineIndices[4] = 8;
-        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 5, SubroutineIndices);
+        std::vector<std::string> functions = data.GetFunctions();
+        std::vector<GLuint> locations;
+        locations.reserve(functions.size() + 1);
+        locations.emplace_back((GLuint)shadingMode);
+        for (std::string& functionName : functions)
+        {
+            locations.emplace_back(glGetSubroutineIndex(Program, GL_FRAGMENT_SHADER, functionName.data()));
+        }
+        // subroutine selection
+        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, locations.size(), locations.data());
     }
 
     void ShaderProgramGL::SetShadingMode(ShadingMode mode)

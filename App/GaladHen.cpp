@@ -57,12 +57,14 @@ int main()
     diffuse.TextureSource = texAlbedo;
     TextureParameters normal{};
     normal.TextureSource = texNormal;
-    TextureParameters roughness{};
-    roughness.TextureSource = texRoughness;
+    bunnyMatData.Metallic = 0.0f;
+    bunnyMatData.Roughness = 0.5f;
+    /*TextureParameters roughness{};
+    roughness.TextureSource = texRoughness;*/
     bunnyMatData.DiffuseTexture = diffuse;
-    bunnyMatData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-    bunnyMatData.NormalMap = normal;
-    bunnyMatData.RoughnessTexture = roughness;
+    bunnyMatData.Diffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    bunnyMatData.NormalTexture = normal;
+    //bunnyMatData.RoughnessTexture = roughness;
     bunnyMat.Data = &bunnyMatData;
 
     // load models

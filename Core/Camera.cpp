@@ -93,11 +93,6 @@ namespace GaladHen
         return ProjectionMatrix;
     }
 
-    glm::mat4 Camera::GetNormalMatrix() const
-    {
-        return glm::transpose(glm::inverse(GetViewMatrix()));
-    }
-
     float Camera::GetFovY()
     {
         return FovY;

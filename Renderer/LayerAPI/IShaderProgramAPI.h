@@ -52,7 +52,7 @@ namespace GaladHen
         
         virtual CompilationResult CompileCompute(std::string& computeCode) = 0;
 
-        virtual void LoadMaterialData(MaterialData& data, std::vector<TextureDataGL>& textureData) = 0;
+        virtual void LoadMaterialData(ShadingMode shadingMode, MaterialData& data, std::vector<TextureDataGL>& textureData) = 0;
 
         virtual void SetShadingMode(ShadingMode mode) = 0;
 

@@ -42,19 +42,21 @@ namespace GaladHen
         PBRMaterialData();
 
         virtual std::vector<MaterialDataScalar> GetScalarData() override;
+        virtual std::vector<MaterialDataInteger> GetIntegerData() override;
         virtual std::vector<MaterialDataVector2> GetVector2Data() override;
         virtual std::vector<MaterialDataVector3> GetVector3Data() override;
         virtual std::vector<MaterialDataVector4> GetVector4Data() override;
         virtual std::vector<MaterialDataTexture> GetTextureData() override;
+        virtual std::vector<std::string> GetFunctions() override;
 
-        glm::vec4 DiffuseColor;
-        TextureParameters DiffuseTexture;
-        TextureParameters NormalMap;
+        glm::vec4 Diffuse;
+        glm::vec4 Specular;
         float Metallic;
-        TextureParameters MetallicTexture;
         float Roughness;
+        TextureParameters DiffuseTexture;
+        TextureParameters NormalTexture;
+        TextureParameters MetallicTexture;
         TextureParameters RoughnessTexture;
-        //GLfloat Specular;
     };
 
     // Blinn-Phong material data

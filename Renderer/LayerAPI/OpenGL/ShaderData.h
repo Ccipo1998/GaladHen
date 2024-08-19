@@ -9,8 +9,7 @@ struct CameraData
 {
 	glm::mat4 ViewMatrix;
 	glm::mat4 ProjectionMatrix;
-	glm::mat4 NormalMatrix;
-	glm::vec3 WCameraNormal;
+	glm::vec3 WCameraPosition;
 };
 
 struct PointLightData
