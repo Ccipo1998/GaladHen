@@ -7,7 +7,7 @@ namespace GaladHen
     Light::Light()
         : Transform{}
         , Color(glm::vec3(1.0f))
-        , Intensity(1.0f)
+        , Intensity(10000.0f)
         {}
 
     Light::Light(const glm::vec3& color, float intensity)
@@ -39,20 +39,22 @@ namespace GaladHen
 
     PointLight::PointLight()
         : Light()
-        , FallOffDistance(5.0f) // default
+        , BulbSize(0.01f) // default
+        , Radius(100.0f) // default
         {}
 
-    PointLight::PointLight(const glm::vec3& color, float intensity, float fallOffDistance)
+    PointLight::PointLight(const glm::vec3& color, float intensity, float bulbSize, float radius)
         : Light(color, intensity)
-        , FallOffDistance(fallOffDistance)
+        , BulbSize(bulbSize)
+        , Radius(radius)
         {}
 
     SpotLight::SpotLight()
         : PointLight()
         {}
 
-    SpotLight::SpotLight(const glm::vec3& color, float intensity, float fallOffDistance, float penumbra_angle, float falloff_angle)
-        : PointLight(color, intensity, fallOffDistance)
+    SpotLight::SpotLight(const glm::vec3& color, float intensity, float bulbSize, float radius, float penumbra_angle, float falloff_angle)
+        : PointLight(color, intensity, bulbSize, radius)
         , PenumbraAngle(penumbra_angle)
         , FallOffAngle(falloff_angle)
         {}

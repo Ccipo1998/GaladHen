@@ -17,7 +17,8 @@ struct PointLightData
 	glm::vec4 Color;
 	glm::vec3 Position;
 	float Intensity;
-	float FallOffDistance;
+	float BulbSize;
+	float Radius;
 };
 
 struct DirectionalLightData

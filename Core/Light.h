@@ -46,12 +46,12 @@ namespace GaladHen
     {
     public:
 
-        float FallOffDistance;
-        // TODO: falloff function type (penso vada bene un enum da cui dipende la funzione usata negli shader)
+        float BulbSize; // The (fake) "physical" size of the light bulb
+        float Radius; // Of the illuminated area (sphere)
 
         PointLight();
 
-        PointLight(const glm::vec3& color, float intensity, float fallOffDistance);
+        PointLight(const glm::vec3& color, float intensity, float bulbSize, float radius);
 
     };
 
@@ -65,6 +65,6 @@ namespace GaladHen
 
         SpotLight();
 
-        SpotLight(const glm::vec3& color, float intensity, float fallOffDistance, float penumbra_angle, float falloff_angle);
+        SpotLight(const glm::vec3& color, float intensity, float bulbSize, float radius, float penumbra_angle, float falloff_angle);
     };
 }

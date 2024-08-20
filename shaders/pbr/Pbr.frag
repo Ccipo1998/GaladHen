@@ -27,7 +27,8 @@ struct PointLight
     vec4 Color;
     vec3 Position;
     float Intensity;
-    float FallOffDistance;
+    float BulbSize;
+    float Radius;
 };
 
 struct DirectionalLight
@@ -68,7 +69,7 @@ uniform sampler2D RoughnessTexture;
 
 // const
 const float pi = 3.141592653589793;
-const float e = 0.0001; // tiny value to avoid dividing per zero
+const float epsilon = 0.0001; // tiny value to avoid dividing per zero
 const vec3 dielectricsF0 = vec3(0.04);
 const float gamma = 2.2;
 
@@ -85,6 +86,14 @@ vec3 GammaCorrection(vec3 shading)
 vec3 ColorToLinearSpace(vec3 srgbColor)
 {
     return pow(srgbColor, vec3(gamma));
+}
+
+float WindowedInverseSquareFalloff(float intensity, float lightRadius, float falloffDistance, float distanceFromLightSource)
+{
+    float intensityFalloff = intensity * (pow(lightRadius, 2.0) / (max(pow(distanceFromLightSource, 2.0), lightRadius) + epsilon));
+    float windowingFunction = pow(max((1.0 - pow(distanceFromLightSource / (falloffDistance + epsilon), 4.0)), 0.0), 2.0);
+
+    return intensityFalloff * windowingFunction;
 }
 
 // Lambertian Reflectance
@@ -126,7 +135,7 @@ vec3 SpecularBRDF(vec3 viewNormal, vec3 lightDir, vec3 viewDir, vec3 halfDir, ve
 
     float NdotL = max(dot(viewNormal, lightDir), 0.0);
     float NdotV = max(dot(viewNormal, viewDir), 0.0);
-    return (fresnel * ggxGeometry * ggxDistribution) / (4.0 * NdotL * NdotV + e);
+    return (fresnel * ggxGeometry * ggxDistribution) / (4.0 * NdotL * NdotV + epsilon);
 }
 
 // functions
@@ -227,17 +236,22 @@ vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic
 
     vec3 wLightPos = vec3(0.0);
     vec3 wLightDir = vec3(0.0);
+    vec3 wLightPosDistance = vec3(0.0);
     vec3 wHalfDir = vec3(0.0);
+
+    float lightIntensity = 0.0;
 
     // point lights
     for (uint i = 0; i < 1; ++i)
     {
         diffuse = DiffuseBRDF(diffuseColor, metallic);
         wLightPos = PointLights[i].Position;
-        wLightDir = normalize(wLightPos - vs_out.WPosition);
+        wLightPosDistance = wLightPos - vs_out.WPosition;
+        wLightDir = normalize(wLightPosDistance);
         wHalfDir = normalize(wLightDir + vs_out.WViewDirection);
         specular = SpecularBRDF(wNormal, wLightDir, vs_out.WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
-        outgoing += PointLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
+        lightIntensity = WindowedInverseSquareFalloff(PointLights[i].Intensity, PointLights[i].BulbSize, PointLights[i].Radius, length(wLightPosDistance));
+        outgoing += lightIntensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
     }
 
     // directional lights
@@ -245,7 +259,6 @@ vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic
     {
         diffuse = DiffuseBRDF(diffuseColor, metallic);
         wLightDir = -DirectionalLights[i].Direction;
-        //viewLightDir = (NormalMatrix * vec4(viewLightDir, 1.0)).xyz;
         wHalfDir = normalize(wLightDir + vs_out.WViewDirection);
         specular = SpecularBRDF(wNormal, wLightDir, vs_out.WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
         outgoing += DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);

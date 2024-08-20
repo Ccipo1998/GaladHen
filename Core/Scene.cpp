@@ -13,7 +13,7 @@ namespace GaladHen
 
         // Default lighting
         PointLight pLight{};
-        pLight.Transform.SetPosition(glm::vec3(0.0f, 0.0f, 3.0f));
+        pLight.Transform.SetPosition(glm::vec3(0.0f, 0.0f, 2.0f));
         PointLights.emplace_back(pLight);
     }
 }

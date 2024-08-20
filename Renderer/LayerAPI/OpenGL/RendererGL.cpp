@@ -466,7 +466,8 @@ namespace GaladHen
 					glm::vec4(pl.Color, 1.0),
 					pl.Transform.GetPosition(),
 					pl.Intensity,
-					pl.FallOffDistance
+					pl.BulbSize,
+					pl.Radius
 				});
 		}
 	}
