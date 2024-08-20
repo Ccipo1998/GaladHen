@@ -17,7 +17,7 @@ namespace GaladHen
 
         TextureGL();
 
-        virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, bool generateMipMaps) override;
+        virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps) override;
 
         virtual void LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, const TextureParameters& params) const override;
 
@@ -51,10 +51,7 @@ namespace GaladHen
         static GLint WrappingAssociations[4];
 
         // OpenGL filtering parameters
-        static GLint FilteringAssociations[2];
-
-        // OpenGL mipmapping filtering associations
-        static int MipMapAssociations[4];
+        static GLint FilteringAssociations[6];
 
         static GLenum TextureUnits[32]; // OpenGL has a maximum of 32 texture units
 

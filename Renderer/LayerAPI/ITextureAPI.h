@@ -20,10 +20,10 @@ namespace GaladHen
         // @param textureBytes: actual texture data
         // @param width: texture width
         // @param height: texture height
-        // @param textureFormat: format used to load entire texture data
-        // @param pixelFormat: format used to interpret pixel data
-        // @param pixelType: data type of a single pixel
-        virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, bool generateMipMaps) = 0;
+        // @param numberOfChannels: the number of channels the texture has (R, RG, RGB, RGBA)
+        // @param textureFormat: internal texture format (used to interpret correctly texture data)
+        // @param numberOfMipMaps: the number of mipmaps to generate
+        virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps) = 0;
 
         // @brief
         // Load texture parameters to use with texture data

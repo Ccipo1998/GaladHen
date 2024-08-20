@@ -10,18 +10,18 @@ namespace GaladHen
         , Width(-1)
         , Height(-1)
         , NumberOfChannels(-1)
-        , GenerateMipMaps(true)
         , TexFormat(TextureFormat::RGB)
+        , NumberOfMipMaps(0)
         , TextureID(0)
         {}
 
-    Texture::Texture(unsigned char* textureBytes, int width, int height, int numberOfChannels, TextureFormat textureFormat)
+    Texture::Texture(unsigned char* textureBytes, int width, int height, int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps)
         : TextureBytes(textureBytes)
         , Width(width)
         , Height(height)
         , NumberOfChannels(numberOfChannels)
-        , GenerateMipMaps(true)
         , TexFormat(textureFormat)
+        , NumberOfMipMaps(numberOfMipMaps)
         , TextureID(0)
     {}
 
@@ -32,13 +32,14 @@ namespace GaladHen
         Height = sourceTexture.Height;
         NumberOfChannels = sourceTexture.NumberOfChannels;
         TexFormat = sourceTexture.TexFormat;
-        GenerateMipMaps = sourceTexture.GenerateMipMaps;
+        NumberOfMipMaps = sourceTexture.NumberOfMipMaps;
         TextureID = sourceTexture.TextureID;
 
         sourceTexture.TextureBytes = nullptr;
         sourceTexture.Width = 0;
         sourceTexture.Height = 0;
         sourceTexture.NumberOfChannels = 0;
+        sourceTexture.NumberOfMipMaps = 0;
         sourceTexture.TextureID = 0;
     }
 
@@ -49,13 +50,14 @@ namespace GaladHen
         Height = sourceTexture.Height;
         NumberOfChannels = sourceTexture.NumberOfChannels;
         TexFormat = sourceTexture.TexFormat;
-        GenerateMipMaps = sourceTexture.GenerateMipMaps;
+        NumberOfMipMaps = sourceTexture.NumberOfMipMaps;
         TextureID = sourceTexture.TextureID;
 
         sourceTexture.TextureBytes = nullptr;
         sourceTexture.Width = 0;
         sourceTexture.Height = 0;
         sourceTexture.NumberOfChannels = 0;
+        sourceTexture.NumberOfMipMaps = 0;
         sourceTexture.TextureID = 0;
 
         return *this;
@@ -98,7 +100,7 @@ namespace GaladHen
             allocation[i] = TextureBytes[i];
         }
 
-        return Texture(allocation, Width, Height, NumberOfChannels, TexFormat);
+        return Texture(allocation, Width, Height, NumberOfChannels, TexFormat, NumberOfMipMaps);
     }
 
     void Texture::FreeResources()

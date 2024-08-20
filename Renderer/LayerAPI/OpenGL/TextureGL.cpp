@@ -40,9 +40,15 @@ namespace GaladHen
         GL_MIRRORED_REPEAT
     };
 
-    GLint TextureGL::FilteringAssociations[2] = {};
-
-    int TextureGL::MipMapAssociations[4] = {};
+    GLint TextureGL::FilteringAssociations[6] =
+    {
+        GL_LINEAR,
+        GL_NEAREST,
+        GL_LINEAR_MIPMAP_LINEAR,
+        GL_NEAREST_MIPMAP_NEAREST,
+        GL_LINEAR_MIPMAP_NEAREST,
+        GL_NEAREST_MIPMAP_LINEAR
+    };
 
     GLenum TextureGL::TextureUnits[32] =
     {
@@ -83,7 +89,7 @@ namespace GaladHen
         : TextureID(0)
     {}
 
-    void TextureGL::LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, bool generateMipMaps)
+    void TextureGL::LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps)
     {
         gl3wInit();
 
@@ -96,12 +102,13 @@ namespace GaladHen
 
         // allocate immutable storage basing on number of channels and on bit depth
         // IMPORTANT: internal format is an external variable because not all the textures need to be interpreted as SRGB (example: normal maps are already stored in linear values)
-        glTexStorage2D(GL_TEXTURE_2D, 1, TextureFormatAssociations[(int)textureFormat], width, height);
+        // levels are the number of mipmaps
+        glTexStorage2D(GL_TEXTURE_2D, numberOfMipMaps, TextureFormatAssociations[(int)textureFormat], width, height);
 
         // copy texture data to texture object
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PixelChannelsAssociations[numberOfChannels - 1], PixelChannelDepthAssociations[0], textureBytes);
 
-        if (generateMipMaps)
+        if (numberOfMipMaps > 0)
             glGenerateTextureMipmap(TextureID);
     }
 
@@ -111,10 +118,8 @@ namespace GaladHen
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrappingAssociations[(int)params.HorizontalWrapping]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrappingAssociations[(int)params.VerticalWrapping]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, FilteringAssociations[(int)params.Filtering]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilteringAssociations[(int)params.Filtering]);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, MipMapAssociations[mipmap]); // TODO: check if this is correct
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MipMapAssociations[mipmap]); 
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, FilteringAssociations[(int)params.MinFiltering]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilteringAssociations[(int)params.MagFiltering]);
     }
 
     void TextureGL::BindToTextureUnit(IShaderProgramAPI* shaderProgram, unsigned int unit) const

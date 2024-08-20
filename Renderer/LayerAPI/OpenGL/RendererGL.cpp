@@ -193,7 +193,7 @@ namespace GaladHen
 		}
 
 		TextureGL& tex = Textures[texture.TextureID - 1];
-		tex.LoadMemoryGPU(texture.GetTextureData(), texture.GetTextureWidth(), texture.GetTextureHeight(), texture.GetNumberOfChannels(), texture.GetTextureFormat(), texture.GenerateMipMaps);
+		tex.LoadMemoryGPU(texture.GetTextureData(), texture.GetTextureWidth(), texture.GetTextureHeight(), texture.GetNumberOfChannels(), texture.GetTextureFormat(), texture.NumberOfMipMaps);
 	}
 
 	void RendererGL::FreeTexture(Texture& texture)

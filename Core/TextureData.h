@@ -20,15 +20,11 @@ namespace GaladHen
     enum class TextureFiltering
     {
         Linear = 0,
-        Nearest = 1
-    };
-
-    enum class TextureMipMap
-    {
-        LinearLinear = 0,
-        NearestNearest = 1,
-        LinearNearest = 2,
-        NearestLinear = 3
+        Nearest = 1,
+        LinearLinear = 2,
+        NearestNearest = 3,
+        LinearNearest = 4,
+        NearestLinear = 5
     };
 
     // texture rendering parameters
@@ -38,15 +34,15 @@ namespace GaladHen
             : TextureSource(nullptr)
             , HorizontalWrapping(TextureWrapping::Repeat)
             , VerticalWrapping(TextureWrapping::Repeat)
-            , Filtering(TextureFiltering::Linear)
-            , MipMapMode(TextureMipMap::LinearLinear) // defaults 
+            , MinFiltering(TextureFiltering::LinearLinear) // default
+            , MagFiltering(TextureFiltering::Linear) // default
             {}
 
         Texture* TextureSource;
 
         TextureWrapping HorizontalWrapping;
         TextureWrapping VerticalWrapping;
-        TextureFiltering Filtering;
-        TextureMipMap MipMapMode;
+        TextureFiltering MinFiltering;
+        TextureFiltering MagFiltering;
     };
 }

@@ -20,7 +20,7 @@ namespace GaladHen
 
         Texture();
 
-        Texture(unsigned char* textureBytes, int width, int height, int numberOfChannels, TextureFormat textureFormat);
+        Texture(unsigned char* textureBytes, int width, int height, int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps);
 
         // Texture copy handled explicitly by CreateTextureCopy()
         Texture(const Texture& sourceTexture) = delete;
@@ -48,7 +48,7 @@ namespace GaladHen
         // Free texture resources
         ~Texture();
 
-        bool GenerateMipMaps;
+        unsigned int NumberOfMipMaps;
 
         unsigned int TextureID; // 0 means -1, so the low level pair is not already been created
 

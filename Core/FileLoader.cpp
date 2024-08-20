@@ -83,7 +83,7 @@ namespace GaladHen
             Log::Error("FileLoader", error);
         }
 
-        return Texture{ bytes, width, height, channels, textureFormat };
+        return Texture{ bytes, width, height, channels, textureFormat, 0 };
     }
 
     void FileLoader::ProcessAssimpNode(aiNode* node, const aiScene* scene, Model* model)

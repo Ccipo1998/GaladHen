@@ -33,14 +33,17 @@ int main()
         std::string{"../Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png"},
         std::string{"StuccoAlbedo"},
         TextureFormat::SRGB8);
+    texAlbedo->NumberOfMipMaps = 4;
     Texture* texNormal = AssetsManager::LoadAndStoreTexture(
         std::string{"../Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png"},
         std::string{"StuccoNormal"},
         TextureFormat::RGB8);
+    texNormal->NumberOfMipMaps = 4;
     Texture* texRoughness = AssetsManager::LoadAndStoreTexture(
         std::string{"../Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png"},
         std::string{"StuccoRoughness"},
         TextureFormat::RGB);
+    texRoughness->NumberOfMipMaps = 4;
 
     // get pbr shader pipeline
     //ShaderPipeline pbr = AssetsManager::GetPipelinePBR();
