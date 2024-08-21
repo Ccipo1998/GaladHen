@@ -29,6 +29,7 @@ namespace GaladHen
     {
         glm::quat rotate = glm::angleAxis(glm::radians(deltaPitch), GlobalRight);
         Orientation *= rotate;
+        Orientation = glm::normalize(Orientation);
 
         UpdateEulerAngles();
     }
@@ -37,6 +38,7 @@ namespace GaladHen
     {
         glm::quat rotate = glm::angleAxis(glm::radians(deltaYaw), GlobalUp);
         Orientation *= rotate;
+        Orientation = glm::normalize(Orientation);
 
         UpdateEulerAngles();
     }
@@ -45,6 +47,7 @@ namespace GaladHen
     {
         glm::quat rotate = glm::angleAxis(glm::radians(deltaRoll), GlobalFront);
         Orientation *= rotate;
+        Orientation = glm::normalize(Orientation);
 
         UpdateEulerAngles();
     }
