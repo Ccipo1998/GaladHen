@@ -8,7 +8,7 @@ namespace GaladHen
     Scene::Scene()
         : MainCamera(Camera()) // default camera
     {
-        MainCamera.Transform.SetPosition(glm::vec3(.0f, .0f, 4.0f));
+        MainCamera.Transform.SetPosition(glm::vec3(.0f, 1.0f, 4.0f));
         MainCamera.Transform.RotateYaw(90.0f);
 
         // Default lighting

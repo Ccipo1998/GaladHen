@@ -18,6 +18,7 @@ namespace GaladHen
 	class Texture;
 	class ShaderProgram;
 	class Camera;
+	class SceneObject;
 
 	class IRendererAPI
 	{
@@ -50,6 +51,10 @@ namespace GaladHen
 		virtual void LoadCameraData(Camera& camera) = 0;
 
 		virtual void UpdateCameraData(Camera& camera) = 0;
+
+		virtual void LoadSceneObjectData() = 0;
+
+		virtual void UpdateSceneObjectData(SceneObject& object) = 0;
 
 		virtual void Draw(Mesh& mesh, Material& material) = 0;
 	};

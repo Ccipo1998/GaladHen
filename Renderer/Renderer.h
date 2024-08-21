@@ -98,6 +98,15 @@ namespace GaladHen
         void UpdateCameraData(Camera& camera);
 
         // @brief
+        // Load scene object data (position, orientation and scale) into GPU memory
+        void LoadSceneObjectData();
+
+        // @brief
+        // Update scene object data (position, orientation and scale) into GPU memory
+        // LoadSceneObjectData() must be already called
+        void UpdateSceneObjectData(SceneObject& object);
+
+        // @brief
         // Draw calls on each scene object of the scene
         void Draw(Scene& scene);
 

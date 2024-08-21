@@ -18,6 +18,11 @@ layout (std140, binding = 0) uniform CameraData
     uniform mat4 ProjectionMatrix;
     uniform vec3 WCameraPosition;
 };
+layout (std140, binding = 1) uniform SceneObjectData
+{
+    uniform mat4 ModelMatrix;
+    uniform mat4 NormalMatrix;
+};
 
 // output
 out VS_OUT
@@ -33,11 +38,12 @@ out VS_OUT
 void main()
 {
     // smooth and flat normals in world coordinates
-    vs_out.SmoothWNormal = Normal;
-    vs_out.FlatWNormal = Normal;
+    vec3 transNormal = (NormalMatrix * vec4(Normal, 1.0)).xyz;
+    vs_out.SmoothWNormal = transNormal;
+    vs_out.FlatWNormal = transNormal;
 
     // vertex position in view coordinates
-    vec3 ViewPosition = (ViewMatrix * vec4(Position, 1.0)).xyz;
+    vec3 ViewPosition = (ViewMatrix * ModelMatrix * vec4(Position, 1.0)).xyz;
 
     // point of view direction in world coords
     vs_out.WViewDirection = normalize(WCameraPosition - Position);
@@ -48,8 +54,8 @@ void main()
     vs_out.TexCoord = UV;
 
     // TBN matrix for normal mapping
-    vec3 adjTangent = normalize(Tangent - dot(Tangent, Normal) * Normal); // re-orthogonalize tangent with respect to normal to ensure tangents are orthogonal when calculated (possible smoothing)
-    vs_out.TBN = mat3(adjTangent, normalize(cross(Normal, adjTangent)), Normal);
+    vec3 adjTangent = normalize(Tangent - dot(Tangent, transNormal) * transNormal); // re-orthogonalize tangent with respect to normal to ensure tangents are orthogonal when calculated (possible smoothing)
+    vs_out.TBN = mat3(adjTangent, normalize(cross(transNormal, adjTangent)), transNormal);
 
     // transformed vertex position
     gl_Position = ProjectionMatrix * vec4(ViewPosition, 1.0);

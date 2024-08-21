@@ -65,6 +65,14 @@ namespace GaladHen
         // Set roll angle
         void SetRoll(float angle);
 
+        void SetScale(const glm::vec3& scale);
+
+        void ScaleX(float scaleX);
+        void ScaleY(float scaleY);
+        void ScaleZ(float scaleZ);
+
+        glm::vec3 GetScale() const;
+
     protected:
 
         // @brief
@@ -73,6 +81,7 @@ namespace GaladHen
 
         glm::vec3 Position;
         glm::quat Orientation;
+        glm::vec3 Scale;
 
         // euler angles
         float Pitch; // around X axis

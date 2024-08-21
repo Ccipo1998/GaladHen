@@ -12,6 +12,12 @@ struct CameraData
 	glm::vec3 WCameraPosition;
 };
 
+struct SceneObjectData
+{
+	glm::mat4 ModelMatrix;
+	glm::mat4 NormalMatrix;
+};
+
 struct PointLightData
 {
 	glm::vec4 Color;

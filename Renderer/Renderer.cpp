@@ -159,6 +159,16 @@ namespace GaladHen
         RendererAPI->UpdateCameraData(camera);
     }
 
+    void Renderer::LoadSceneObjectData()
+    {
+        RendererAPI->LoadSceneObjectData();
+    }
+
+    void Renderer::UpdateSceneObjectData(SceneObject& object)
+    {
+        RendererAPI->UpdateSceneObjectData(object);
+    }
+
     void Renderer::Draw(Scene& scene)
     {
         for (SceneObject& sceneObj : scene.SceneObjects)
@@ -169,6 +179,7 @@ namespace GaladHen
             {
                 if (Material* mat = sceneObj.GetMaterial(i))
                 {
+                    RendererAPI->UpdateSceneObjectData(sceneObj);
                     RendererAPI->Draw(mod->Meshes[i], *mat);
                 }
             }

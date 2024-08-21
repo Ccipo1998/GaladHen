@@ -9,6 +9,7 @@
 #include <GLFW/glfw3native.h>
 
 #include <glm/gtc/type_ptr.hpp> // for value_ptr() and stuff
+#include <glm/gtx/quaternion.hpp>
 
 #include <Utils/Log.h>
 
@@ -19,6 +20,7 @@
 #include <Core/Shader.h>
 #include <Core/FileLoader.h>
 #include <Core/Camera.h>
+#include <Core/SceneObject.h>
 
 namespace GaladHen
 {
@@ -30,6 +32,7 @@ namespace GaladHen
 		, PointLightBufferID(0)
 		, DirectionalLightBufferID(0)
 		, CameraDataUniformBufferID(0)
+		, SceneObjectDataUniformBufferID(0)
 	{}
 
 	void RendererGL::Init()
@@ -277,6 +280,26 @@ namespace GaladHen
 		UpdateBufferData(CameraDataUniformBufferID, GL_UNIFORM_BUFFER, 0, GL_STATIC_DRAW, 0, sizeof(CameraData), &data);
 	}
 
+	void RendererGL::LoadSceneObjectData()
+	{
+		if (SceneObjectDataUniformBufferID == 0)
+		{
+			// first loading
+			SceneObjectDataUniformBufferID = LoadBufferData(GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, sizeof(SceneObjectData), nullptr);
+		}
+		else
+		{
+			LoadBufferData(SceneObjectDataUniformBufferID, GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, sizeof(SceneObjectData), nullptr);
+		}
+	}
+
+	void RendererGL::UpdateSceneObjectData(SceneObject& object)
+	{
+		SceneObjectData data = TranslateToShaderData(object);
+
+		UpdateBufferData(SceneObjectDataUniformBufferID, GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, 0, sizeof(SceneObjectData), &data);
+	}
+
 	void RendererGL::Draw(Mesh& mesh, Material& material)
 	{
 		MeshGL& meshGL = Meshes[mesh.MeshID - 1];
@@ -520,6 +543,21 @@ namespace GaladHen
 			camera.GetViewMatrix(),
 			camera.GetProjectionMatrix(),
 			camera.Transform.GetPosition()
+		};
+	}
+
+	SceneObjectData RendererGL::TranslateToShaderData(const SceneObject& object)
+	{
+		glm::mat4 ModelMatrix = glm::mat4(1.0f);
+		ModelMatrix = glm::translate(ModelMatrix, object.Transform.GetPosition());
+		ModelMatrix = glm::scale(ModelMatrix, object.Transform.GetScale());
+		ModelMatrix = ModelMatrix * glm::toMat4(object.Transform.GetOrientation());
+		glm::mat4 NormalMatrix = glm::inverse(glm::transpose(ModelMatrix));
+
+		return SceneObjectData
+		{
+			ModelMatrix,
+			NormalMatrix
 		};
 	}
 }

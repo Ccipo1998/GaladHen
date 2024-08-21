@@ -13,6 +13,7 @@ namespace GaladHen
     TransformQuat::TransformQuat()
         : Position(glm::vec3{})
         , Orientation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f))
+        , Scale(glm::vec3(1.0f, 1.0f, 1.0f))
         , Pitch(0.0f)
         , Yaw(0.0f)
         , Roll(0.0f)
@@ -123,6 +124,31 @@ namespace GaladHen
         angle = glm::mod(angle, 359.9999999f);
         
         RotateRoll(angle - Roll);
+    }
+
+    void TransformQuat::SetScale(const glm::vec3& scale)
+    {
+        Scale = scale;
+    }
+
+    void TransformQuat::ScaleX(float scaleX)
+    {
+        Scale.x = scaleX;
+    }
+
+    void TransformQuat::ScaleY(float scaleY)
+    {
+        Scale.y = scaleY;
+    }
+
+    void TransformQuat::ScaleZ(float scaleZ)
+    {
+        Scale.z = scaleZ;
+    }
+
+    glm::vec3 TransformQuat::GetScale() const
+    {
+        return Scale;
     }
 
     // privates

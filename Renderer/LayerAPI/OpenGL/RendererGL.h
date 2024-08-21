@@ -49,6 +49,10 @@ namespace GaladHen
 
 		virtual void UpdateCameraData(Camera& camera) override;
 
+		virtual void LoadSceneObjectData() override;
+
+		virtual void UpdateSceneObjectData(SceneObject& object) override;
+
 		virtual void Draw(Mesh& mesh, Material& material) override;
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
@@ -130,6 +134,7 @@ namespace GaladHen
 		void TranslateToShaderData(const std::vector<PointLight>& pointLights, std::vector<PointLightData>& outLightData);
 		void TranslateToShaderData(const std::vector<DirectionalLight>& dirLights, std::vector<DirectionalLightData>& outLightData);
 		CameraData TranslateToShaderData(const Camera& camera);
+		SceneObjectData TranslateToShaderData(const SceneObject& object);
 
 		std::vector<MeshGL> Meshes;
 		unsigned int MeshIndex;
@@ -147,6 +152,7 @@ namespace GaladHen
 		unsigned int PointLightBufferID;
 		unsigned int DirectionalLightBufferID;
 		unsigned int CameraDataUniformBufferID;
+		unsigned int SceneObjectDataUniformBufferID;
 
 	};
 }

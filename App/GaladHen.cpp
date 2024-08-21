@@ -30,31 +30,31 @@ int main()
 
     // load textures
     Texture* texAlbedo = AssetsManager::LoadAndStoreTexture(
-        std::string{"../Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png"},
-        std::string{"StuccoAlbedo"},
+        "../Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png",
+        "StuccoAlbedo",
         TextureFormat::SRGB8);
     texAlbedo->NumberOfMipMaps = 4;
     Texture* texNormal = AssetsManager::LoadAndStoreTexture(
-        std::string{"../Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png"},
-        std::string{"StuccoNormal"},
+        "../Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png",
+        "StuccoNormal",
         TextureFormat::RGB8);
     texNormal->NumberOfMipMaps = 4;
     Texture* texRoughness = AssetsManager::LoadAndStoreTexture(
-        std::string{"../Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png"},
-        std::string{"StuccoRoughness"},
+        "../Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png",
+        "StuccoRoughness",
         TextureFormat::RGB);
     texRoughness->NumberOfMipMaps = 4;
 
     // get pbr shader pipeline
-    //ShaderPipeline pbr = AssetsManager::GetPipelinePBR();
-    Shader vertex{ "../Shaders/pbr/Pbr.vert", ShaderStage::Vertex };
+    ShaderPipeline pbr = AssetsManager::GetPipelinePBR();
+    /*Shader vertex{ "../Shaders/pbr/Pbr.vert", ShaderStage::Vertex };
     Shader fragment{ "../Shaders/pbr/Pbr.frag", ShaderStage::Fragment };
     ShaderPipeline test{};
     test.VertexShader = &vertex;
-    test.FragmentShader = &fragment;
+    test.FragmentShader = &fragment;*/
 
     // materials
-    Material bunnyMat{&test, ShadingMode::SmoothShading};
+    Material bunnyMat{ &pbr, ShadingMode::SmoothShading };
     PBRMaterialData bunnyMatData{};
     TextureParameters diffuse{};
     diffuse.TextureSource = texAlbedo;
@@ -70,14 +70,28 @@ int main()
     //bunnyMatData.RoughnessTexture = roughness;
     bunnyMat.Data = &bunnyMatData;
 
+    Material planeMat{ &pbr, ShadingMode::SmoothShading };
+    PBRMaterialData planeMatData{};
+    planeMatData.Diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    planeMatData.Roughness = 0.1f;
+    planeMatData.Metallic = 0.0f;
+    planeMat.Data = &planeMatData;
+
     // load models
-    Model* bunny = AssetsManager::LoadAndStoreModel(std::string("../Assets/Models/bunny.glb"), "Bunny");
+    Model* bunny = AssetsManager::LoadAndStoreModel("../Assets/Models/bunny.glb", "Bunny");
+    Model* plane = AssetsManager::LoadAndStoreModel("../Assets/Models/plane.glb", "Plane");
 
     // load into scene
     std::vector<Material*> bunnyMats;
     bunnyMats.push_back(&bunnyMat);
     SceneObject objBunny{ bunny, bunnyMats };
+    objBunny.Transform.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
     scene.SceneObjects.push_back(objBunny);
+    std::vector<Material*> planeMats;
+    planeMats.push_back(&planeMat);
+    SceneObject objPlane{ plane, planeMats };
+    objPlane.Transform.SetScale(glm::vec3(5.0f, 1.0f, 5.0f));
+    scene.SceneObjects.push_back(objPlane);
 
     // init scene for renderer
     renderer.LoadModels(scene);
@@ -87,6 +101,7 @@ int main()
     renderer.LoadTexture(*texAlbedo);
     renderer.LoadTexture(*texNormal);
     renderer.LoadTexture(*texRoughness);
+    renderer.LoadSceneObjectData();
 
     while (!window.IsCloseWindowRequested())
     {
