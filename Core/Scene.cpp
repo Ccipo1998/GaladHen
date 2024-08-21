@@ -12,8 +12,12 @@ namespace GaladHen
         MainCamera.Transform.RotateYaw(90.0f);
 
         // Default lighting
-        PointLight pLight{};
+        DirectionalLight dLight{};
+        dLight.SetDirection(glm::vec3(-0.5f, -0.5f, -0.5f));
+        DirectionalLights.emplace_back(dLight);
+
+        /*PointLight pLight{};
         pLight.Transform.SetPosition(glm::vec3(0.0f, 0.0f, 2.0f));
-        PointLights.emplace_back(pLight);
+        PointLights.emplace_back(pLight);*/
     }
 }

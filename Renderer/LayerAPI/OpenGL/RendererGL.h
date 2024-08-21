@@ -71,7 +71,7 @@ namespace GaladHen
 		// @param sizesBytes: vector of sizes, each one referring to the pointer to data at the same index in data param
 		// @param data: vector of pointers to data, each one with a total occupancy at the same index in sizesBytes param
 		// @returns buffer id, to retrieve buffer for later use
-		unsigned int LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> data);
+		unsigned int LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*>& data);
 
 		// @brief
 		// Allocate a new buffer in gpu memory, overwriting the old allocation
@@ -91,7 +91,7 @@ namespace GaladHen
 		// @param usage: the usage of the buffer -> https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml
 		// @param sizesBytes: vector of sizes, each one referring to the pointer to data at the same index in data param
 		// @param data: vector of pointers to data, each one with a total occupancy at the same index in sizesBytes param
-		void LoadBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> data);
+		void LoadBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*>& data);
 
 		// @brief
 		// Update data inside a buffer, without changing its size
@@ -99,7 +99,7 @@ namespace GaladHen
 
 		// @brief
 		// Update data inside a buffer, without changing its size
-		void UpdateBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> newDatas);
+		void UpdateBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*>& newDatas);
 
 		// @brief
 		// Free memory allocated for a buffer

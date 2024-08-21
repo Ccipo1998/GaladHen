@@ -34,7 +34,7 @@ namespace GaladHen
 
         // @brief
         // Get the direction of the light (front versor)
-        glm::vec3 GetDirection();
+        glm::vec3 GetDirection() const;
 
         // @brief
         // Set the direction of the light (front versor)

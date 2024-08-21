@@ -82,24 +82,37 @@ namespace GaladHen
 		std::vector<DirectionalLightData> dirLightDatas;
 		TranslateToShaderData(dirLights, dirLightDatas);
 
+		std::vector<size_t> sizesBytes;
+		sizesBytes.emplace_back(sizeof(size_t) * 2); // Because of 16 bytes alignment of the array of lights inside the ssbo (std140)
+		sizesBytes.emplace_back(pointLightDatas.size() * sizeof(PointLightData));
+		std::vector<void*> datas;
+		size_t vectorSize = pointLightDatas.size();
+		datas.emplace_back((void*)&vectorSize);
+		datas.emplace_back((void*)pointLightDatas.data());
+
 		if (PointLightBufferID == 0)
 		{
 			// first loading
-			PointLightBufferID = LoadBufferData( GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, pointLightDatas.size() * sizeof(PointLightData), (void*)pointLightDatas.data());
+			PointLightBufferID = LoadBufferData( GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, sizesBytes, datas);
 		}
 		else
 		{
-			LoadBufferData(PointLightBufferID, GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, pointLightDatas.size() * sizeof(PointLightData), (void*)pointLightDatas.data());
+			LoadBufferData(PointLightBufferID, GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, sizesBytes, datas);
 		}
+
+		sizesBytes[1] = dirLightDatas.size() * sizeof(DirectionalLightData);
+		vectorSize = dirLightDatas.size();
+		datas[0] = (void*)&vectorSize;
+		datas[1] = (void*)dirLightDatas.data();
 
 		if (DirectionalLightBufferID == 0)
 		{
 			// first loading
-			DirectionalLightBufferID = LoadBufferData(GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, dirLightDatas.size() * sizeof(DirectionalLightData), (void*)dirLightDatas.data());
+			DirectionalLightBufferID = LoadBufferData(GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, sizesBytes, datas);
 		}
 		else
 		{
-			LoadBufferData(DirectionalLightBufferID, GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, dirLightDatas.size() * sizeof(DirectionalLightData), (void*)dirLightDatas.data());
+			LoadBufferData(DirectionalLightBufferID, GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, sizesBytes, datas);
 		}
 	}
 
@@ -111,8 +124,22 @@ namespace GaladHen
 		std::vector<DirectionalLightData> dirLightDatas;
 		TranslateToShaderData(dirLights, dirLightDatas);
 
-		UpdateBufferData(PointLightBufferID, GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, 0, dirLightDatas.size() * sizeof(DirectionalLightData), (void*)dirLightDatas.data());
-		UpdateBufferData(DirectionalLightBufferID, GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, 0, dirLightDatas.size() * sizeof(DirectionalLightData), (void*)dirLightDatas.data());
+		std::vector<size_t> sizesBytes;
+		sizesBytes.emplace_back(sizeof(size_t) * 2); // Because of 16 bytes alignment of the array of lights inside the ssbo (std140)
+		sizesBytes.emplace_back(pointLightDatas.size() * sizeof(PointLightData));
+		std::vector<void*> datas;
+		size_t vectorSize = pointLightDatas.size();
+		datas.emplace_back((void*)&vectorSize);
+		datas.emplace_back((void*)pointLightDatas.data());
+
+		UpdateBufferData(PointLightBufferID, GL_SHADER_STORAGE_BUFFER, 0, GL_STATIC_DRAW, sizesBytes, datas);
+
+		sizesBytes[1] = dirLightDatas.size() * sizeof(DirectionalLightData);
+		vectorSize = dirLightDatas.size();
+		datas[0] = (void*)&vectorSize;
+		datas[1] = (void*)dirLightDatas.data();
+
+		UpdateBufferData(DirectionalLightBufferID, GL_SHADER_STORAGE_BUFFER, 1, GL_STATIC_DRAW, sizesBytes, datas);
 	}
 
 	void RendererGL::FreeLightingData()
@@ -269,7 +296,7 @@ namespace GaladHen
 		return id;
 	}
 
-	unsigned int RendererGL::LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> data)
+	unsigned int RendererGL::LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*>& data)
 	{
 		unsigned int id = CreateBuffer();
 
@@ -304,7 +331,7 @@ namespace GaladHen
 		glBufferData(bufferType, totalSizeBytes, data, usage);
 	}
 
-	void RendererGL::LoadBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> data)
+	void RendererGL::LoadBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*>& data)
 	{
 		DestroyBuffer(bufferID);
 		unsigned int newID = CreateBuffer();
@@ -335,7 +362,7 @@ namespace GaladHen
 		glBufferSubData(bufferType, offset, totalSizeBytes, newData);
 	}
 
-	void RendererGL::UpdateBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*> newDatas)
+	void RendererGL::UpdateBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*>& newDatas)
 	{
 		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
 		size_t offset = 0;
@@ -482,7 +509,7 @@ namespace GaladHen
 					glm::vec4(dl.Color, 1.0),
 					dl.Transform.GetPosition(),
 					dl.Intensity,
-					dl.Transform.GetFront()
+					dl.GetDirection()
 				});
 		}
 	}

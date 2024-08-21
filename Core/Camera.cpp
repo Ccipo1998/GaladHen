@@ -84,7 +84,6 @@ namespace GaladHen
 
     glm::mat4 Camera::GetViewMatrix() const
     {
-        glm::vec3 test = Transform.GetFront();
         return glm::lookAt(Transform.GetPosition(), Transform.GetPosition() + Transform.GetFront(), TransformQuat::GlobalUp);
     }
 

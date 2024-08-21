@@ -42,10 +42,12 @@ struct DirectionalLight
 // buffers
 layout(std140, binding = 0) buffer PointLightBuffer
 {
+    int PointLightNumber;
     PointLight PointLights[];
 };
 layout(std140, binding = 1) buffer DirectionalLightBuffer
 {
+    int DirLightNumber;
     DirectionalLight DirectionalLights[];
 };
 
@@ -242,7 +244,7 @@ vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic
     float lightIntensity = 0.0;
 
     // point lights
-    for (uint i = 0; i < 1; ++i)
+    for (uint i = 0; i < PointLightNumber; ++i)
     {
         diffuse = DiffuseBRDF(diffuseColor, metallic);
         wLightPos = PointLights[i].Position;
@@ -255,7 +257,7 @@ vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic
     }
 
     // directional lights
-    for (uint i = 0; i < DirectionalLights.length(); ++i)
+    for (uint i = 0; i < DirLightNumber; ++i)
     {
         diffuse = DiffuseBRDF(diffuseColor, metallic);
         wLightDir = -DirectionalLights[i].Direction;

@@ -17,7 +17,7 @@ namespace GaladHen
         {}
 
     DirectionalLight::DirectionalLight()
-        : Light()
+        : Light(glm::vec3(1.0f), 1.0f)
         {}
 
     DirectionalLight::DirectionalLight(const glm::vec3& color, float intensity, const glm::vec3& direction)
@@ -26,15 +26,16 @@ namespace GaladHen
         SetDirection(direction);
     }
 
-    glm::vec3 DirectionalLight::GetDirection()
+    glm::vec3 DirectionalLight::GetDirection() const
     {
         return Transform.GetFront();
     }
 
     void DirectionalLight::SetDirection(const glm::vec3& direction)
     {
-        glm::quat rot = glm::lookAt(Transform.GetPosition(), Transform.GetPosition() + direction, TransformQuat::GlobalUp);
+        glm::quat rot = glm::quatLookAt(Transform.GetPosition() + direction, TransformQuat::GlobalUp);
         Transform.SetOrientation(rot);
+        Transform.RotateYaw(90.0f); // because of the difference between glm and GaladHen reference system orientation
     }
 
     PointLight::PointLight()
