@@ -220,7 +220,10 @@ namespace GaladHen
 
     void WindowGL::EnableDephtTest(bool enable)
     {
-        glEnable(GL_DEPTH_TEST);
+        if (enable)
+            glEnable(GL_DEPTH_TEST);
+        else
+            glDisable(GL_DEPTH_TEST);
     }
 
     void WindowGL::CloseWindow()
