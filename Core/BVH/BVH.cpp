@@ -19,7 +19,7 @@ namespace GaladHen
 
 		Nodes.emplace_back(BVHNode{});
 		BVHNode& root = Nodes[RootNode];
-		root.FirstIndex = 0;
+		root.LeftOrFirst = 0;
 		root.IndexCount = mesh.Indices.size();
 
 		root.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, 0, mesh.Indices.size());
@@ -62,7 +62,7 @@ namespace GaladHen
 		float splitCoord = node.AABoundingBox.SplitCoordinateAlongAxis(splitAxis);
 
 		// Divide the aabb in two halves
-		unsigned int i = node.FirstIndex;
+		unsigned int i = node.LeftOrFirst;
 		unsigned int j = i + node.IndexCount - 1;
 		while (i <= j)
 		{
@@ -84,27 +84,26 @@ namespace GaladHen
 		}
 
 		// Stop split if one of the sides is empty
-		int leftCount = i - node.FirstIndex;
+		int leftCount = i - node.LeftOrFirst;
 		if (leftCount == 0 || leftCount == node.IndexCount) return;
 
 		// Create child nodes
 		Nodes.emplace_back(BVHNode{});
 		Nodes.emplace_back(BVHNode{});
 		unsigned int leftChildIndex = Nodes.size() - 2;
-		unsigned int rightChildIndex = Nodes.size() - 1;
+		unsigned int rightChildIndex = leftChildIndex + 1;
 		BVHNode& leftNode = Nodes[leftChildIndex];
 		BVHNode& rightNode = Nodes[rightChildIndex];
-		leftNode.FirstIndex = node.FirstIndex;
+		leftNode.LeftOrFirst = node.LeftOrFirst;
 		leftNode.IndexCount = leftCount;
-		rightNode.FirstIndex = i;
+		rightNode.LeftOrFirst = i;
 		rightNode.IndexCount = node.IndexCount - leftCount;
-		node.LeftChild = leftChildIndex;
-		node.RightChild = rightChildIndex;
+		node.LeftOrFirst = leftChildIndex;
 		node.IndexCount = 0; // it means that this node is not a leaf
 
 		// Create child AABBs
-		leftNode.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, leftNode.FirstIndex, leftNode.IndexCount);
-		rightNode.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, rightNode.FirstIndex, rightNode.IndexCount);
+		leftNode.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, leftNode.LeftOrFirst, leftNode.IndexCount);
+		rightNode.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, rightNode.LeftOrFirst, rightNode.IndexCount);
 
 		// Recursion call
 		LongestAxisSubdivision(leftNode, mesh);

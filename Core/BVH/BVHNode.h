@@ -10,7 +10,7 @@ namespace GaladHen
 	struct BVHNode
 	{
 		AABB AABoundingBox;
-		unsigned int LeftChild, RightChild;
-		unsigned int FirstIndex, IndexCount; // assumption: adjacent data
+		unsigned int LeftOrFirst; // LeftChildIndex when IndexCount = 0, FirstIndex otherwise
+		unsigned int IndexCount; // assumption: FirstIndex ans IndexCount represents adjacent data
 	};
 }
