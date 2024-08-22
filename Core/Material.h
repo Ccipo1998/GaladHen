@@ -42,9 +42,6 @@ namespace GaladHen
         PBRMaterialData();
 
         virtual std::vector<MaterialDataScalar> GetScalarData() override;
-        virtual std::vector<MaterialDataInteger> GetIntegerData() override;
-        virtual std::vector<MaterialDataVector2> GetVector2Data() override;
-        virtual std::vector<MaterialDataVector3> GetVector3Data() override;
         virtual std::vector<MaterialDataVector4> GetVector4Data() override;
         virtual std::vector<MaterialDataTexture> GetTextureData() override;
         virtual std::vector<std::string> GetFunctions() override;
@@ -65,10 +62,7 @@ namespace GaladHen
         BPMaterialData();
 
         virtual std::vector<MaterialDataScalar> GetScalarData() override;
-        virtual std::vector<MaterialDataVector2> GetVector2Data() override;
-        virtual std::vector<MaterialDataVector3> GetVector3Data() override;
         virtual std::vector<MaterialDataVector4> GetVector4Data() override;
-        virtual std::vector<MaterialDataTexture> GetTextureData() override;
 
         // colors for the diffuse term and for the dielectric reflection
         glm::vec4 DiffuseColor;
@@ -84,10 +78,6 @@ namespace GaladHen
     {
         UnlitMaterialData();
 
-        virtual std::vector<MaterialDataScalar> GetScalarData() override;
-        virtual std::vector<MaterialDataInteger> GetIntegerData() override;
-        virtual std::vector<MaterialDataVector2> GetVector2Data() override;
-        virtual std::vector<MaterialDataVector3> GetVector3Data() override;
         virtual std::vector<MaterialDataVector4> GetVector4Data() override;
         virtual std::vector<MaterialDataTexture> GetTextureData() override;
         virtual std::vector<std::string> GetFunctions() override;

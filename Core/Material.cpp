@@ -36,21 +36,6 @@ namespace GaladHen
         };
     }
 
-    std::vector<MaterialDataInteger> PBRMaterialData::GetIntegerData()
-    {
-        return std::vector<MaterialDataInteger>{};
-    }
-
-    std::vector<MaterialDataVector2> PBRMaterialData::GetVector2Data()
-    {
-        return std::vector<MaterialDataVector2>{};
-    }
-
-    std::vector<MaterialDataVector3> PBRMaterialData::GetVector3Data()
-    {
-        return std::vector<MaterialDataVector3>{};
-    }
-
     std::vector<MaterialDataVector4> PBRMaterialData::GetVector4Data()
     {
         return std::vector<MaterialDataVector4>
@@ -86,6 +71,7 @@ namespace GaladHen
         , Ka(glm::vec4(.1f, .1f, .1f, 1.0f))
         , Kd(glm::vec4(.6f, .6f, .6f, 1.0f))
         , Ks(glm::vec4(.8f, .8f, .8f, 1.0f))
+        , SpecularFallOff(200.0f)
         {}
 
     std::vector<MaterialDataScalar> BPMaterialData::GetScalarData()
@@ -94,16 +80,6 @@ namespace GaladHen
         { 
             MaterialDataScalar{ std::string{"SpecularFallOff"}, SpecularFallOff }
         };
-    }
-
-    std::vector<MaterialDataVector2> BPMaterialData::GetVector2Data()
-    {
-        return std::vector<MaterialDataVector2>{};
-    }
-
-    std::vector<MaterialDataVector3> BPMaterialData::GetVector3Data()
-    {
-        return std::vector<MaterialDataVector3>{};
     }
 
     std::vector<MaterialDataVector4> BPMaterialData::GetVector4Data()
@@ -117,35 +93,10 @@ namespace GaladHen
         };
     }
 
-    std::vector<MaterialDataTexture> BPMaterialData::GetTextureData()
-    {
-        return std::vector<MaterialDataTexture>{};
-    }
-
     UnlitMaterialData::UnlitMaterialData()
         : DiffuseColor(glm::vec4(0.3f, 0.9f, 0.3f, 1.0f))
         , DiffuseTexture(TextureParameters{})
     {}
-
-    std::vector<MaterialDataScalar> UnlitMaterialData::GetScalarData()
-    {
-        return std::vector<MaterialDataScalar>{};
-    }
-
-    std::vector<MaterialDataInteger> UnlitMaterialData::GetIntegerData()
-    {
-        return std::vector<MaterialDataInteger>{};
-    }
-
-    std::vector<MaterialDataVector2> UnlitMaterialData::GetVector2Data()
-    {
-        return std::vector<MaterialDataVector2>{};
-    }
-
-    std::vector<MaterialDataVector3> UnlitMaterialData::GetVector3Data()
-    {
-        return std::vector<MaterialDataVector3>{};
-    }
 
     std::vector<MaterialDataVector4> UnlitMaterialData::GetVector4Data()
     {

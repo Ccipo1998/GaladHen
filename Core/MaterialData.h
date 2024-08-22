@@ -56,15 +56,42 @@ namespace GaladHen
         TextureParameters TexParams;
     };
 
-    // Material data interface -> TODO: implementare le funzioni qui che restituiscono array vuoti, così si fa override solo delle funzioni che servono
+    // Material data interface
     struct MaterialData
     {
-        virtual std::vector<MaterialDataScalar> GetScalarData() = 0;
-        virtual std::vector<MaterialDataInteger> GetIntegerData() = 0;
-        virtual std::vector<MaterialDataVector2> GetVector2Data() = 0;
-        virtual std::vector<MaterialDataVector3> GetVector3Data() = 0;
-        virtual std::vector<MaterialDataVector4> GetVector4Data() = 0;
-        virtual std::vector<MaterialDataTexture> GetTextureData() = 0;
-        virtual std::vector<std::string> GetFunctions() = 0;
+        virtual std::vector<MaterialDataScalar> GetScalarData()
+        {
+            return std::vector<MaterialDataScalar>{};
+        }
+
+        virtual std::vector<MaterialDataInteger> GetIntegerData()
+        {
+            return std::vector<MaterialDataInteger>{};
+        }
+
+        virtual std::vector<MaterialDataVector2> GetVector2Data()
+        {
+            return std::vector<MaterialDataVector2>{};
+        }
+
+        virtual std::vector<MaterialDataVector3> GetVector3Data()
+        {
+            return std::vector<MaterialDataVector3>{};
+        }
+
+        virtual std::vector<MaterialDataVector4> GetVector4Data()
+        {
+            return std::vector<MaterialDataVector4>{};
+        }
+
+        virtual std::vector<MaterialDataTexture> GetTextureData()
+        {
+            return std::vector<MaterialDataTexture>{};
+        }
+
+        virtual std::vector<std::string> GetFunctions()
+        {
+            return std::vector<std::string>{};
+        }
     };
 }
