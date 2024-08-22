@@ -32,7 +32,12 @@ add_library(GaladHenCore STATIC
     TextureData.h
     SceneData.h
     FileLoader.h
-    FileLoader.cpp)
+    FileLoader.cpp
+    BVH/BVH.h
+    BVH/BVH.cpp
+    BVH/BVHNode.h
+    AABB/AABB.h
+    AABB/AABB.cpp)
 
 target_include_directories(GaladHenCore PRIVATE
     ${CMAKE_SOURCE_DIR}/

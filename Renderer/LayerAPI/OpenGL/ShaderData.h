@@ -12,7 +12,7 @@ struct CameraData
 	glm::vec3 WCameraPosition;
 };
 
-struct SceneObjectData
+struct TransformData
 {
 	glm::mat4 ModelMatrix;
 	glm::mat4 NormalMatrix;

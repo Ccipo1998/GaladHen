@@ -159,29 +159,40 @@ namespace GaladHen
         RendererAPI->UpdateCameraData(camera);
     }
 
-    void Renderer::LoadSceneObjectData()
+    void Renderer::LoadTransformData()
     {
-        RendererAPI->LoadSceneObjectData();
+        RendererAPI->LoadTransformData();
     }
 
-    void Renderer::UpdateSceneObjectData(SceneObject& object)
+    void Renderer::UpdateTransformData(TransformQuat& transform)
     {
-        RendererAPI->UpdateSceneObjectData(object);
+        RendererAPI->UpdateTransformData(transform);
     }
 
     void Renderer::Draw(Scene& scene)
     {
         for (SceneObject& sceneObj : scene.SceneObjects)
         {
-            Model* mod = sceneObj.GetSceneObjectModel();
+            Draw(sceneObj);
+        }
+    }
 
-            for (unsigned int i = 0; i < mod->Meshes.size(); ++i)
+    void Renderer::Draw(Mesh& mesh, Material& material)
+    {
+        RendererAPI->UpdateTransformData(TransformQuat{});
+        RendererAPI->Draw(mesh, material);
+    }
+
+    void Renderer::Draw(SceneObject& object)
+    {
+        Model* mod = object.GetSceneObjectModel();
+
+        for (unsigned int i = 0; i < mod->Meshes.size(); ++i)
+        {
+            if (Material* mat = object.GetMaterial(i))
             {
-                if (Material* mat = sceneObj.GetMaterial(i))
-                {
-                    RendererAPI->UpdateSceneObjectData(sceneObj);
-                    RendererAPI->Draw(mod->Meshes[i], *mat);
-                }
+                RendererAPI->UpdateTransformData(object.Transform);
+                RendererAPI->Draw(mod->Meshes[i], *mat);
             }
         }
     }

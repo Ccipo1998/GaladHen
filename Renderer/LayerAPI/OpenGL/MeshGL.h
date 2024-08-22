@@ -17,7 +17,7 @@ namespace GaladHen
 
         MeshGL();
 
-        virtual void Draw(IShaderProgramAPI* shader) override;
+        virtual void Draw(IShaderProgramAPI* shader, Primitive primitiveType) override;
 
         virtual void LoadMemoryGPU(const std::vector<VertexData>& vertices, const std::vector<unsigned int>& indices) override;
 
@@ -28,5 +28,7 @@ namespace GaladHen
         GLuint VAO, VBO, EBO;
         
         unsigned int NumberOfIndices;
+
+        static GLenum PrimitiveTypes[3];
     };
 }

@@ -20,7 +20,7 @@
 #include <Core/Shader.h>
 #include <Core/FileLoader.h>
 #include <Core/Camera.h>
-#include <Core/SceneObject.h>
+#include <Core/Transform.h>
 
 namespace GaladHen
 {
@@ -32,7 +32,7 @@ namespace GaladHen
 		, PointLightBufferID(0)
 		, DirectionalLightBufferID(0)
 		, CameraDataUniformBufferID(0)
-		, SceneObjectDataUniformBufferID(0)
+		, TransformDataUniformBufferID(0)
 	{}
 
 	void RendererGL::Init()
@@ -280,24 +280,24 @@ namespace GaladHen
 		UpdateBufferData(CameraDataUniformBufferID, GL_UNIFORM_BUFFER, 0, GL_STATIC_DRAW, 0, sizeof(CameraData), &data);
 	}
 
-	void RendererGL::LoadSceneObjectData()
+	void RendererGL::LoadTransformData()
 	{
-		if (SceneObjectDataUniformBufferID == 0)
+		if (TransformDataUniformBufferID == 0)
 		{
 			// first loading
-			SceneObjectDataUniformBufferID = LoadBufferData(GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, sizeof(SceneObjectData), nullptr);
+			TransformDataUniformBufferID = LoadBufferData(GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, sizeof(TransformData), nullptr);
 		}
 		else
 		{
-			LoadBufferData(SceneObjectDataUniformBufferID, GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, sizeof(SceneObjectData), nullptr);
+			LoadBufferData(TransformDataUniformBufferID, GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, sizeof(TransformData), nullptr);
 		}
 	}
 
-	void RendererGL::UpdateSceneObjectData(SceneObject& object)
+	void RendererGL::UpdateTransformData(TransformQuat& transform)
 	{
-		SceneObjectData data = TranslateToShaderData(object);
+		TransformData data = TranslateToShaderData(transform);
 
-		UpdateBufferData(SceneObjectDataUniformBufferID, GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, 0, sizeof(SceneObjectData), &data);
+		UpdateBufferData(TransformDataUniformBufferID, GL_UNIFORM_BUFFER, 1, GL_STATIC_DRAW, 0, sizeof(TransformData), &data);
 	}
 
 	void RendererGL::Draw(Mesh& mesh, Material& material)
@@ -306,7 +306,7 @@ namespace GaladHen
 		ShaderProgramGL& shaderGL = Shaders[material.MaterialShader->ShaderProgramID - 1];
 
 		LoadMaterialData(material);
-		meshGL.Draw(&shaderGL);
+		meshGL.Draw(&shaderGL, mesh.PrimitiveType);
 	}
 
 	unsigned int RendererGL::LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, size_t totalSizeBytes, void* data)
@@ -546,15 +546,15 @@ namespace GaladHen
 		};
 	}
 
-	SceneObjectData RendererGL::TranslateToShaderData(const SceneObject& object)
+	TransformData RendererGL::TranslateToShaderData(const TransformQuat& transform)
 	{
 		glm::mat4 ModelMatrix = glm::mat4(1.0f);
-		ModelMatrix = glm::translate(ModelMatrix, object.Transform.GetPosition());
-		ModelMatrix = glm::scale(ModelMatrix, object.Transform.GetScale());
-		ModelMatrix = ModelMatrix * glm::toMat4(object.Transform.GetOrientation());
+		ModelMatrix = glm::translate(ModelMatrix, transform.GetPosition());
+		ModelMatrix = glm::scale(ModelMatrix, transform.GetScale());
+		ModelMatrix = ModelMatrix * glm::toMat4(transform.GetOrientation());
 		glm::mat4 NormalMatrix = glm::inverse(glm::transpose(ModelMatrix));
 
-		return SceneObjectData
+		return TransformData
 		{
 			ModelMatrix,
 			NormalMatrix

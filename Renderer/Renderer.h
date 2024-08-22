@@ -24,6 +24,7 @@ namespace GaladHen
     class Material;
     class Texture;
     class Camera;
+    class SceneObject;
 
     class Renderer final
     {
@@ -98,17 +99,25 @@ namespace GaladHen
         void UpdateCameraData(Camera& camera);
 
         // @brief
-        // Load scene object data (position, orientation and scale) into GPU memory
-        void LoadSceneObjectData();
+        // Load transform data (position, orientation and scale) into GPU memory
+        void LoadTransformData();
 
         // @brief
-        // Update scene object data (position, orientation and scale) into GPU memory
-        // LoadSceneObjectData() must be already called
-        void UpdateSceneObjectData(SceneObject& object);
+        // Update transform data (position, orientation and scale) into GPU memory
+        // LoadTransformData() must be already called
+        void UpdateTransformData(TransformQuat& transform);
 
         // @brief
         // Draw calls on each scene object of the scene
         void Draw(Scene& scene);
+
+        // @brief
+        // Drawcall for a mesh with a material
+        void Draw(Mesh& mesh, Material& material);
+
+        // @brief
+        // Drawcall for a scene object
+        void Draw(SceneObject& object);
 
         // @brief
         // Compile a shader pipeline program

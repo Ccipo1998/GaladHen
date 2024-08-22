@@ -6,12 +6,14 @@ namespace GaladHen
 {
     Mesh::Mesh()
         : MeshID(0)
+        , PrimitiveType(Primitive::Triangle)
         {}
 
     Mesh::Mesh(const Mesh& other) noexcept
         : MeshID(0)
         , Vertices(other.Vertices)
         , Indices(other.Indices)
+        , PrimitiveType(other.PrimitiveType)
         {}
 
     Mesh& Mesh::operator=(const Mesh& other) noexcept
@@ -19,6 +21,7 @@ namespace GaladHen
         MeshID = 0;
         Vertices = other.Vertices;
         Indices = other.Indices;
+        PrimitiveType = other.PrimitiveType;
 
         return *this;
     }
@@ -27,6 +30,7 @@ namespace GaladHen
         : MeshID(other.MeshID)
         , Vertices(std::move(other.Vertices))
         , Indices(std::move(other.Indices))
+        , PrimitiveType(other.PrimitiveType)
     {
         other.MeshID = 0;
     }
@@ -37,6 +41,7 @@ namespace GaladHen
         other.MeshID = 0;
         Vertices = std::move(other.Vertices);
         Indices = std::move(other.Indices);
+        PrimitiveType = other.PrimitiveType;
 
         return *this;
     }

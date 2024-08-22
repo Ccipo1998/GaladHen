@@ -18,7 +18,7 @@ namespace GaladHen
 	class Texture;
 	class ShaderProgram;
 	class Camera;
-	class SceneObject;
+	class TransformQuat;
 
 	class IRendererAPI
 	{
@@ -52,9 +52,9 @@ namespace GaladHen
 
 		virtual void UpdateCameraData(Camera& camera) = 0;
 
-		virtual void LoadSceneObjectData() = 0;
+		virtual void LoadTransformData() = 0;
 
-		virtual void UpdateSceneObjectData(SceneObject& object) = 0;
+		virtual void UpdateTransformData(TransformQuat& transform) = 0;
 
 		virtual void Draw(Mesh& mesh, Material& material) = 0;
 	};

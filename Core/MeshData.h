@@ -15,4 +15,11 @@ namespace GaladHen
         glm::vec3 Tangent;
         glm::vec3 Bitangent;
     };
+
+    enum class Primitive
+    {
+        Point = 0,
+        Line = 1,
+        Triangle = 2
+    };
 }

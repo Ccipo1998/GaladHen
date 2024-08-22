@@ -29,6 +29,7 @@ namespace GaladHen
 
         std::vector<VertexData> Vertices;
         std::vector<unsigned int> Indices;
+        Primitive PrimitiveType;
 
         unsigned int MeshID; // 0 means -1, so the low level pair is not already been created
     };

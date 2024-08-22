@@ -19,7 +19,7 @@ namespace GaladHen
 
         // @brief
         // Drawcall
-        virtual void Draw(IShaderProgramAPI* shader) = 0;
+        virtual void Draw(IShaderProgramAPI* shader, Primitive primitiveType) = 0;
 
         // @brief
         // Load mesh data in GPU memory

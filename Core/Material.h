@@ -78,4 +78,21 @@ namespace GaladHen
         glm::vec4 Ks; // specular component
         float SpecularFallOff; // falloff parameter from perfect specular direction (usually value from 1 to 200)
     };
+
+    // Unlit material data
+    struct UnlitMaterialData : public MaterialData
+    {
+        UnlitMaterialData();
+
+        virtual std::vector<MaterialDataScalar> GetScalarData() override;
+        virtual std::vector<MaterialDataInteger> GetIntegerData() override;
+        virtual std::vector<MaterialDataVector2> GetVector2Data() override;
+        virtual std::vector<MaterialDataVector3> GetVector3Data() override;
+        virtual std::vector<MaterialDataVector4> GetVector4Data() override;
+        virtual std::vector<MaterialDataTexture> GetTextureData() override;
+        virtual std::vector<std::string> GetFunctions() override;
+
+        glm::vec4 DiffuseColor;
+        TextureParameters DiffuseTexture;
+    };
 }

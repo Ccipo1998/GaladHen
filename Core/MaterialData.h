@@ -56,7 +56,7 @@ namespace GaladHen
         TextureParameters TexParams;
     };
 
-    // Material data interface
+    // Material data interface -> TODO: implementare le funzioni qui che restituiscono array vuoti, così si fa override solo delle funzioni che servono
     struct MaterialData
     {
         virtual std::vector<MaterialDataScalar> GetScalarData() = 0;

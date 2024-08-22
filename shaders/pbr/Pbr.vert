@@ -1,8 +1,6 @@
 
 // PBR vertex shader
 
-// TODO: add model matrix
-
 #version 450 core
 
 layout (location = 0) in vec3 Position;
@@ -18,7 +16,7 @@ layout (std140, binding = 0) uniform CameraData
     uniform mat4 ProjectionMatrix;
     uniform vec3 WCameraPosition;
 };
-layout (std140, binding = 1) uniform SceneObjectData
+layout (std140, binding = 1) uniform TransformData
 {
     uniform mat4 ModelMatrix;
     uniform mat4 NormalMatrix;

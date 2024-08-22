@@ -121,4 +121,53 @@ namespace GaladHen
     {
         return std::vector<MaterialDataTexture>{};
     }
+
+    UnlitMaterialData::UnlitMaterialData()
+        : DiffuseColor(glm::vec4(0.3f, 0.9f, 0.3f, 1.0f))
+        , DiffuseTexture(TextureParameters{})
+    {}
+
+    std::vector<MaterialDataScalar> UnlitMaterialData::GetScalarData()
+    {
+        return std::vector<MaterialDataScalar>{};
+    }
+
+    std::vector<MaterialDataInteger> UnlitMaterialData::GetIntegerData()
+    {
+        return std::vector<MaterialDataInteger>{};
+    }
+
+    std::vector<MaterialDataVector2> UnlitMaterialData::GetVector2Data()
+    {
+        return std::vector<MaterialDataVector2>{};
+    }
+
+    std::vector<MaterialDataVector3> UnlitMaterialData::GetVector3Data()
+    {
+        return std::vector<MaterialDataVector3>{};
+    }
+
+    std::vector<MaterialDataVector4> UnlitMaterialData::GetVector4Data()
+    {
+        return std::vector<MaterialDataVector4>
+        {
+            MaterialDataVector4{ std::string{"Diffuse"}, DiffuseColor }
+        };
+    }
+
+    std::vector<MaterialDataTexture> UnlitMaterialData::GetTextureData()
+    {
+        return std::vector<MaterialDataTexture>
+        {
+            MaterialDataTexture{ std::string{"DiffuseTexture"}, DiffuseTexture }
+        };
+    }
+
+    std::vector<std::string> UnlitMaterialData::GetFunctions()
+    {
+        return std::vector<std::string>
+        {
+            DiffuseTexture.TextureSource != nullptr ? std::string{ "DiffuseSampling" } : std::string{ "DiffuseConstant" }
+        };
+    }
 }

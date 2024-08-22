@@ -5,6 +5,13 @@
 
 namespace GaladHen
 {
+    GLenum MeshGL::PrimitiveTypes[3] =
+    {
+        GL_POINTS,
+        GL_LINES,
+        GL_TRIANGLES
+    };
+
     MeshGL::MeshGL()
         : VAO(0)
         , VBO(0)
@@ -12,14 +19,14 @@ namespace GaladHen
         , NumberOfIndices(0)
         {}
 
-    void MeshGL::Draw(IShaderProgramAPI* shader)
+    void MeshGL::Draw(IShaderProgramAPI* shader, Primitive primitiveType)
     {
         // shader functionalities
         shader->Use();
 
         // draw
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, NumberOfIndices, GL_UNSIGNED_INT, 0);
+        glDrawElements(PrimitiveTypes[(int)primitiveType], NumberOfIndices, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
     }
 

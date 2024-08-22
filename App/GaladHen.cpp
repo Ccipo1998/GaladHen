@@ -5,8 +5,13 @@
 #include <Core/ShaderProgram.h>
 #include <Core/Shader.h>
 #include <Core/AssetsManager.h>
+#include <Core/Model.h>
 #include <Core/Material.h>
 #include <Core/Texture.h>
+
+#include <Core/BVH/BVH.h>
+#include <Core/BVH/BVHNode.h>
+#include <Core/AABB/AABB.h>
 
 #include <glm/glm.hpp>
 
@@ -101,7 +106,27 @@ int main()
     renderer.LoadTexture(*texAlbedo);
     renderer.LoadTexture(*texNormal);
     renderer.LoadTexture(*texRoughness);
-    renderer.LoadSceneObjectData();
+    renderer.LoadTransformData();
+
+    // bvh
+    BVH bunnyBVH{};
+    bunnyBVH.BuildBVH(bunny->Meshes[0]);
+    Model aabbModel{};
+    aabbModel.Meshes.push_back(bunnyBVH.GetRootNode().AABoundingBox.ToMesh());
+    Shader vUnlit{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
+    Shader fUnlit{ "../Shaders/Unlit/Unlit.frag", ShaderStage::Fragment };
+    ShaderPipeline unlit{};
+    unlit.VertexShader = &vUnlit;
+    unlit.FragmentShader = &fUnlit;
+    Material aabbMat{ &unlit, ShadingMode::SmoothShading };
+    UnlitMaterialData unlitData{};
+    unlitData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    aabbMat.Data = &unlitData;
+    renderer.LoadModel(aabbModel);
+    renderer.CompileShaderPipeline(unlit);
+    SceneObject aabbObj{ &aabbModel, std::vector<Material*>{ &aabbMat } };
+    aabbObj.Transform = objBunny.Transform;
+    scene.SceneObjects.push_back(aabbObj);
 
     while (!window.IsCloseWindowRequested())
     {
