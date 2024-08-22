@@ -73,6 +73,8 @@ namespace GaladHen
 
         glm::vec3 GetScale() const;
 
+        glm::mat4 GetModelMatrix() const;
+
     protected:
 
         // @brief

@@ -1,5 +1,5 @@
 
-// Node of the BVH data structure
+// Data structure for a non-sparse (contiguous) BVH node, where each single node points always to adjacent-only data
 
 #pragma once
 
@@ -11,6 +11,6 @@ namespace GaladHen
 	{
 		AABB AABoundingBox;
 		unsigned int LeftChild, RightChild;
-		unsigned int FirstIndex, IndexCount;
+		unsigned int FirstIndex, IndexCount; // assumption: adjacent data
 	};
 }

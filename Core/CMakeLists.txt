@@ -49,4 +49,5 @@ target_link_libraries(GaladHenCore
     PRIVATE
     glm
     assimp
+    GaladHenMath
     Utils)

@@ -9,6 +9,8 @@ namespace GaladHen
 {
 	namespace Math
 	{
+		struct AABB;
+
 		// @brief
 		// Calculate the centroid position of a triangle
 		glm::vec3 TriangleCentroidPosition(glm::vec3 vertex0, glm::vec3 vertex1, glm::vec3 vertex2);

@@ -151,6 +151,14 @@ namespace GaladHen
         return Scale;
     }
 
+    glm::mat4 TransformQuat::GetModelMatrix() const
+    {
+        glm::mat4 ModelMatrix = glm::mat4(1.0f);
+        ModelMatrix = glm::translate(ModelMatrix, GetPosition());
+        ModelMatrix = glm::scale(ModelMatrix, GetScale());
+        return ModelMatrix * glm::toMat4(GetOrientation());
+    }
+
     // privates
 
     void TransformQuat::UpdateEulerAngles()

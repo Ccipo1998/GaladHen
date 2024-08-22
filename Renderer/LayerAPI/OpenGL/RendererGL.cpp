@@ -548,10 +548,7 @@ namespace GaladHen
 
 	TransformData RendererGL::TranslateToShaderData(const TransformQuat& transform)
 	{
-		glm::mat4 ModelMatrix = glm::mat4(1.0f);
-		ModelMatrix = glm::translate(ModelMatrix, transform.GetPosition());
-		ModelMatrix = glm::scale(ModelMatrix, transform.GetScale());
-		ModelMatrix = ModelMatrix * glm::toMat4(transform.GetOrientation());
+		glm::mat4 ModelMatrix = transform.GetModelMatrix();
 		glm::mat4 NormalMatrix = glm::inverse(glm::transpose(ModelMatrix));
 
 		return TransformData

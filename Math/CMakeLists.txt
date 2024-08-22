@@ -1,18 +1,17 @@
 cmake_minimum_required(VERSION 3.5.0)
 
-project(MathLib VERSION 0.1.0)
+project(GaladHenMath VERSION 0.1.0)
 
-add_library(MathLib STATIC
+add_library(GaladHenMath STATIC
     Math.h
     Math.cpp
 )
 
-target_include_directories(MathLib PRIVATE
+target_include_directories(GaladHenMath PRIVATE
     ${CMAKE_SOURCE_DIR}/
-    ${CMAKE_SOURCE_DIR}/Libs/
-    ${CMAKE_SOURCE_DIR}/Libs/gl3w/include/)
+    ${CMAKE_SOURCE_DIR}/Libs/)
 
-target_link_libraries(MathLib
+target_link_libraries(GaladHenMath
     PRIVATE
     GaladHenCore
     glm)

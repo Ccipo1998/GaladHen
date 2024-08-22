@@ -86,17 +86,34 @@ int main()
     Model* bunny = AssetsManager::LoadAndStoreModel("../Assets/Models/bunny.glb", "Bunny");
     Model* plane = AssetsManager::LoadAndStoreModel("../Assets/Models/plane.glb", "Plane");
 
+    // bvh
+    BVH bunnyBVH{};
+    bunnyBVH.BuildBVH_InPlace(bunny->Meshes[0]);
+    //bunnyBVH.GetRootNode().AABoundingBox.UpdateAABB(objBunny.Transform);
+    Mesh aabbMesh = bunnyBVH.GetNode(0).AABoundingBox.ToMesh();
+    Shader vUnlit{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
+    Shader fUnlit{ "../Shaders/Unlit/Unlit.frag", ShaderStage::Fragment };
+    ShaderPipeline unlit{};
+    unlit.VertexShader = &vUnlit;
+    unlit.FragmentShader = &fUnlit;
+    Material aabbMat{ &unlit, ShadingMode::SmoothShading };
+    UnlitMaterialData unlitData{};
+    unlitData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    aabbMat.Data = &unlitData;
+    renderer.LoadMesh(aabbMesh);
+    renderer.CompileShaderPipeline(unlit);
+
     // load into scene
     std::vector<Material*> bunnyMats;
     bunnyMats.push_back(&bunnyMat);
     SceneObject objBunny{ bunny, bunnyMats };
-    objBunny.Transform.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
+    objBunny.Transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     scene.SceneObjects.push_back(objBunny);
     std::vector<Material*> planeMats;
     planeMats.push_back(&planeMat);
     SceneObject objPlane{ plane, planeMats };
     objPlane.Transform.SetScale(glm::vec3(5.0f, 1.0f, 5.0f));
-    scene.SceneObjects.push_back(objPlane);
+    //scene.SceneObjects.push_back(objPlane);
 
     // init scene for renderer
     renderer.LoadModels(scene);
@@ -107,26 +124,6 @@ int main()
     renderer.LoadTexture(*texNormal);
     renderer.LoadTexture(*texRoughness);
     renderer.LoadTransformData();
-
-    // bvh
-    BVH bunnyBVH{};
-    bunnyBVH.BuildBVH(bunny->Meshes[0]);
-    Model aabbModel{};
-    aabbModel.Meshes.push_back(bunnyBVH.GetRootNode().AABoundingBox.ToMesh());
-    Shader vUnlit{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
-    Shader fUnlit{ "../Shaders/Unlit/Unlit.frag", ShaderStage::Fragment };
-    ShaderPipeline unlit{};
-    unlit.VertexShader = &vUnlit;
-    unlit.FragmentShader = &fUnlit;
-    Material aabbMat{ &unlit, ShadingMode::SmoothShading };
-    UnlitMaterialData unlitData{};
-    unlitData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-    aabbMat.Data = &unlitData;
-    renderer.LoadModel(aabbModel);
-    renderer.CompileShaderPipeline(unlit);
-    SceneObject aabbObj{ &aabbModel, std::vector<Material*>{ &aabbMat } };
-    aabbObj.Transform = objBunny.Transform;
-    scene.SceneObjects.push_back(aabbObj);
 
     while (!window.IsCloseWindowRequested())
     {
@@ -166,6 +163,7 @@ int main()
         renderer.UpdateCameraData(scene.MainCamera);
 
         renderer.Draw(scene);
+        renderer.Draw(aabbMesh, aabbMat);
 
         window.EndFrame();
     }
