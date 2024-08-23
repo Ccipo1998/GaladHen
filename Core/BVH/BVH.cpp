@@ -5,6 +5,7 @@
 #include <Core/Mesh.h>
 
 #include <Math/Math.h>
+#include <Math/Ray.h>
 
 namespace GaladHen
 {
@@ -12,7 +13,7 @@ namespace GaladHen
 		: RootNode(0)
 	{}
 
-	void BVH::BuildBVH_InPlace(Mesh& mesh)
+	void BVH::BuildBVH(Mesh& mesh)
 	{
 		Nodes.clear();
 		Nodes.reserve(mesh.Vertices.size() * 2 - 1); // the size of the BVH for N triangles has an upper limit: we can never have more than 2N-1 nodes, since N primitives in N leaves have no more than N/2 parents, N/4 grandparents and so on
@@ -33,6 +34,62 @@ namespace GaladHen
 
 	}
 
+	RayTriangleMeshHitInfo BVH::CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh)
+	{
+		return CheckTriangleMeshIntersection(ray, mesh, GetRootNode());
+	}
+
+	RayTriangleMeshHitInfo BVH::CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVHNode& node)
+	{
+		RayTriangleMeshHitInfo intersection{};
+
+		if (!Math::CheckRayAABBIntersection(ray, node.AABoundingBox))
+			return intersection;
+
+		if (node.IsLeaf())
+		{
+			// check intersection on geometry
+			for (unsigned int i = node.LeftOrFirst; i < node.LeftOrFirst + node.IndexCount - 1; i += 3) // TODO: questi test di intersezione dovrebbero dipendere dal tipo di primitive del BVH
+			{
+				RayTriangleHitInfo hit = Math::CheckRayTriangleIntersection(
+					ray,
+					mesh.Vertices[mesh.Indices[i]].Position,
+					mesh.Vertices[mesh.Indices[i + 1]].Position,
+					mesh.Vertices[mesh.Indices[i + 2]].Position
+				);
+
+				if (hit.HitDistance < intersection.RayTriangleHit.HitDistance)
+				{
+					intersection.RayTriangleHit = hit;
+					intersection.Index0 = mesh.Indices[i];
+					intersection.Index1 = mesh.Indices[i + 1];
+					intersection.Index2 = mesh.Indices[i + 2];
+				}
+			}
+		}
+		else
+		{
+			RayTriangleMeshHitInfo interLeft = CheckTriangleMeshIntersection(ray, mesh, Nodes[node.LeftOrFirst]);
+			if (interLeft.RayTriangleHit.HitDistance < intersection.RayTriangleHit.HitDistance)
+			{
+				intersection = interLeft;
+			}
+
+			RayTriangleMeshHitInfo interRight = CheckTriangleMeshIntersection(ray, mesh, Nodes[node.LeftOrFirst + 1]);
+			if (interRight.RayTriangleHit.HitDistance < intersection.RayTriangleHit.HitDistance)
+			{
+				intersection = interRight;
+			}
+		}
+
+		return intersection;
+	}
+
+	RayTriangleMeshHitInfo BVH::CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const unsigned int nodeIndex)
+	{
+		return RayTriangleMeshHitInfo{};
+	}
+
 	BVHNode& BVH::GetRootNode()
 	{
 		return Nodes[RootNode];
@@ -50,7 +107,7 @@ namespace GaladHen
 
 	void BVH::LongestAxisSubdivision(BVHNode& node, Mesh& mesh)
 	{
-		// Check if we reached a leaf // TODO: controllare se è corretto
+		// Check if we reached a leaf
 		int indexStep = (int)mesh.PrimitiveType + 1;
 		if (node.IndexCount <= indexStep - 1)
 		{
@@ -77,9 +134,11 @@ namespace GaladHen
 			}
 			else
 			{
-				std::swap(mesh.Indices[i], mesh.Indices[j--]);
-				std::swap(mesh.Indices[i + 1], mesh.Indices[j--]);
-				std::swap(mesh.Indices[i + 2], mesh.Indices[j--]);
+				std::swap(mesh.Indices[i], mesh.Indices[j]);
+				std::swap(mesh.Indices[i + 1], mesh.Indices[j - 1]);
+				std::swap(mesh.Indices[i + 2], mesh.Indices[j - 2]);
+
+				j -= indexStep;
 			}
 		}
 

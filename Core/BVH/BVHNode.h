@@ -9,6 +9,11 @@ namespace GaladHen
 {
 	struct BVHNode
 	{
+		bool IsLeaf() const
+		{
+			return IndexCount != 0;
+		}
+
 		AABB AABoundingBox;
 		unsigned int LeftOrFirst; // LeftChildIndex when IndexCount = 0, FirstIndex otherwise
 		unsigned int IndexCount; // assumption: FirstIndex ans IndexCount represents adjacent data

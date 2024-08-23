@@ -15,6 +15,8 @@ namespace GaladHen
 
     CompilationResult ShaderProgramGL::Compile(std::string& vertexCode, std::string& tessContCode, std::string& tessEvalCode, std::string& geometryCode, std::string& fragmentCode)
     {
+        gl3wInit();
+
         // result
         CompilationResult res;
 

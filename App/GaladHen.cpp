@@ -13,6 +13,8 @@
 #include <Core/BVH/BVHNode.h>
 #include <Core/AABB/AABB.h>
 
+#include <Math/Ray.h>
+
 #include <glm/glm.hpp>
 
 #include <string>
@@ -88,9 +90,9 @@ int main()
 
     // bvh
     BVH bunnyBVH{};
-    bunnyBVH.BuildBVH_InPlace(bunny->Meshes[0]);
+    bunnyBVH.BuildBVH(bunny->Meshes[0]);
     //bunnyBVH.GetRootNode().AABoundingBox.UpdateAABB(objBunny.Transform);
-    Mesh aabbMesh = bunnyBVH.GetNode(0).AABoundingBox.ToMesh();
+    //Mesh aabbMesh = bunnyBVH.GetNode(0).AABoundingBox.ToMesh();
     Shader vUnlit{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
     Shader fUnlit{ "../Shaders/Unlit/Unlit.frag", ShaderStage::Fragment };
     ShaderPipeline unlit{};
@@ -100,8 +102,26 @@ int main()
     UnlitMaterialData unlitData{};
     unlitData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
     aabbMat.Data = &unlitData;
-    renderer.LoadMesh(aabbMesh);
     renderer.CompileShaderPipeline(unlit);
+
+    // ray
+    Ray ray
+    {
+        scene.MainCamera.Transform.GetPosition(),
+        glm::vec3(0.0f, 0.0f, -1.0f),
+        1000.0f
+    };
+
+    RayTriangleMeshHitInfo hit = bunnyBVH.CheckTriangleMeshIntersection(ray, bunny->Meshes[0]);
+    Mesh aabbMesh{};
+    aabbMesh.Indices = { 0, 1, 2 };
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.Index0]);
+    aabbMesh.Vertices[0].Position += glm::vec3(0.0f, 0.0f, 0.1f);
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.Index1]);
+    aabbMesh.Vertices[1].Position += glm::vec3(0.0f, 0.0f, 0.1f);
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.Index2]);
+    aabbMesh.Vertices[2].Position += glm::vec3(0.0f, 0.0f, 0.1f);
+    renderer.LoadMesh(aabbMesh);
 
     // load into scene
     std::vector<Material*> bunnyMats;

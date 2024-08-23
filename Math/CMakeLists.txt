@@ -5,6 +5,7 @@ project(GaladHenMath VERSION 0.1.0)
 add_library(GaladHenMath STATIC
     Math.h
     Math.cpp
+    Ray.h
 )
 
 target_include_directories(GaladHenMath PRIVATE

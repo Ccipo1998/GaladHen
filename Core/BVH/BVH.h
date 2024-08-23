@@ -15,6 +15,8 @@ namespace GaladHen
 	struct BVHNode;
 	class Mesh;
 	class Scene;
+	struct Ray;
+	struct RayTriangleMeshHitInfo;
 
 	class BVH
 	{
@@ -24,11 +26,34 @@ namespace GaladHen
 
 		// @brief
 		// Build the BVH for a mesh, changing order of indices inside it (in-place)
-		void BuildBVH_InPlace(Mesh& mesh);
+		void BuildBVH(Mesh& mesh);
 
 		// @brief
 		// Build the BVH from a scene
 		void BuildBVH(const Scene& scene);
+
+		// @brief
+		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry
+		// @param ray: the ray casted
+		// @param mesh: the mesh used to perform intersection tests on actual geometry -> this MUST be the same mesh used when the bvh was builded
+		// @returns infos about intersection
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh);
+
+		// @brief
+		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node
+		// @param ray: the ray casted
+		// @param mesh: the mesh used to perform intersection tests on actual geometry -> this MUST be the same mesh used when the bvh was builded
+		// @param node: starting node of the intersection tests
+		// @returns infos about intersection
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVHNode& node);
+
+		// @brief
+		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node index
+		// @param ray: the ray casted
+		// @param mesh: the mesh used to perform intersection tests on actual geometry -> this MUST be the same mesh used when the bvh was builded
+		// @param nodeIndex: starting node index of the intersection tests
+		// @returns infos about intersection
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const unsigned int nodeIndex);
 
 		BVHNode& GetRootNode();
 		

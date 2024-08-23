@@ -7,12 +7,26 @@
 
 namespace GaladHen
 {
+	struct AABB;
+	struct Ray;
+	struct RayTriangleHitInfo;
+
 	namespace Math
 	{
-		struct AABB;
+		const float Epsilon = 0.0001f;
 
 		// @brief
 		// Calculate the centroid position of a triangle
-		glm::vec3 TriangleCentroidPosition(glm::vec3 vertex0, glm::vec3 vertex1, glm::vec3 vertex2);
+		glm::vec3 TriangleCentroidPosition(const glm::vec3 v0, const glm::vec3 v1, const glm::vec3 v2);
+
+		// @brief
+		// Check if a ray intersects a triangle (Möller–Trumbore intersection algorithm)
+		// @returns intersection info
+		RayTriangleHitInfo CheckRayTriangleIntersection(const Ray& ray, const glm::vec3 v0, const glm::vec3 v1, const glm::vec3 v2);
+
+		// @brief
+		// Check if a ray intersects an axis aligned bounding box (slab test)
+		// @returns intersection info
+		bool CheckRayAABBIntersection(const Ray& ray, const AABB& aabb);
 	}
 }
