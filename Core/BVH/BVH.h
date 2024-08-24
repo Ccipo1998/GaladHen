@@ -63,6 +63,16 @@ namespace GaladHen
 
 	protected:
 
+		// @brief
+		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node.
+		// Internal version for in-place modification of the ray, as optimization of the traversal algorithm
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const BVHNode& node);
+
+		// @brief
+		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node index
+		// Internal version for in-place modification of the ray, as optimization of the traversal algorithm
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex);
+
 		void LongestAxisSubdivision(BVHNode& node, Mesh& mesh);
 
 		std::vector<BVHNode> Nodes;

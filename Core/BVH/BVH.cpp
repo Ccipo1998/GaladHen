@@ -41,6 +41,33 @@ namespace GaladHen
 
 	RayTriangleMeshHitInfo BVH::CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVHNode& node)
 	{
+		Ray internalUseRay = ray;
+		return CheckTriangleMeshIntersection_Recursive(internalUseRay, mesh, node);
+	}
+
+	RayTriangleMeshHitInfo BVH::CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const unsigned int nodeIndex)
+	{
+		Ray internalUseRay = ray;
+		return CheckTriangleMeshIntersection_Recursive(internalUseRay, mesh, nodeIndex);
+	}
+
+	BVHNode& BVH::GetRootNode()
+	{
+		return Nodes[RootNode];
+	}
+
+	BVHNode& BVH::GetNode(unsigned int index)
+	{
+		return Nodes[index];
+	}
+
+	unsigned int BVH::GetNodeNumber() const
+	{
+		return Nodes.size();
+	}
+
+	RayTriangleMeshHitInfo BVH::CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const BVHNode& node)
+	{
 		RayTriangleMeshHitInfo intersection{};
 
 		if (!Math::CheckRayAABBIntersection(ray, node.AABoundingBox))
@@ -69,40 +96,28 @@ namespace GaladHen
 		}
 		else
 		{
-			RayTriangleMeshHitInfo interLeft = CheckTriangleMeshIntersection(ray, mesh, Nodes[node.LeftOrFirst]);
+			RayTriangleMeshHitInfo interLeft = CheckTriangleMeshIntersection_Recursive(ray, mesh, Nodes[node.LeftOrFirst]);
 			if (interLeft.RayTriangleHit.HitDistance < intersection.RayTriangleHit.HitDistance)
 			{
 				intersection = interLeft;
 			}
 
-			RayTriangleMeshHitInfo interRight = CheckTriangleMeshIntersection(ray, mesh, Nodes[node.LeftOrFirst + 1]);
+			RayTriangleMeshHitInfo interRight = CheckTriangleMeshIntersection_Recursive(ray, mesh, Nodes[node.LeftOrFirst + 1]);
 			if (interRight.RayTriangleHit.HitDistance < intersection.RayTriangleHit.HitDistance)
 			{
 				intersection = interRight;
 			}
 		}
 
+		// traversal optimization: shortening the ray means avoiding intersection tests that are further than the current intersection point
+		ray.Length = intersection.RayTriangleHit.HitDistance;
+
 		return intersection;
 	}
 
-	RayTriangleMeshHitInfo BVH::CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const unsigned int nodeIndex)
+	RayTriangleMeshHitInfo BVH::CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex)
 	{
 		return RayTriangleMeshHitInfo{};
-	}
-
-	BVHNode& BVH::GetRootNode()
-	{
-		return Nodes[RootNode];
-	}
-
-	BVHNode& BVH::GetNode(unsigned int index)
-	{
-		return Nodes[index];
-	}
-
-	unsigned int BVH::GetNodeNumber() const
-	{
-		return Nodes.size();
 	}
 
 	void BVH::LongestAxisSubdivision(BVHNode& node, Mesh& mesh)
