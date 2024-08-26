@@ -17,6 +17,8 @@ namespace GaladHen
 	class Scene;
 	struct Ray;
 	struct RayTriangleMeshHitInfo;
+	struct AABB;
+	enum class AABBSplitMethod;
 
 	class BVH
 	{
@@ -26,7 +28,9 @@ namespace GaladHen
 
 		// @brief
 		// Build the BVH for a mesh, changing order of indices inside it (in-place)
-		void BuildBVH(Mesh& mesh);
+		// @param mesh: the mesh to bound -> in place sort of elements inside the indices array
+		// @param splitMethod: the aabb split method to use
+		void BuildBVH(Mesh& mesh, AABBSplitMethod splitMethod);
 
 		// @brief
 		// Build the BVH from a scene
@@ -73,7 +77,24 @@ namespace GaladHen
 		// Internal version for in-place modification of the ray, as optimization of the traversal algorithm
 		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex);
 
-		void LongestAxisSubdivision(BVHNode& node, Mesh& mesh);
+		void LongestAxisMidpointSubdivision(BVHNode& node, Mesh& mesh);
+
+		void SAHSubdivision(BVHNode& node, Mesh& mesh);
+
+		// @brief
+		// Calculate axis and position with lowest cost, basing on Surface Area Heuristic
+		// @param mesh: source mesh used inside the BVH
+		// @param node: the BVH node on which calculate the split
+		// @param[out] outAxis: the axis to use for the split
+		// @param[out] outSplitCoordinate: the coordinate along the axis where splitting is convenient
+		// @param[out] outLeftAABB: left aabb corresponding to lowest cost split point
+		// @param[out] outRightAABB: right aabb corresponding to lowest cost split point
+		// @return lowest cost of the split
+		float LowestCostSplit_SAH(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate, AABB& outLeftAABB, AABB& outRightAABB);
+
+		// @brief
+		// Evaluate the cost function of the Surface Area Heuristic on given position and with given geometry
+		float EvaluateCostSAH(const Mesh& mesh, const BVHNode& node, unsigned int splitAxis, float splitCoordinate, AABB& outLeftAABB, AABB& outRightAABB);
 
 		std::vector<BVHNode> Nodes;
 		unsigned int RootNode;

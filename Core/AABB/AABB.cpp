@@ -25,12 +25,9 @@ namespace GaladHen
 
 		for (unsigned int i = fromIndex; i < fromIndex + countIndex; i += indicesStep)
 		{
-			MinBound = glm::min(MinBound, vertices[indices[i]].Position);
-			MinBound = glm::min(MinBound, vertices[indices[i + 1]].Position);
-			MinBound = glm::min(MinBound, vertices[indices[i + 2]].Position);
-			MaxBound = glm::max(MaxBound, vertices[indices[i]].Position);
-			MaxBound = glm::max(MaxBound, vertices[indices[i + 1]].Position);
-			MaxBound = glm::max(MaxBound, vertices[indices[i + 2]].Position);
+			BoundPoint(vertices[indices[i]].Position);
+			BoundPoint(vertices[indices[i + 1]].Position);
+			BoundPoint(vertices[indices[i + 2]].Position);
 		}
 	}
 
@@ -38,6 +35,12 @@ namespace GaladHen
 	{
 		/*MinBound = transform.GetModelMatrix() * glm::vec4(MinBound, 1.0f);
 		MaxBound = transform.GetModelMatrix() * glm::vec4(MaxBound, 1.0f);*/
+	}
+
+	void AABB::BoundPoint(const glm::vec3& pointToBound)
+	{
+		MinBound = glm::min(MinBound, pointToBound);
+		MaxBound = glm::max(MaxBound, pointToBound);
 	}
 
 	unsigned int AABB::LongestAxis()
@@ -50,10 +53,16 @@ namespace GaladHen
 		return axis;
 	}
 
-	float AABB::SplitCoordinateAlongAxis(unsigned int axis)
+	float AABB::MidpointSplitAlongAxis(unsigned int axis)
 	{
 		glm::vec3 extent = MaxBound - MinBound;
 		return MinBound[axis] + extent[axis] * 0.5f;
+	}
+
+	float AABB::Area()
+	{
+		glm::vec3 extent = MaxBound - MinBound;
+		return extent.x * extent.y + extent.y * extent.z + extent.z * extent.x;
 	}
 
 	Mesh AABB::ToMesh() const

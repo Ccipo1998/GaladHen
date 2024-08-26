@@ -15,6 +15,12 @@ namespace GaladHen
 	class Mesh;
 	class TransformQuat;
 
+	enum class AABBSplitMethod
+	{
+		Midpoint = 0,
+		SurfaceAreaHeuristic = 1
+	};
+
 	struct AABB
 	{
 		AABB();
@@ -33,13 +39,21 @@ namespace GaladHen
 		void UpdateAABB(const TransformQuat& transform);
 
 		// @brief
+		// Update the AABB such that it includes a new point
+		void BoundPoint(const glm::vec3& pointToBound);
+
+		// @brief
 		// Return the longest axis of the AABB
 		// @returns 0 (x axis), 1 (y axis) or 2 (z axis)
 		unsigned int LongestAxis();
 
 		// @brief
-		// Calculate split position along a specific axis
-		float SplitCoordinateAlongAxis(unsigned int axis);
+		// Calculate midpoint split coordinate along a specific axis
+		float MidpointSplitAlongAxis(unsigned int axis);
+		
+		// @brief
+		// Calculate the half of the total area of the aabb
+		float Area();
 
 		// @brief
 		// Create the corresponding mesh (primitive type = line)

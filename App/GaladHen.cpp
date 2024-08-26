@@ -85,12 +85,12 @@ int main()
     planeMat.Data = &planeMatData;
 
     // load models
-    Model* bunny = AssetsManager::LoadAndStoreModel("../Assets/Models/bunny.glb", "Bunny");
+    Model* bunny = AssetsManager::LoadAndStoreModel("../Assets/Models/sphere.glb", "Bunny");
     Model* plane = AssetsManager::LoadAndStoreModel("../Assets/Models/plane.glb", "Plane");
 
     // bvh
     BVH bunnyBVH{};
-    bunnyBVH.BuildBVH(bunny->Meshes[0]);
+    bunnyBVH.BuildBVH(bunny->Meshes[0], AABBSplitMethod::SurfaceAreaHeuristic);
     //bunnyBVH.GetRootNode().AABoundingBox.UpdateAABB(objBunny.Transform);
     //Mesh aabbMesh = bunnyBVH.GetNode(0).AABoundingBox.ToMesh();
     Shader vUnlit{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
@@ -108,7 +108,7 @@ int main()
     Ray ray
     {
         scene.MainCamera.Transform.GetPosition(),
-        glm::vec3(0.0f, 0.0f, -1.0f),
+        glm::vec3(0.0f, -0.1f, -1.0f),
         1000.0f
     };
 
