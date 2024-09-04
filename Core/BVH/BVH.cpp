@@ -207,8 +207,7 @@ namespace GaladHen
 		// Split plane and position
 		unsigned int splitAxis;
 		float splitCoord;
-		AABB leftAABB, rightAABB;
-		float bestCost = LowestCostSplit_SAH(mesh, node, splitAxis, splitCoord, leftAABB, rightAABB);
+		float bestCost = LowestCostSplit_SAH(mesh, node, splitAxis, splitCoord);
 
 		// Check if we reached a leaf
 		if (parentCost <= bestCost)
@@ -257,21 +256,20 @@ namespace GaladHen
 		node.LeftOrFirst = leftChildIndex;
 		node.IndexCount = 0; // it means that this node is not a leaf
 
-		// Assign child AABBs
-		leftNode.AABoundingBox = leftAABB;
-		rightNode.AABoundingBox = rightAABB;
+		// Create child AABBs
+		leftNode.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, leftNode.LeftOrFirst, leftNode.IndexCount);
+		rightNode.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, rightNode.LeftOrFirst, rightNode.IndexCount);
 
 		// Recursion call
 		SAHSubdivision(leftNode, mesh);
 		SAHSubdivision(rightNode, mesh);
 	}
 
-	float BVH::LowestCostSplit_SAH(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate, AABB& outLeftAABB, AABB& outRightAABB)
+	float BVH::LowestCostSplit_SAH(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate)
 	{
 		unsigned int bestAxis = 0;
 		float bestCoord = 0;
 		float bestCost = std::numeric_limits<float>::max();
-		AABB bestLeftAABB, bestRightAABB;
 
 		// testing all midpoints on all three axis
 		int primitive = (int)mesh.PrimitiveType + 1;
@@ -285,16 +283,13 @@ namespace GaladHen
 					mesh.Vertices[mesh.Indices[i + 2]].Position
 				);
 
-				AABB leftAABB, rightAABB;
-				float cost = EvaluateCostSAH(mesh, node, axis, candidatePos[axis], leftAABB, rightAABB);
+				float cost = EvaluateCostSAH(mesh, node, axis, candidatePos[axis]);
 
 				if (cost < bestCost)
 				{
 					bestCoord = candidatePos[axis];
 					bestAxis = axis;
 					bestCost = cost;
-					bestLeftAABB = leftAABB;
-					bestRightAABB = rightAABB;
 				}
 			}
 		}
@@ -302,18 +297,17 @@ namespace GaladHen
 		// write outputs
 		outAxis = bestAxis;
 		outSplitCoordinate = bestCoord;
-		outLeftAABB = bestLeftAABB;
-		outRightAABB = bestRightAABB;
 
 		return bestCost;
 	}
 
-	float BVH::EvaluateCostSAH(const Mesh& mesh, const BVHNode& node, unsigned int splitAxis, float splitCoordinate, AABB& outLeftAABB, AABB& outRightAABB)
+	float BVH::EvaluateCostSAH(const Mesh& mesh, const BVHNode& node, unsigned int splitAxis, float splitCoordinate)
 	{
 		// build temp aabbs on which evaluate the SAH
 
 		unsigned int leftCount = 0, rightCount = 0;
 		int primitive = (int)mesh.PrimitiveType + 1;
+		AABB leftAABB, rightAABB;
 
 		for (unsigned int i = node.LeftOrFirst; i < node.LeftOrFirst + node.IndexCount; i += primitive)
 		{
@@ -325,19 +319,19 @@ namespace GaladHen
 			if (centroid[splitAxis] < splitCoordinate)
 			{
 				++leftCount;
-				outLeftAABB.BoundPoint(v0);
-				outLeftAABB.BoundPoint(v1);
-				outLeftAABB.BoundPoint(v2);
+				leftAABB.BoundPoint(v0);
+				leftAABB.BoundPoint(v1);
+				leftAABB.BoundPoint(v2);
 			}
 			else
 			{
 				++rightCount;
-				outRightAABB.BoundPoint(v0);
-				outRightAABB.BoundPoint(v1);
-				outRightAABB.BoundPoint(v2);
+				rightAABB.BoundPoint(v0);
+				rightAABB.BoundPoint(v1);
+				rightAABB.BoundPoint(v2);
 			}
 		}
-		float cost = leftCount * outLeftAABB.Area() + rightCount * outRightAABB.Area();
+		float cost = leftCount * leftAABB.Area() + rightCount * rightAABB.Area();
 		return cost > 0.0f ? cost : std::numeric_limits<float>::max();
 	}
 }

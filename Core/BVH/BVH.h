@@ -87,14 +87,12 @@ namespace GaladHen
 		// @param node: the BVH node on which calculate the split
 		// @param[out] outAxis: the axis to use for the split
 		// @param[out] outSplitCoordinate: the coordinate along the axis where splitting is convenient
-		// @param[out] outLeftAABB: left aabb corresponding to lowest cost split point
-		// @param[out] outRightAABB: right aabb corresponding to lowest cost split point
 		// @return lowest cost of the split
-		float LowestCostSplit_SAH(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate, AABB& outLeftAABB, AABB& outRightAABB);
+		float LowestCostSplit_SAH(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate);
 
 		// @brief
 		// Evaluate the cost function of the Surface Area Heuristic on given position and with given geometry
-		float EvaluateCostSAH(const Mesh& mesh, const BVHNode& node, unsigned int splitAxis, float splitCoordinate, AABB& outLeftAABB, AABB& outRightAABB);
+		float EvaluateCostSAH(const Mesh& mesh, const BVHNode& node, unsigned int splitAxis, float splitCoordinate);
 
 		std::vector<BVHNode> Nodes;
 		unsigned int RootNode;

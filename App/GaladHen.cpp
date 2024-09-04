@@ -85,7 +85,7 @@ int main()
     planeMat.Data = &planeMatData;
 
     // load models
-    Model* bunny = AssetsManager::LoadAndStoreModel("../Assets/Models/sphere.glb", "Bunny");
+    Model* bunny = AssetsManager::LoadAndStoreModel("../Assets/Models/bunny.glb", "Bunny");
     Model* plane = AssetsManager::LoadAndStoreModel("../Assets/Models/plane.glb", "Plane");
 
     // bvh
@@ -108,7 +108,7 @@ int main()
     Ray ray
     {
         scene.MainCamera.Transform.GetPosition(),
-        glm::vec3(0.0f, -0.1f, -1.0f),
+        glm::vec3(0.0f, 0.0f, -1.0f),
         1000.0f
     };
 
