@@ -13,7 +13,7 @@ namespace GaladHen
 			return (v0 + v1 + v2) * 0.3333f;
 		}
 
-		RayTriangleHitInfo CheckRayTriangleIntersection(const Ray& ray, const glm::vec3 v0, const glm::vec3 v1, const glm::vec3 v2)
+		RayTriangleHitInfo RayTriangleIntersection(const Ray& ray, const glm::vec3 v0, const glm::vec3 v1, const glm::vec3 v2)
 		{
 			// Möller–Trumbore intersection algorithm (from "Fast, Minimum Storage Ray/Triangle Intersection" paper by Tomas Möller and Ben Trumbore)
 			// https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
@@ -62,7 +62,7 @@ namespace GaladHen
 			return intersection;
 		}
 
-		bool CheckRayAABBIntersection(const Ray& ray, const AABB& aabb)
+		RayHitInfo RayAABBIntersection(const Ray& ray, const AABB& aabb)
 		{
 			float tx1 = (aabb.MinBound.x - ray.Origin.x) / ray.Direction.x, tx2 = (aabb.MaxBound.x - ray.Origin.x) / ray.Direction.x;
 			float tmin = glm::min(tx1, tx2), tmax = glm::max(tx1, tx2);
@@ -70,7 +70,17 @@ namespace GaladHen
 			tmin = glm::max(tmin, glm::min(ty1, ty2)), tmax = glm::min(tmax, glm::max(ty1, ty2));
 			float tz1 = (aabb.MinBound.z - ray.Origin.z) / ray.Direction.z, tz2 = (aabb.MaxBound.z - ray.Origin.z) / ray.Direction.z;
 			tmin = glm::max(tmin, glm::min(tz1, tz2)), tmax = glm::min(tmax, glm::max(tz1, tz2));
-			return tmax >= tmin && tmin < ray.Length && tmax > 0;
+
+			if (tmax >= tmin && tmin < ray.Length && tmax > 0)
+			{
+				RayHitInfo info{};
+				info.HitDistance = tmin;
+
+				return info;
+			}
+
+			RayHitInfo info{};
+			info.HitDistance = std::numeric_limits<float>::max();
 		}
 	}
 }

@@ -112,7 +112,7 @@ int main()
         1000.0f
     };
 
-    RayTriangleMeshHitInfo hit = bunnyBVH.CheckTriangleMeshIntersection(ray, bunny->Meshes[0]);
+    RayTriangleMeshHitInfo hit = bunnyBVH.CheckTriangleMeshIntersection(ray, bunny->Meshes[0], BVHTraversalMethod::FrontToBack);
     Mesh aabbMesh{};
     aabbMesh.Indices = { 0, 1, 2 };
     aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.Index0]);

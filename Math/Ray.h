@@ -27,25 +27,34 @@ namespace GaladHen
 		float Length;
 	};
 
-	struct RayTriangleHitInfo
+	struct RayHitInfo
 	{
-		RayTriangleHitInfo()
+		RayHitInfo()
 			: HitDistance(std::numeric_limits<float>::max())
-			, UV(glm::vec2(0.0f))
 		{}
 
 		bool Hit() { return HitDistance < std::numeric_limits<float>::max(); }
 
 		float HitDistance;
+	};
+
+	struct RayTriangleHitInfo : RayHitInfo
+	{
+		RayTriangleHitInfo()
+			: UV(glm::vec2(0.0f))
+		{}
+
 		glm::vec2 UV; // baricentric coordinates of intersection
 	};
 
-	struct RayTriangleMeshHitInfo
+	struct RayTriangleMeshHitInfo : RayTriangleHitInfo
 	{
-		bool Hit() { return RayTriangleHit.HitDistance < std::numeric_limits<float>::max(); }
+		RayTriangleMeshHitInfo()
+			: Index0(0)
+			, Index1(0)
+			, Index2(0)
+		{}
 
-		RayTriangleHitInfo RayTriangleHit;
-		
 		// Indices of the vertices array of the mesh, representing the primitive hitted
 		unsigned int Index0;
 		unsigned int Index1;

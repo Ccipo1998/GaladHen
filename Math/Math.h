@@ -10,6 +10,7 @@ namespace GaladHen
 	struct AABB;
 	struct Ray;
 	struct RayTriangleHitInfo;
+	struct RayHitInfo;
 
 	namespace Math
 	{
@@ -22,11 +23,11 @@ namespace GaladHen
 		// @brief
 		// Check if a ray intersects a triangle (Möller–Trumbore intersection algorithm)
 		// @returns intersection info
-		RayTriangleHitInfo CheckRayTriangleIntersection(const Ray& ray, const glm::vec3 v0, const glm::vec3 v1, const glm::vec3 v2);
+		RayTriangleHitInfo RayTriangleIntersection(const Ray& ray, const glm::vec3 v0, const glm::vec3 v1, const glm::vec3 v2);
 
 		// @brief
 		// Check if a ray intersects an axis aligned bounding box (slab test)
 		// @returns intersection info
-		bool CheckRayAABBIntersection(const Ray& ray, const AABB& aabb);
+		RayHitInfo RayAABBIntersection(const Ray& ray, const AABB& aabb);
 	}
 }

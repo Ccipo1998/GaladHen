@@ -20,6 +20,12 @@ namespace GaladHen
 	struct AABB;
 	enum class AABBSplitMethod;
 
+	enum class BVHTraversalMethod
+	{
+		OrientationInvariant = 0,
+		FrontToBack = 1
+	};
+
 	class BVH
 	{
 	public:
@@ -40,24 +46,27 @@ namespace GaladHen
 		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry
 		// @param ray: the ray casted
 		// @param mesh: the mesh used to perform intersection tests on actual geometry -> this MUST be the same mesh used when the bvh was builded
+		// @param traversalMethod: the method to use for the traversal algorithm
 		// @returns infos about intersection
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, BVHTraversalMethod traversalMethod);
 
 		// @brief
 		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node
 		// @param ray: the ray casted
 		// @param mesh: the mesh used to perform intersection tests on actual geometry -> this MUST be the same mesh used when the bvh was builded
 		// @param node: starting node of the intersection tests
+		// @param traversalMethod: the method to use for the traversal algorithm
 		// @returns infos about intersection
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVHNode& node);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVHNode& node, BVHTraversalMethod traversalMethod);
 
 		// @brief
 		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node index
 		// @param ray: the ray casted
 		// @param mesh: the mesh used to perform intersection tests on actual geometry -> this MUST be the same mesh used when the bvh was builded
 		// @param nodeIndex: starting node index of the intersection tests
+		// @param traversalMethod: the method to use for the traversal algorithm
 		// @returns infos about intersection
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const unsigned int nodeIndex);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const unsigned int nodeIndex, BVHTraversalMethod traversalMethod);
 
 		BVHNode& GetRootNode();
 		
@@ -76,6 +85,9 @@ namespace GaladHen
 		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node index
 		// Internal version for in-place modification of the ray, as optimization of the traversal algorithm
 		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex);
+
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_FrontToBack(Ray& ray, const Mesh& mesh, const BVHNode& node);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_FrontToBack(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex);
 
 		void LongestAxisMidpointSubdivision(BVHNode& node, Mesh& mesh);
 
