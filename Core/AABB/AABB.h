@@ -44,6 +44,10 @@ namespace GaladHen
 		void BoundPoint(const glm::vec3& pointToBound);
 
 		// @brief
+		// Update the AABB such that it includes another axis aligned bounding box
+		void BoundAABB(const AABB& aabb);
+
+		// @brief
 		// Return the longest axis of the AABB
 		// @returns 0 (x axis), 1 (y axis) or 2 (z axis)
 		unsigned int LongestAxis();

@@ -8,22 +8,27 @@
 
 #include <vector>
 
+#include "BVHNode.h"
 #include <Core/MeshData.h>
 
 namespace GaladHen
 {
-	struct BVHNode;
 	class Mesh;
 	class Scene;
 	struct Ray;
 	struct RayTriangleMeshHitInfo;
-	struct AABB;
 	enum class AABBSplitMethod;
 
 	enum class BVHTraversalMethod
 	{
 		OrientationInvariant = 0,
 		FrontToBack = 1
+	};
+
+	struct Bin
+	{
+		AABB AABoundingBox;
+		unsigned int PrimitiveCount = 0;
 	};
 
 	class BVH

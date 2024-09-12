@@ -43,6 +43,12 @@ namespace GaladHen
 		MaxBound = glm::max(MaxBound, pointToBound);
 	}
 
+	void AABB::BoundAABB(const AABB& aabb)
+	{
+		BoundPoint(aabb.MinBound);
+		BoundPoint(aabb.MaxBound);
+	}
+
 	unsigned int AABB::LongestAxis()
 	{
 		glm::vec3 extent = MaxBound - MinBound;

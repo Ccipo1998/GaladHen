@@ -1,7 +1,6 @@
 
 #include "BVH.h"
 
-#include "BVHNode.h"
 #include <Core/Mesh.h>
 
 #include <Math/Math.h>
@@ -489,30 +488,84 @@ namespace GaladHen
 
 	float BVH::BestSplitPlane(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate)
 	{
+		unsigned int numberOfIntervals = NumberOfCandidatePlanes + 1;
+
 		float bestCost = std::numeric_limits<float>::max();
 
+		float boundMin = std::numeric_limits<float>::max();
+		float boundMax = std::numeric_limits<float>::min();
+		int primitive = (int)mesh.PrimitiveType + 1;
 		for (unsigned int i = 0; i < 3; ++i)
 		{
-			float min = node.AABoundingBox.MinBound[i];
-			float max = node.AABoundingBox.MaxBound[i];
+			for (unsigned int j = node.LeftOrFirst; j < node.LeftOrFirst + node.IndexCount; j += primitive)
+			{
+				const glm::vec3& v0 = mesh.Vertices[mesh.Indices[i]].Position;
+				const glm::vec3& v1 = mesh.Vertices[mesh.Indices[i + 1]].Position;
+				const glm::vec3& v2 = mesh.Vertices[mesh.Indices[i + 2]].Position;
+				glm::vec3 centroid = Math::TriangleCentroidPosition(v0, v1, v2);
 
-			if (min == max)
+				boundMin = glm::min(boundMin, centroid[i]);
+				boundMax = glm::min(boundMax, centroid[i]);
+			}
+
+			if (boundMax == boundMin)
 				continue;
 
-			float scale = (max - min) / NumberOfCandidatePlanes;
-			for (unsigned int j = 1; j < NumberOfCandidatePlanes; ++j)
+			// Calculate primitive count and aabb for each bin (interval)
+			std::vector<Bin> bins;
+			bins.resize(numberOfIntervals);
+
+			float scale = numberOfIntervals / (boundMax - boundMin);
+			for (unsigned int j = node.LeftOrFirst; j < node.LeftOrFirst + node.IndexCount; j += primitive)
 			{
-				float candidateCoord = min + j * scale;
-				float cost = EvaluateCostSAH(mesh, node, i, candidateCoord);
-				if (cost < bestCost)
+				const glm::vec3& v0 = mesh.Vertices[mesh.Indices[i]].Position;
+				const glm::vec3& v1 = mesh.Vertices[mesh.Indices[i + 1]].Position;
+				const glm::vec3& v2 = mesh.Vertices[mesh.Indices[i + 2]].Position;
+				glm::vec3 centroid = Math::TriangleCentroidPosition(v0, v1, v2);
+				unsigned int binIdx = glm::min(numberOfIntervals - 1, (unsigned int)((centroid[i] - boundMin) * scale));
+				bins[binIdx].PrimitiveCount++;
+				bins[binIdx].AABoundingBox.BoundPoint(v0);
+				bins[binIdx].AABoundingBox.BoundPoint(v1);
+				bins[binIdx].AABoundingBox.BoundPoint(v2);
+			}
+
+			// Gather data from bins
+			std::vector<float> leftAreas;
+			leftAreas.resize(numberOfIntervals - 1);
+			std::vector<float> rightAreas;
+			rightAreas.resize(numberOfIntervals - 1);
+			std::vector<unsigned int> leftCount;
+			leftCount.resize(numberOfIntervals - 1);
+			std::vector<unsigned int> rightCount;
+			rightCount.resize(numberOfIntervals - 1);
+
+			AABB leftBox, rightBox;
+			unsigned int leftSum = 0, rightSum = 0;
+			for (unsigned int j = 0; i < numberOfIntervals - 1; ++j)
+			{
+				leftSum += bins[i].PrimitiveCount;
+				leftCount[i] = leftSum;
+				leftBox.BoundAABB(bins[i].AABoundingBox);
+				leftAreas[i] = leftBox.Area();
+				rightSum += bins[numberOfIntervals - 1 - i].PrimitiveCount;
+				rightCount[numberOfIntervals - 2 - i] = rightSum;
+				rightBox.BoundAABB(bins[numberOfIntervals - 1 - i].AABoundingBox);
+				rightAreas[numberOfIntervals - 2 - i] = rightBox.Area();
+			}
+
+			// Evaluate SAH using bins
+			scale = (boundMax - boundMin) / numberOfIntervals;
+			for (unsigned int j = 0; i < numberOfIntervals - 1; ++j)
+			{
+				float planeCost = leftCount[i] * leftAreas[i] + rightCount[i] * rightAreas[i];
+				if (planeCost < bestCost)
 				{
-					outSplitCoordinate = candidateCoord;
 					outAxis = i;
-					bestCost = cost;
+					outSplitCoordinate = boundMin + scale * (i + 1);
+					bestCost = planeCost;
 				}
 			}
 		}
-
 		return bestCost;
 	}
 
