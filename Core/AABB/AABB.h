@@ -18,7 +18,8 @@ namespace GaladHen
 	enum class AABBSplitMethod
 	{
 		Midpoint = 0,
-		SurfaceAreaHeuristic = 1
+		PlaneCandidates = 1,
+		SurfaceAreaHeuristic = 2
 	};
 
 	struct AABB

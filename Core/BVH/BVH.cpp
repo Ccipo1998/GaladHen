@@ -9,8 +9,12 @@
 
 #include <stack>
 
+#define NUMBER_OF_CANDIDATE_PLANES 100
+
 namespace GaladHen
 {
+	unsigned int BVH::NumberOfCandidatePlanes = NUMBER_OF_CANDIDATE_PLANES;
+
 	BVH::BVH()
 		: RootNode(0)
 	{}
@@ -31,15 +35,20 @@ namespace GaladHen
 
 		switch (splitMethod)
 		{
-		case GaladHen::AABBSplitMethod::Midpoint:
-
-			LongestAxisMidpointSubdivision(root, mesh);
-
-			break;
 		case GaladHen::AABBSplitMethod::SurfaceAreaHeuristic:
-		default:
 
 			SAHSubdivision(root, mesh);
+
+			break;
+		case GaladHen::AABBSplitMethod::PlaneCandidates:
+
+			PlaneCandidatesSubdivision(root, mesh);
+
+			break;
+		case GaladHen::AABBSplitMethod::Midpoint:
+		default:
+
+			LongestAxisMidpointSubdivision(root, mesh);
 
 			break;
 		}
@@ -374,6 +383,74 @@ namespace GaladHen
 		SAHSubdivision(rightNode, mesh);
 	}
 
+	void BVH::PlaneCandidatesSubdivision(BVHNode& node, Mesh& mesh)
+	{
+		// Data for later check of recursion ending -> new method to detect when splitting is no longer convenient
+		int primitive = (int)mesh.PrimitiveType + 1;
+		float parentArea = node.AABoundingBox.Area(); // area of the parent's aabb
+		float parentCost = node.IndexCount * parentArea;
+
+		// Split plane and position
+		unsigned int splitAxis;
+		float splitCoord;
+		float bestCost = BestSplitPlane(mesh, node, splitAxis, splitCoord);
+
+		// Check if we reached a leaf
+		if (parentCost <= bestCost)
+			return;
+
+		// Divide the aabb in two halves
+		int i = node.LeftOrFirst;
+		int j = i + node.IndexCount - 1;
+		while (i <= j)
+		{
+			glm::vec3 centroid = Math::TriangleCentroidPosition(
+				mesh.Vertices[mesh.Indices[i]].Position,
+				mesh.Vertices[mesh.Indices[i + 1]].Position,
+				mesh.Vertices[mesh.Indices[i + 2]].Position);
+
+			if (centroid[splitAxis] < splitCoord)
+			{
+				i += primitive;
+			}
+			else
+			{
+				std::swap(mesh.Indices[i], mesh.Indices[j]);
+				std::swap(mesh.Indices[i + 1], mesh.Indices[j - 1]);
+				std::swap(mesh.Indices[i + 2], mesh.Indices[j - 2]);
+
+				j -= primitive;
+			}
+		}
+
+		// Stop split if one of the sides is empty
+		int leftCount = i - node.LeftOrFirst;
+		if (leftCount == 0 || leftCount == node.IndexCount)
+			return;
+
+		// Create child nodes
+		Nodes.emplace_back(BVHNode{});
+		Nodes.emplace_back(BVHNode{});
+		unsigned int leftChildIndex = Nodes.size() - 2;
+		unsigned int rightChildIndex = leftChildIndex + 1;
+		BVHNode& leftNode = Nodes[leftChildIndex];
+		BVHNode& rightNode = Nodes[rightChildIndex];
+		leftNode.LeftOrFirst = node.LeftOrFirst;
+		leftNode.IndexCount = leftCount;
+		rightNode.LeftOrFirst = i;
+		rightNode.IndexCount = node.IndexCount - leftCount;
+		node.LeftOrFirst = leftChildIndex;
+		node.IndexCount = 0; // it means that this node is not a leaf
+
+		// Create child AABBs
+		leftNode.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, leftNode.LeftOrFirst, leftNode.IndexCount);
+		rightNode.AABoundingBox.BuildAABB(mesh.Vertices, mesh.Indices, mesh.PrimitiveType, rightNode.LeftOrFirst, rightNode.IndexCount);
+
+		// Recursion call
+		PlaneCandidatesSubdivision(leftNode, mesh);
+		PlaneCandidatesSubdivision(rightNode, mesh);
+	}
+
 	float BVH::LowestCostSplit_SAH(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate)
 	{
 		unsigned int bestAxis = 0;
@@ -406,6 +483,35 @@ namespace GaladHen
 		// write outputs
 		outAxis = bestAxis;
 		outSplitCoordinate = bestCoord;
+
+		return bestCost;
+	}
+
+	float BVH::BestSplitPlane(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate)
+	{
+		float bestCost = std::numeric_limits<float>::max();
+
+		for (unsigned int i = 0; i < 3; ++i)
+		{
+			float min = node.AABoundingBox.MinBound[i];
+			float max = node.AABoundingBox.MaxBound[i];
+
+			if (min == max)
+				continue;
+
+			float scale = (max - min) / NumberOfCandidatePlanes;
+			for (unsigned int j = 1; j < NumberOfCandidatePlanes; ++j)
+			{
+				float candidateCoord = min + j * scale;
+				float cost = EvaluateCostSAH(mesh, node, i, candidateCoord);
+				if (cost < bestCost)
+				{
+					outSplitCoordinate = candidateCoord;
+					outAxis = i;
+					bestCost = cost;
+				}
+			}
+		}
 
 		return bestCost;
 	}

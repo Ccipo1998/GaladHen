@@ -74,6 +74,8 @@ namespace GaladHen
 
 		unsigned int GetNodeNumber() const;
 
+		static unsigned int NumberOfCandidatePlanes;
+
 	protected:
 
 		// @brief
@@ -93,6 +95,8 @@ namespace GaladHen
 
 		void SAHSubdivision(BVHNode& node, Mesh& mesh);
 
+		void PlaneCandidatesSubdivision(BVHNode& node, Mesh& mesh);
+
 		// @brief
 		// Calculate axis and position with lowest cost, basing on Surface Area Heuristic
 		// @param mesh: source mesh used inside the BVH
@@ -101,6 +105,8 @@ namespace GaladHen
 		// @param[out] outSplitCoordinate: the coordinate along the axis where splitting is convenient
 		// @return lowest cost of the split
 		float LowestCostSplit_SAH(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate);
+
+		float BestSplitPlane(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate);
 
 		// @brief
 		// Evaluate the cost function of the Surface Area Heuristic on given position and with given geometry

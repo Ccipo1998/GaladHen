@@ -90,7 +90,7 @@ int main()
 
     // bvh
     BVH bunnyBVH{};
-    bunnyBVH.BuildBVH(bunny->Meshes[0], AABBSplitMethod::SurfaceAreaHeuristic);
+    bunnyBVH.BuildBVH(bunny->Meshes[0], AABBSplitMethod::PlaneCandidates);
     //bunnyBVH.GetRootNode().AABoundingBox.UpdateAABB(objBunny.Transform);
     //Mesh aabbMesh = bunnyBVH.GetNode(0).AABoundingBox.ToMesh();
     Shader vUnlit{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
