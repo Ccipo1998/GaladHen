@@ -31,10 +31,9 @@ namespace GaladHen
 		}
 	}
 
-	void AABB::UpdateAABB(const TransformQuat& transform) // not working, here just as a reminder
+	void AABB::BuildAABB(const std::vector<Mesh>& meshes, unsigned int fromIndex, unsigned int countIndex)
 	{
-		/*MinBound = transform.GetModelMatrix() * glm::vec4(MinBound, 1.0f);
-		MaxBound = transform.GetModelMatrix() * glm::vec4(MaxBound, 1.0f);*/
+
 	}
 
 	void AABB::BoundPoint(const glm::vec3& pointToBound)
@@ -63,6 +62,11 @@ namespace GaladHen
 	{
 		glm::vec3 extent = MaxBound - MinBound;
 		return MinBound[axis] + extent[axis] * 0.5f;
+	}
+
+	glm::vec3 AABB::Center()
+	{
+		return (MaxBound + MinBound) * 0.5f;
 	}
 
 	float AABB::Area()

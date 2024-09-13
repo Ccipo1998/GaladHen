@@ -26,6 +26,10 @@ namespace GaladHen
         // Move constructor
         Model(Model&& model) noexcept;
 
+        void BuildModelBVH(AABBSplitMethod meshSplitMethod, AABBSplitMethod modelSplitMethod);
+
         std::vector<Mesh> Meshes;
+
+        BVH ModelBVH;
     };
 }

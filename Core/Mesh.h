@@ -8,6 +8,8 @@
 
 #include "MeshData.h"
 
+#include "BVH/BVH.h"
+
 namespace GaladHen
 {
     class Mesh
@@ -30,6 +32,8 @@ namespace GaladHen
         std::vector<VertexData> Vertices;
         std::vector<unsigned int> Indices;
         Primitive PrimitiveType;
+
+        BVH MeshBVH;
 
         unsigned int MeshID; // 0 means -1, so the low level pair is not already been created
     };

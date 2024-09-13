@@ -14,9 +14,10 @@
 namespace GaladHen
 {
 	class Mesh;
-	class Scene;
+	class Model;
 	struct Ray;
 	struct RayTriangleMeshHitInfo;
+	struct RayModelHitInfo;
 	enum class AABBSplitMethod;
 
 	enum class BVHTraversalMethod
@@ -44,8 +45,10 @@ namespace GaladHen
 		void BuildBVH(Mesh& mesh, AABBSplitMethod splitMethod);
 
 		// @brief
-		// Build the BVH from a scene
-		void BuildBVH(const Scene& scene);
+		// Build the BVH from a model, bounding the bvh of its meshes (assumption: bvhs for the meshes are already built)
+		// @param model: the model to bound -> in place sort of elements inside the meshes array
+		// @param splitMethod: the aabb split method to use
+		void BuildBVH(Model& model, AABBSplitMethod splitMethod);
 
 		// @brief
 		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry
@@ -53,7 +56,7 @@ namespace GaladHen
 		// @param mesh: the mesh used to perform intersection tests on actual geometry -> this MUST be the same mesh used when the bvh was builded
 		// @param traversalMethod: the method to use for the traversal algorithm
 		// @returns infos about intersection
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, BVHTraversalMethod traversalMethod);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, BVHTraversalMethod traversalMethod) const;
 
 		// @brief
 		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node
@@ -62,7 +65,7 @@ namespace GaladHen
 		// @param node: starting node of the intersection tests
 		// @param traversalMethod: the method to use for the traversal algorithm
 		// @returns infos about intersection
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVHNode& node, BVHTraversalMethod traversalMethod);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVHNode& node, BVHTraversalMethod traversalMethod) const;
 
 		// @brief
 		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node index
@@ -71,7 +74,13 @@ namespace GaladHen
 		// @param nodeIndex: starting node index of the intersection tests
 		// @param traversalMethod: the method to use for the traversal algorithm
 		// @returns infos about intersection
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const unsigned int nodeIndex, BVHTraversalMethod traversalMethod);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, unsigned int nodeIndex, BVHTraversalMethod traversalMethod) const;
+
+		RayModelHitInfo CheckModelIntersection(const Ray& ray, const Model& model, BVHTraversalMethod traversalMethod) const;
+
+		RayModelHitInfo CheckModelIntersection(const Ray& ray, const Model& model, const BVHNode& node, BVHTraversalMethod traversalMethod) const;
+
+		RayModelHitInfo CheckModelIntersection(const Ray& ray, const Model& model, unsigned int nodeIndex, BVHTraversalMethod traversalMethod) const;
 
 		BVHNode& GetRootNode();
 		
@@ -83,27 +92,32 @@ namespace GaladHen
 
 	protected:
 
-		// @brief
-		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node.
-		// Internal version for in-place modification of the ray, as optimization of the traversal algorithm
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const BVHNode& node);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const BVHNode& node) const;
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex) const;
 
-		// @brief
-		// Check if a ray intersects the bvh hierarchy and the triangle mesh's geometry, strarting from a specific node index
-		// Internal version for in-place modification of the ray, as optimization of the traversal algorithm
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_Recursive(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex);
+		RayModelHitInfo CheckModelIntersection_Recursive(Ray& ray, const Model& model, const BVHNode& node) const;
+		RayModelHitInfo CheckModelIntersection_Recursive(Ray& ray, const Model& model, const unsigned int nodeIndex) const;
 
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_FrontToBack(Ray& ray, const Mesh& mesh, const BVHNode& node);
-		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_FrontToBack(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex);
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_FrontToBack(Ray& ray, const Mesh& mesh, const BVHNode& node) const;
+		RayTriangleMeshHitInfo CheckTriangleMeshIntersection_FrontToBack(Ray& ray, const Mesh& mesh, const unsigned int nodeIndex) const;
+
+		RayModelHitInfo CheckModelIntersection_FrontToBack(Ray& ray, const Model& model, const BVHNode& node) const;
+		RayModelHitInfo CheckModelIntersection_FrontToBack(Ray& ray, const Model& model, const unsigned int nodeIndex) const;
 
 		void LongestAxisMidpointSubdivision(BVHNode& node, Mesh& mesh);
 
+		void LongestAxisMidpointSubdivision(BVHNode& node, Model& model);
+
 		void SAHSubdivision(BVHNode& node, Mesh& mesh);
+
+		void SAHSubdivision(BVHNode& node, Model& model);
 
 		void PlaneCandidatesSubdivision(BVHNode& node, Mesh& mesh);
 
+		void PlaneCandidatesSubdivision(BVHNode& node, Model& model);
+
 		// @brief
-		// Calculate axis and position with lowest cost, basing on Surface Area Heuristic
+		// Calculate split axis and position with lowest cost, basing on Surface Area Heuristic
 		// @param mesh: source mesh used inside the BVH
 		// @param node: the BVH node on which calculate the split
 		// @param[out] outAxis: the axis to use for the split
@@ -111,14 +125,28 @@ namespace GaladHen
 		// @return lowest cost of the split
 		float LowestCostSplit_SAH(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate);
 
+		// @brief
+		// Calculate split axis and position with lowest cost, basing on Surface Area Heuristic
+		// @param model: source model used inside the BVH
+		// @param node: the BVH node on which calculate the split
+		// @param[out] outAxis: the axis to use for the split
+		// @param[out] outSplitCoordinate: the coordinate along the axis where splitting is convenient
+		// @return lowest cost of the split
+		float LowestCostSplit_SAH(Model& model, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate);
+
 		float BestSplitPlane(const Mesh& mesh, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate);
+
+		float BestSplitPlane(Model& model, const BVHNode& node, unsigned int& outAxis, float& outSplitCoordinate);
 
 		// @brief
 		// Evaluate the cost function of the Surface Area Heuristic on given position and with given geometry
 		float EvaluateCostSAH(const Mesh& mesh, const BVHNode& node, unsigned int splitAxis, float splitCoordinate);
 
+		// @brief
+		// Evaluate the cost function of the Surface Area Heuristic on given position and with given model
+		float EvaluateCostSAH(Model& model, const BVHNode& node, unsigned int splitAxis, float splitCoordinate);
+
 		std::vector<BVHNode> Nodes;
-		unsigned int RootNode;
 
 	};
 }

@@ -36,8 +36,11 @@ namespace GaladHen
 		void BuildAABB(const std::vector<VertexData>& vertices, const std::vector<unsigned int>& indices, Primitive primitiveType, unsigned int fromIndex, unsigned int countIndex);
 
 		// @brief
-		// Update the AABB with a transform applied to min and max bounds
-		void UpdateAABB(const TransformQuat& transform);
+		// Build the AABB for a set (or a subset) of meshes
+		// @param meshes: the array of meshes
+		// @param fromIndex: starting index
+		// @param countIndex: number of indices to consider
+		void BuildAABB(const std::vector<Mesh>& meshes, unsigned int fromIndex, unsigned int countIndex);
 
 		// @brief
 		// Update the AABB such that it includes a new point
@@ -55,6 +58,10 @@ namespace GaladHen
 		// @brief
 		// Calculate midpoint split coordinate along a specific axis
 		float MidpointSplitAlongAxis(unsigned int axis);
+
+		// @brief
+		// Calculate the center of the aabb
+		glm::vec3 Center();
 		
 		// @brief
 		// Calculate the half of the total area of the aabb

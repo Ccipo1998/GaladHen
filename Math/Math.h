@@ -10,7 +10,13 @@ namespace GaladHen
 	struct AABB;
 	struct Ray;
 	struct RayTriangleHitInfo;
+	struct RayTriangleMeshHitInfo;
 	struct RayHitInfo;
+	struct RayModelHitInfo;
+	struct BVH;
+	enum class BVHTraversalMethod;
+	class Mesh;
+	class Model;
 
 	namespace Math
 	{
@@ -29,5 +35,15 @@ namespace GaladHen
 		// Check if a ray intersects an axis aligned bounding box (slab test)
 		// @returns intersection info
 		RayHitInfo RayAABBIntersection(const Ray& ray, const AABB& aabb);
+
+		// @brief
+		// Check if a ray intersects an triangle mesh, using its BVH
+		// @returns intersection info
+		RayTriangleMeshHitInfo RayTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, BVHTraversalMethod traversalMethod);
+
+		// @brief
+		// Check if a ray intersects a model's triangle mesh, using its BVH
+		// @returns intersection info
+		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, BVHTraversalMethod traversalMethod);
 	}
 }

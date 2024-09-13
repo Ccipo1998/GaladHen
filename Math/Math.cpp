@@ -3,6 +3,8 @@
 
 #include "Ray.h"
 #include <Core/AABB/AABB.h>
+#include <Core/BVH/BVH.h>
+#include <Core/Model.h>
 
 namespace GaladHen
 {
@@ -81,6 +83,16 @@ namespace GaladHen
 
 			RayHitInfo info{};
 			info.HitDistance = std::numeric_limits<float>::max();
+		}
+
+		RayTriangleMeshHitInfo RayTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, BVHTraversalMethod traversalMethod)
+		{
+			return mesh.MeshBVH.CheckTriangleMeshIntersection(ray, mesh, traversalMethod);
+		}
+
+		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, BVHTraversalMethod traversalMethod)
+		{
+			return model.ModelBVH.CheckModelIntersection(ray, model, traversalMethod);
 		}
 	}
 }

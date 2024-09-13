@@ -14,6 +14,7 @@
 #include <Core/AABB/AABB.h>
 
 #include <Math/Ray.h>
+#include <Math/Math.h>
 
 #include <glm/glm.hpp>
 
@@ -89,10 +90,9 @@ int main()
     Model* plane = AssetsManager::LoadAndStoreModel("../Assets/Models/plane.glb", "Plane");
 
     // bvh
-    BVH bunnyBVH{};
-    bunnyBVH.BuildBVH(bunny->Meshes[0], AABBSplitMethod::PlaneCandidates);
-    //bunnyBVH.GetRootNode().AABoundingBox.UpdateAABB(objBunny.Transform);
-    //Mesh aabbMesh = bunnyBVH.GetNode(0).AABoundingBox.ToMesh();
+    bunny->BuildModelBVH(AABBSplitMethod::PlaneCandidates, AABBSplitMethod::PlaneCandidates);
+
+    // shaders and materials
     Shader vUnlit{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
     Shader fUnlit{ "../Shaders/Unlit/Unlit.frag", ShaderStage::Fragment };
     ShaderPipeline unlit{};
@@ -112,14 +112,14 @@ int main()
         1000.0f
     };
 
-    RayTriangleMeshHitInfo hit = bunnyBVH.CheckTriangleMeshIntersection(ray, bunny->Meshes[0], BVHTraversalMethod::FrontToBack);
+    RayModelHitInfo hit = Math::RayModelIntersection(ray, *bunny, BVHTraversalMethod::FrontToBack);
     Mesh aabbMesh{};
     aabbMesh.Indices = { 0, 1, 2 };
-    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.Index0]);
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex0]);
     aabbMesh.Vertices[0].Position += glm::vec3(0.0f, 0.0f, 0.1f);
-    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.Index1]);
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex1]);
     aabbMesh.Vertices[1].Position += glm::vec3(0.0f, 0.0f, 0.1f);
-    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.Index2]);
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex2]);
     aabbMesh.Vertices[2].Position += glm::vec3(0.0f, 0.0f, 0.1f);
     renderer.LoadMesh(aabbMesh);
 

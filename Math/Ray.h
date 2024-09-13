@@ -50,14 +50,19 @@ namespace GaladHen
 	struct RayTriangleMeshHitInfo : RayTriangleHitInfo
 	{
 		RayTriangleMeshHitInfo()
-			: Index0(0)
-			, Index1(0)
-			, Index2(0)
+			: VertexIndex0(0)
+			, VertexIndex1(0)
+			, VertexIndex2(0)
 		{}
 
 		// Indices of the vertices array of the mesh, representing the primitive hitted
-		unsigned int Index0;
-		unsigned int Index1;
-		unsigned int Index2;
+		unsigned int VertexIndex0;
+		unsigned int VertexIndex1;
+		unsigned int VertexIndex2;
+	};
+
+	struct RayModelHitInfo : RayTriangleMeshHitInfo
+	{
+		unsigned int MeshIndex;
 	};
 }
