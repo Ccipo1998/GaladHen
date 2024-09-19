@@ -112,28 +112,29 @@ int main()
         1000.0f
     };
 
-    RayModelHitInfo hit = Math::RayModelIntersection(ray, *bunny, BVHTraversalMethod::FrontToBack);
-    Mesh aabbMesh{};
-    aabbMesh.Indices = { 0, 1, 2 };
-    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex0]);
-    aabbMesh.Vertices[0].Position += glm::vec3(0.0f, 0.0f, 0.1f);
-    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex1]);
-    aabbMesh.Vertices[1].Position += glm::vec3(0.0f, 0.0f, 0.1f);
-    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex2]);
-    aabbMesh.Vertices[2].Position += glm::vec3(0.0f, 0.0f, 0.1f);
-    renderer.LoadMesh(aabbMesh);
-
     // load into scene
     std::vector<Material*> bunnyMats;
     bunnyMats.push_back(&bunnyMat);
     SceneObject objBunny{ bunny, bunnyMats };
-    objBunny.Transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    objBunny.Transform.SetPosition(glm::vec3(0.0f, 1.5f, 0.0f));
+    objBunny.Transform.SetYaw(50.0f);
     scene.SceneObjects.push_back(objBunny);
     std::vector<Material*> planeMats;
     planeMats.push_back(&planeMat);
     SceneObject objPlane{ plane, planeMats };
     objPlane.Transform.SetScale(glm::vec3(5.0f, 1.0f, 5.0f));
     //scene.SceneObjects.push_back(objPlane);
+
+    RayModelHitInfo hit = Math::RaySceneObjectIntersection(ray, objBunny, BVHTraversalMethod::FrontToBack);
+    Mesh aabbMesh{};
+    aabbMesh.Indices = { 0, 1, 2 };
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex0]);
+    aabbMesh.Vertices[0].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[0].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex1]);
+    aabbMesh.Vertices[1].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[1].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+    aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex2]);
+    aabbMesh.Vertices[2].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[2].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+    renderer.LoadMesh(aabbMesh);
 
     // init scene for renderer
     renderer.LoadModels(scene);

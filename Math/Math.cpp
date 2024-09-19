@@ -5,6 +5,7 @@
 #include <Core/AABB/AABB.h>
 #include <Core/BVH/BVH.h>
 #include <Core/Model.h>
+#include <Core/SceneObject.h>
 
 namespace GaladHen
 {
@@ -93,6 +94,23 @@ namespace GaladHen
 		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, BVHTraversalMethod traversalMethod)
 		{
 			return model.ModelBVH.CheckModelIntersection(ray, model, traversalMethod);
+		}
+
+		RayModelHitInfo RaySceneObjectIntersection(const Ray& ray, const SceneObject& sceneObject, BVHTraversalMethod traversalMethod)
+		{
+			// Transform world space ray into model space
+			Ray inverseRay = sceneObject.Transform.Inverse() * ray;
+
+			return RayModelIntersection(inverseRay, *sceneObject.GetSceneObjectModel(), BVHTraversalMethod::FrontToBack);
+		}
+
+		Ray operator*(const TransformQuat transform, const Ray ray)
+		{
+			return Ray{ transform.GetModelMatrix() * glm::vec4(ray.Origin, 1.0f), transform.GetOrientation() * glm::vec4(ray.Direction, 1.0f), ray.Length };
+		}
+		Ray operator*(const Ray ray, const TransformQuat transform)
+		{
+			return Ray{ glm::vec4(ray.Origin, 1.0f) * transform.GetModelMatrix(), glm::vec4(ray.Direction, 1.0f) * transform.GetOrientation(), ray.Length };
 		}
 	}
 }

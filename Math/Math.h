@@ -17,6 +17,8 @@ namespace GaladHen
 	enum class BVHTraversalMethod;
 	class Mesh;
 	class Model;
+	class SceneObject;
+	class TransformQuat;
 
 	namespace Math
 	{
@@ -45,5 +47,13 @@ namespace GaladHen
 		// Check if a ray intersects a model's triangle mesh, using its BVH
 		// @returns intersection info
 		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, BVHTraversalMethod traversalMethod);
+
+		// @brief
+		// Check if a ray intersects the scene object's model (triangle mesh), using its BVH
+		// @returns intersection info
+		RayModelHitInfo RaySceneObjectIntersection(const Ray& ray, const SceneObject& sceneObject, BVHTraversalMethod traversalMethod);
+
+		Ray operator*(const TransformQuat transform, const Ray ray);
+		Ray operator*(const Ray ray, const TransformQuat transform);
 	}
 }

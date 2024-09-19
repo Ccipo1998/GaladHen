@@ -75,6 +75,8 @@ namespace GaladHen
 
         glm::mat4 GetModelMatrix() const;
 
+        TransformQuat Inverse() const;
+
     protected:
 
         // @brief

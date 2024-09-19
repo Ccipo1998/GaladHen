@@ -51,7 +51,7 @@ namespace GaladHen
         // @param meshIndex: the index of the material's target mesh inside the model
         void ClearMeshMaterialLink(unsigned int meshIndex);
 
-        Model* GetSceneObjectModel();
+        Model* GetSceneObjectModel() const;
 
         // @brief
         // Delete the association between the scene object and its model

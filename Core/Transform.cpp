@@ -159,6 +159,15 @@ namespace GaladHen
         return ModelMatrix * glm::toMat4(GetOrientation());
     }
 
+    TransformQuat TransformQuat::Inverse() const
+    {
+        TransformQuat trans = *this;
+        trans.SetOrientation(glm::inverse(GetOrientation()));
+        trans.SetPosition(-GetPosition());
+        
+        return trans;
+    }
+
     // privates
 
     void TransformQuat::UpdateEulerAngles()

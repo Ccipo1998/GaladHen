@@ -101,7 +101,7 @@ namespace GaladHen
         SceneObjectMaterials[meshIndex] = nullptr;
     }
 
-    Model* SceneObject::GetSceneObjectModel()
+    Model* SceneObject::GetSceneObjectModel() const
     {
         return SceneObjectModel;
     }
