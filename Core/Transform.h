@@ -23,6 +23,9 @@ namespace GaladHen
         // Rotate the transform by delta pitch, yaw and roll angles (in degrees)
         void Rotate(float deltaPitch, float deltaYaw, float deltaRoll);
 
+        void RotateGlobal(const glm::quat& rotation);
+        void RotateLocal(const glm::quat& rotation);
+
         void RotatePitch(float deltaPitch);
         void RotateYaw(float deltaYaw);
         void RotateRoll(float deltaRoll);

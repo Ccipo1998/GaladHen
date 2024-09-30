@@ -26,29 +26,43 @@ namespace GaladHen
         RotateRoll(deltaRoll);
     }
 
+    void TransformQuat::RotateGlobal(const glm::quat& rotation)
+    {
+        Orientation = glm::normalize(rotation * Orientation);
+    }
+
+    void TransformQuat::RotateLocal(const glm::quat& rotation)
+    {
+        Orientation = glm::normalize(Orientation * rotation);
+    }
+
     void TransformQuat::RotatePitch(float deltaPitch)
     {
-        glm::quat rotate = glm::angleAxis(glm::radians(deltaPitch), GlobalRight);
-        Orientation *= rotate;
-        Orientation = glm::normalize(Orientation);
+        glm::quat rotatePitch = glm::angleAxis(glm::radians(deltaPitch), GlobalRight);
+        RotateLocal(rotatePitch);
 
         UpdateEulerAngles();
     }
 
     void TransformQuat::RotateYaw(float deltaYaw)
     {
-        glm::quat rotate = glm::angleAxis(glm::radians(deltaYaw), GlobalUp);
-        Orientation *= rotate;
-        Orientation = glm::normalize(Orientation);
+        glm::quat rotateYaw = glm::angleAxis(glm::radians(deltaYaw), GlobalUp);
+
+        // i.e. Orientation = glm::normalize(rotation * Orientation):
+        // https://stackoverflow.com/questions/9857398/quaternion-camera-how-do-i-make-it-rotate-correctly
+        // https://gamedev.stackexchange.com/questions/136174/im-rotating-an-object-on-two-axes-so-why-does-it-keep-twisting-around-the-thir
+        // https://gamedev.stackexchange.com/questions/207177/correct-order-on-accumulating-rotations
+        // "Pitch Locally, Yaw Globally" mantra
+        // YXZ rotation order
+        RotateGlobal(rotateYaw);
 
         UpdateEulerAngles();
     }
 
     void TransformQuat::RotateRoll(float deltaRoll)
     {
-        glm::quat rotate = glm::angleAxis(glm::radians(deltaRoll), GlobalFront);
-        Orientation *= rotate;
-        Orientation = glm::normalize(Orientation);
+        glm::quat rotateRoll = glm::angleAxis(glm::radians(deltaRoll), GlobalFront);
+        RotateLocal(rotateRoll);
 
         UpdateEulerAngles();
     }
@@ -169,12 +183,12 @@ namespace GaladHen
     }
 
     // privates
-
+    // TODO: add euler angles management when we have a rotation of 90° -> angles become inaccurate
     void TransformQuat::UpdateEulerAngles()
     {
         glm::vec3 eulers = glm::eulerAngles(Orientation);
-        Pitch = eulers.x;
-        Yaw = eulers.y;
-        Roll = eulers.z;
+        Pitch = glm::degrees(eulers.x);
+        Yaw = glm::degrees(eulers.y);
+        Roll = glm::degrees(eulers.z);
     }
 }
