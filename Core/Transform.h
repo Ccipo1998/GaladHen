@@ -23,7 +23,12 @@ namespace GaladHen
         // Rotate the transform by delta pitch, yaw and roll angles (in degrees)
         void Rotate(float deltaPitch, float deltaYaw, float deltaRoll);
 
+        // @brief
+        // Rotate current orientation with a rotation defined in the global reference system (rotation * Orientation)
         void RotateGlobal(const glm::quat& rotation);
+
+        // @brief
+        // Rotate current orientation with a rotation defined in the local reference system (Orientation * rotation)
         void RotateLocal(const glm::quat& rotation);
 
         void RotatePitch(float deltaPitch);
