@@ -4,6 +4,21 @@
 From Sindarin _**Galad-Hen**_ (Glittering Eye)
 
 # Build
+## Preliminary steps
+Before building, a change to the include directive inside used *imgui*'s backend files is needed:
+  1. Libs/imgui/imgui/backends/imgui_impl_glfw.cpp
+  2. Libs/imgui/imgui/backends/imgui_impl_opengl3.cpp
+  3. Libs/imgui/imgui/backends/imgui_impl_win32.cpp
+  
+Change:
+```#include "imgui.h"```
+to:
+```#include <imgui/imgui.h>```
+
+>[!NOTE]
+>These steps are needed because the original *imgui* repository uses local path to include *imgui.h* inside backend files, and i'm lazy so i don't want to include the entire *imgui* repo to **GaladHen** for just a change nor to create an imgui lib folder with only needed files (i like submodules)
+
+## Build commands
 GaladHen uses CMake as building toolchain.
 Via command line:
   1. Navigate to project folder;
