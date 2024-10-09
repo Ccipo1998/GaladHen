@@ -1,5 +1,6 @@
 
 #include "RendererGL.h"
+#include <Renderer/Common.h>
 
 // gl3w MUST be included before any other OpenGL-related header
 #include <GL/gl3w.h>
@@ -47,8 +48,8 @@ namespace GaladHen
 		}
 
 		// setting the minimum required version of OpenGL
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GLSL_VERSION_MAJOR);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GLSL_VERSION_MINOR);
 		// core profile is a subset of OpenGL features (without the backward-compatible features)
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		// for MacOS:

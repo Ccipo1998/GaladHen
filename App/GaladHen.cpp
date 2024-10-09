@@ -16,6 +16,8 @@
 #include <Math/Ray.h>
 #include <Math/Math.h>
 
+#include <Core/Color.h>
+
 #include <glm/glm.hpp>
 
 #include <string>
@@ -55,11 +57,6 @@ int main()
 
     // get pbr shader pipeline
     ShaderPipeline pbr = AssetsManager::GetPipelinePBR();
-    /*Shader vertex{ "../Shaders/pbr/Pbr.vert", ShaderStage::Vertex };
-    Shader fragment{ "../Shaders/pbr/Pbr.frag", ShaderStage::Fragment };
-    ShaderPipeline test{};
-    test.VertexShader = &vertex;
-    test.FragmentShader = &fragment;*/
 
     // materials
     Material bunnyMat{ &pbr, ShadingMode::SmoothShading };
@@ -99,9 +96,9 @@ int main()
     unlit.VertexShader = &vUnlit;
     unlit.FragmentShader = &fUnlit;
     Material aabbMat{ &unlit, ShadingMode::SmoothShading };
-    UnlitMaterialData unlitData{};
-    unlitData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-    aabbMat.Data = &unlitData;
+    UnlitMaterialData aabbMatData{};
+    aabbMatData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    aabbMat.Data = &aabbMatData;
     renderer.CompileShaderPipeline(unlit);
 
     // ray
@@ -136,6 +133,32 @@ int main()
     aabbMesh.Vertices[2].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[2].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
     renderer.LoadMesh(aabbMesh);
 
+    // Gizmos
+    Mesh gizmos{};
+    gizmos.PrimitiveType = Primitive::Line;
+    VertexData v{};
+    v.Position = glm::vec3(0.0f);
+    v.Color = Color::Red;
+    gizmos.Vertices.push_back(v);
+    v.Position = glm::vec3(1.0f, 0.0f, 0.0f);
+    gizmos.Vertices.push_back(v);
+    v.Color = Color::Green;
+    v.Position = glm::vec3(0.0f);
+    gizmos.Vertices.push_back(v);
+    v.Position = glm::vec3(0.0f, 1.0f, 0.0f);
+    gizmos.Vertices.push_back(v);
+    v.Color = Color::Blue;
+    v.Position = glm::vec3(0.0f);
+    gizmos.Vertices.push_back(v);
+    v.Position = glm::vec3(0.0f, 0.0f, 1.0f);
+    gizmos.Vertices.push_back(v);
+    gizmos.Indices = std::vector<unsigned int>{ 0, 1, 2, 3, 4, 5 };
+
+    Material gizmosMat{ &unlit, ShadingMode::SmoothShading };
+    UnlitMaterialData gizmosMatData{};
+    gizmosMatData.UseVertexColor = true;
+    gizmosMat.Data = &gizmosMatData;
+
     // init scene for renderer
     renderer.LoadModels(scene);
     renderer.LoadLightingData(scene);
@@ -144,6 +167,7 @@ int main()
     renderer.LoadTexture(*texAlbedo);
     renderer.LoadTexture(*texNormal);
     renderer.LoadTexture(*texRoughness);
+    renderer.LoadMesh(gizmos);
     renderer.LoadTransformData();
 
     while (!window.IsCloseWindowRequested())
@@ -183,8 +207,9 @@ int main()
         scene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
         renderer.UpdateCameraData(scene.MainCamera);
 
-        renderer.Draw(scene);
-        renderer.Draw(aabbMesh, aabbMat);
+        //renderer.Draw(scene);
+        //renderer.Draw(aabbMesh, aabbMat);
+        renderer.Draw(gizmos, gizmosMat);
 
         window.EndFrame();
     }

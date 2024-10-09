@@ -3,7 +3,7 @@
 
 #include <Renderer/LayerAPI/IWindowAPI.h>
 
-class GLFWwindow;
+struct GLFWwindow;
 
 namespace GaladHen
 {
@@ -18,6 +18,8 @@ namespace GaladHen
 
         WindowGL(const WindowGL& other) = delete; //disallow copy
         WindowGL& operator=(const WindowGL& other) = delete;
+
+        GLFWwindow* GetGLFWWindow();
 
         // INPUT --------------------------------------------------------------------------------------------------------------
 

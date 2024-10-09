@@ -10,6 +10,7 @@
 namespace GaladHen
 {
     class IWindowAPI;
+    class UIPage;
 
     class Window
     {
@@ -27,6 +28,10 @@ namespace GaladHen
         float GetAspectRatio();
 
         void CloseWindow();
+
+        API GetWindowAPI() const;
+
+        IWindowAPI* GetAPILevelWindow();
 
         // void ChangeWindowName(const std::string& windowName);
 
@@ -94,10 +99,15 @@ namespace GaladHen
         unsigned int Width;
         unsigned int Height;
 
+        API CurrentAPI;
+
         Input WindowInput;
 
         // pointer to api level window
         IWindowAPI* WinAPI;
+
+        // pointer to ImGui context
+        UIPage* Page;
 
         void RegisterInputCallbacks();
 

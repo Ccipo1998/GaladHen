@@ -37,7 +37,8 @@ add_library(GaladHenCore STATIC
     BVH/BVH.cpp
     BVH/BVHNode.h
     AABB/AABB.h
-    AABB/AABB.cpp)
+    AABB/AABB.cpp
+    Color.h)
 
 target_include_directories(GaladHenCore PRIVATE
     ${CMAKE_SOURCE_DIR}/

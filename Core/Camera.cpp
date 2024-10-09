@@ -47,8 +47,8 @@ namespace GaladHen
         float deltaPitch = -float(AngularSpeed * deltaTime * angularMovement.y);
 
         // pitch with limits
-        float newPitch = Transform.GetPitch() + deltaPitch;
-        deltaPitch = glm::clamp(newPitch, -MaxPitchAngle, MaxPitchAngle) - Transform.GetPitch();
+        /*float newPitch = Transform.GetPitch() + deltaPitch;
+        deltaPitch = glm::clamp(newPitch, -MaxPitchAngle, MaxPitchAngle) - Transform.GetPitch();*/
 
         // apply rotation
         Transform.Rotate(deltaPitch, deltaYaw, 0.0f);

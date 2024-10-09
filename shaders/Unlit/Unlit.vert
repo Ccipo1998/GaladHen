@@ -5,6 +5,7 @@
 
 layout (location = 0) in vec3 Position;
 layout (location = 2) in vec2 UV;
+layout (location = 5) in vec4 Color;
 
 // uniforms
 layout (std140, binding = 0) uniform CameraData
@@ -23,12 +24,15 @@ layout (std140, binding = 1) uniform TransformData
 out VS_OUT
 {
     out vec2 TexCoord;
+    out vec4 VertexColor;
 } vs_out;
 
 void main()
 {
     // pass texture coordinates
     vs_out.TexCoord = UV;
+    // pass vertex Color
+    vs_out.VertexColor = Color;
 
     // vertex position in view coordinates
     vec3 ViewPosition = (ViewMatrix * ModelMatrix * vec4(Position, 1.0)).xyz;

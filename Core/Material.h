@@ -83,6 +83,29 @@ namespace GaladHen
         virtual std::vector<std::string> GetFunctions() override;
 
         glm::vec4 DiffuseColor;
+        bool UseVertexColor;
         TextureParameters DiffuseTexture;
+    };
+
+    // Generic material data
+    struct GenericMaterialData : public MaterialData
+    {
+        GenericMaterialData();
+
+        virtual std::vector<MaterialDataScalar> GetScalarData() override;
+        virtual std::vector<MaterialDataInteger> GetIntegerData() override;
+        virtual std::vector<MaterialDataVector2> GetVector2Data() override;
+        virtual std::vector<MaterialDataVector3> GetVector3Data() override;
+        virtual std::vector<MaterialDataVector4> GetVector4Data() override;
+        virtual std::vector<MaterialDataTexture> GetTextureData() override;
+        virtual std::vector<std::string> GetFunctions() override;
+
+        std::vector<MaterialDataScalar> ScalarDatas;
+        std::vector<MaterialDataInteger> IntegerDatas;
+        std::vector<MaterialDataVector2> Vector2Datas;
+        std::vector<MaterialDataVector3> Vector3Datas;
+        std::vector<MaterialDataVector4> Vector4Datas;
+        std::vector<MaterialDataTexture> TextureDatas;
+        std::vector<std::string> FunctionDatas;
     };
 }

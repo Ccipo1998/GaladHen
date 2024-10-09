@@ -170,7 +170,7 @@ namespace GaladHen
         {
             glProgramUniform1f(Program, glGetUniformLocation(Program, scalar.Name.data()), scalar.Scalar);
         }
-        for (MaterialDataInteger& integer : data.GetIntegerData())
+        for (MaterialDataInteger& integer : data.GetIntegerData()) // This could be removed maybe using casted float to load integer values
         {
             glProgramUniform1i(Program, glGetUniformLocation(Program, integer.Name.data()), integer.Integer);
         }

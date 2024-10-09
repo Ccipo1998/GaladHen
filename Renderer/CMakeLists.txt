@@ -32,11 +32,13 @@ target_include_directories(Renderer PRIVATE
     ${CMAKE_SOURCE_DIR}/
     ${CMAKE_SOURCE_DIR}/Libs/
     ${CMAKE_SOURCE_DIR}/Libs/gl3w/include/
-    ${CMAKE_SOURCE_DIR}/Libs/glfw/include/)
+    ${CMAKE_SOURCE_DIR}/Libs/glfw/include/
+    ${CMAKE_SOURCE_DIR}/Libs/imgui/)
 
 target_link_libraries(Renderer
     PRIVATE
     GaladHenCore
+    UserInterface
     glfw
     gl3w
     glm

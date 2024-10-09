@@ -10,6 +10,7 @@ out vec4 color;
 in VS_OUT
 {
     in vec2 TexCoord;
+    in vec4 VertexColor;
 } vs_out;
 
 // const
@@ -46,6 +47,13 @@ subroutine(DiffuseMode)
 vec3 DiffuseSampling()
 {
     return texture(DiffuseTexture, vs_out.TexCoord).rgb;
+}
+
+layout (index = 4)
+subroutine(DiffuseMode)
+vec3 VertexColorConstant()
+{
+    return vs_out.VertexColor.xyz;
 }
 
 void main()

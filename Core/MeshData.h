@@ -14,6 +14,7 @@ namespace GaladHen
         glm::vec2 UV;
         glm::vec3 Tangent;
         glm::vec3 Bitangent;
+        glm::vec4 Color;
     };
 
     enum class Primitive

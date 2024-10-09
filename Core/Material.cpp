@@ -95,6 +95,7 @@ namespace GaladHen
 
     UnlitMaterialData::UnlitMaterialData()
         : DiffuseColor(glm::vec4(0.3f, 0.9f, 0.3f, 1.0f))
+        , UseVertexColor(false)
         , DiffuseTexture(TextureParameters{})
     {}
 
@@ -118,7 +119,44 @@ namespace GaladHen
     {
         return std::vector<std::string>
         {
-            DiffuseTexture.TextureSource != nullptr ? std::string{ "DiffuseSampling" } : std::string{ "DiffuseConstant" }
+            DiffuseTexture.TextureSource != nullptr ? std::string{ "DiffuseSampling" } : (UseVertexColor ? std::string{ "VertexColorConstant" } : std::string{ "DiffuseConstant" })
         };
+    }
+
+    GenericMaterialData::GenericMaterialData() {}
+
+    std::vector<MaterialDataScalar> GenericMaterialData::GetScalarData()
+    {
+        return ScalarDatas;
+    }
+
+    std::vector<MaterialDataInteger> GenericMaterialData::GetIntegerData()
+    {
+        return IntegerDatas;
+    }
+
+    std::vector<MaterialDataVector2> GenericMaterialData::GetVector2Data()
+    {
+        return Vector2Datas;
+    }
+
+    std::vector<MaterialDataVector3> GenericMaterialData::GetVector3Data()
+    {
+        return Vector3Datas;
+    }
+
+    std::vector<MaterialDataVector4> GenericMaterialData::GetVector4Data()
+    {
+        return Vector4Datas;
+    }
+
+    std::vector<MaterialDataTexture> GenericMaterialData::GetTextureData()
+    {
+        return TextureDatas;
+    }
+
+    std::vector<std::string> GenericMaterialData::GetFunctions()
+    {
+        return FunctionDatas;
     }
 }

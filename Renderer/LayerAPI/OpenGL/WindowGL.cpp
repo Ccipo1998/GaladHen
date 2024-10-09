@@ -38,6 +38,11 @@ namespace GaladHen
         CreateOpenGLWindow(width, height, name);
     }
 
+    GLFWwindow* WindowGL::GetGLFWWindow()
+    {
+        return WinGL;
+    }
+
     void WindowGL::FillKeyAssociations()
     {
         KeyboardKeyAssociations[GLFW_KEY_W] = (int)KeyboardKey::W;

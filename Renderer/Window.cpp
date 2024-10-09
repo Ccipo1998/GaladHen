@@ -1,5 +1,6 @@
 
 #include "Window.h"
+#include <UI/Page.h>
 #include <Renderer/LayerAPI/IWindowAPI.h>
 #include <Renderer/LayerAPI/OpenGL/WindowGL.h>
 
@@ -9,14 +10,19 @@ namespace GaladHen
         : WindowName("")
         , Width(1280)
         , Height(720)
+        , CurrentAPI(apiToUse)
         , WindowInput(Input{})
+        , Page(nullptr)
     {
-        switch (apiToUse)
+        switch (CurrentAPI)
         {
         case API::OpenGL:
 
             // Create OpenGL window
             WinAPI = new WindowGL(1280, 720, "");
+
+            // Create UI page
+            Page = new UIPage{ "Prova", this};
 
             break;
 
@@ -31,14 +37,19 @@ namespace GaladHen
         : WindowName(windowName)
         , Width(1280)
         , Height(720)
+        , CurrentAPI(apiToUse)
         , WindowInput(Input{})
+        , Page(nullptr)
     {
-        switch (apiToUse)
+        switch (CurrentAPI)
         {
         case API::OpenGL:
 
             // Create OpenGL window
             WinAPI = new WindowGL(1280, 720, windowName.data());
+
+            // Create UI page
+            Page = new UIPage{ "Prova", this };
 
             break;
 
@@ -53,14 +64,19 @@ namespace GaladHen
         : WindowName(windowName)
         , Width(width)
         , Height(height)
+        , CurrentAPI(apiToUse)
         , WindowInput(Input{})
+        , Page(nullptr)
     {
-        switch (apiToUse)
+        switch (CurrentAPI)
         {
         case API::OpenGL:
 
             // Create OpenGL window
             WinAPI = new WindowGL(width, height, windowName.data());
+
+            // Create UI page
+            Page = new UIPage{ "Prova", this };
 
             break;
 
@@ -79,6 +95,16 @@ namespace GaladHen
     void Window::CloseWindow()
     {
         WinAPI->CloseWindow();
+    }
+
+    API Window::GetWindowAPI() const
+    {
+        return CurrentAPI;
+    }
+
+    IWindowAPI* Window::GetAPILevelWindow()
+    {
+        return WinAPI;
     }
 
     void Window::CallKeyboardCallback(KeyboardKey key, KeyAction action)
@@ -122,11 +148,13 @@ namespace GaladHen
     void Window::KeyboardCallback(Window* owner, unsigned int key, unsigned int action)
     {
         owner->WindowInput.Keyboard[key] = action;
+        owner->Page->SendKeyboardCallback(owner, key, action);
     }
     
     void Window::MouseKeyCallback(Window* owner, unsigned int key, unsigned int action)
     {
         owner->WindowInput.Mouse[key] = action;
+        owner->Page->SendMouseKeyCallback(owner, key, action);
     }
 
     void Window::MousePosCallback(Window* owner, float mouseX, float mouseY)
@@ -151,10 +179,15 @@ namespace GaladHen
         WindowInput.LastMouseY = WindowInput.MouseY;
         WindowInput.MouseX = currentX;
         WindowInput.MouseY = currentY;
+
+        Page->NewFrame();
+        Page->BuildPage();
     }
 
     void Window::EndFrame()
     {
+        Page->Draw();
+
         WinAPI->SwapBuffers();
         WinAPI->InvokePendingCallbacks();
     }
@@ -188,5 +221,7 @@ namespace GaladHen
     Window::~Window()
     {
         // TODO
+
+        delete Page;
     }
 }
