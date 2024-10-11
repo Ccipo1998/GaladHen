@@ -6,7 +6,7 @@ add_library(Utils STATIC
     Log.cpp
     stb_image.cpp
     Singleton.hpp
-)
+    IdList.hpp)
 
 target_include_directories(Utils PRIVATE
     ${CMAKE_SOURCE_DIR}/)

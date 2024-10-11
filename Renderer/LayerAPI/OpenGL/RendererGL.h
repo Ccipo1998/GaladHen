@@ -10,7 +10,7 @@
 #include <Renderer/LayerAPI/OpenGL/ShaderProgramGL.h>
 #include <Renderer/LayerAPI/OpenGL/TextureGL.h>
 
-#include <vector>
+#include <Utils/IdList.hpp>
 
 namespace GaladHen
 {
@@ -111,19 +111,8 @@ namespace GaladHen
 
 	protected:
 
-		// @brief
-		// @returns mesh id, to retrieve mesh for later use
-		unsigned int CreateLowLevelMesh();
 		void DestroyLowLevelMesh(unsigned int meshID);
-
-		// @brief
-		// @returns shader program id, to retrieve shader program for later use
-		unsigned int CreateLowLevelShaderProgram();
 		void DestroyLowLevelShaderProgram(unsigned int shaderID);
-
-		// @brief
-		// @returns texture id, to retrieve texture for later use
-		unsigned int CreateLowLevelTexture();
 		void DestroyLowLevelTexture(unsigned int textureID);
 
 		// @brief
@@ -136,17 +125,10 @@ namespace GaladHen
 		CameraData TranslateToShaderData(const Camera& camera);
 		TransformData TranslateToShaderData(const TransformQuat& transform);
 
-		std::vector<MeshGL> Meshes;
-		unsigned int MeshIndex;
-
-		std::vector<GLuint> Buffers;
-		unsigned int BufferIndex;
-
-		std::vector<ShaderProgramGL> Shaders;
-		unsigned int ShaderIndex;
-
-		std::vector<TextureGL> Textures;
-		unsigned int TextureIndex;
+		IdList<MeshGL> Meshes;
+		IdList<GLuint> Buffers;
+		IdList<ShaderProgramGL> Shaders;
+		IdList<TextureGL> Textures;
 
 		// const data
 		unsigned int PointLightBufferID;

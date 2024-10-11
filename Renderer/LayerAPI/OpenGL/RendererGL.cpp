@@ -26,11 +26,7 @@
 namespace GaladHen
 {
 	RendererGL::RendererGL()
-		: MeshIndex(0)
-		, BufferIndex(0)
-		, ShaderIndex(0)
-		, TextureIndex(0)
-		, PointLightBufferID(0)
+		: PointLightBufferID(0)
 		, DirectionalLightBufferID(0)
 		, CameraDataUniformBufferID(0)
 		, TransformDataUniformBufferID(0)
@@ -67,15 +63,15 @@ namespace GaladHen
 	{
 		if (mesh.MeshID == 0)
 		{
-			mesh.MeshID= CreateLowLevelMesh();
+			mesh.MeshID = Meshes.AddWithId();
 		}
 
-		Meshes[mesh.MeshID - 1].LoadMemoryGPU(mesh.Vertices, mesh.Indices);
+		Meshes.GetObjectWithId(mesh.MeshID).LoadMemoryGPU(mesh.Vertices, mesh.Indices);
 	}
 
 	void RendererGL::FreeMeshData(Mesh& mesh)
 	{
-		Meshes[mesh.MeshID - 1].FreeMemoryGPU();
+		Meshes.GetObjectWithId(mesh.MeshID).FreeMemoryGPU();
 	}
 
 	void RendererGL::LoadLightingData(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights)
@@ -156,10 +152,10 @@ namespace GaladHen
 	{
 		if (pipeline.ShaderProgramID == 0)
 		{
-			pipeline.ShaderProgramID = CreateLowLevelShaderProgram();
+			pipeline.ShaderProgramID = Shaders.AddWithId(ShaderProgramGL{});
 		}
 
-		ShaderProgramGL& program = Shaders[pipeline.ShaderProgramID - 1];
+		ShaderProgramGL& program = Shaders.GetObjectWithId(pipeline.ShaderProgramID);
 
 		// Read files
 
@@ -193,10 +189,10 @@ namespace GaladHen
 	{
 		if (compute.ShaderProgramID == 0)
 		{
-			compute.ShaderProgramID = CreateLowLevelShaderProgram();
+			compute.ShaderProgramID = Shaders.AddWithId(ShaderProgramGL{});
 		}
 
-		ShaderProgramGL& program = Shaders[compute.ShaderProgramID - 1];
+		ShaderProgramGL& program = Shaders.GetObjectWithId(compute.ShaderProgramID);
 
 		std::string computeCode;
 
@@ -210,7 +206,7 @@ namespace GaladHen
 
 	void RendererGL::FreeShaderProgram(ShaderProgram* program)
 	{
-		ShaderProgramGL& prog = Shaders[program->ShaderProgramID - 1];
+		ShaderProgramGL& prog = Shaders.GetObjectWithId(program->ShaderProgramID);
 		prog.Delete();
 
 		DestroyLowLevelShaderProgram(program->ShaderProgramID);
@@ -220,16 +216,16 @@ namespace GaladHen
 	{
 		if (texture.TextureID == 0)
 		{
-			texture.TextureID = CreateLowLevelTexture();
+			texture.TextureID = Textures.AddWithId(TextureGL{});
 		}
 
-		TextureGL& tex = Textures[texture.TextureID - 1];
+		TextureGL& tex = Textures.GetObjectWithId(texture.TextureID);
 		tex.LoadMemoryGPU(texture.GetTextureData(), texture.GetTextureWidth(), texture.GetTextureHeight(), texture.GetNumberOfChannels(), texture.GetTextureFormat(), texture.NumberOfMipMaps);
 	}
 
 	void RendererGL::FreeTexture(Texture& texture)
 	{
-		TextureGL& tex = Textures[texture.TextureID - 1];
+		TextureGL& tex = Textures.GetObjectWithId(texture.TextureID);
 		tex.FreeMemoryGPU();
 
 		DestroyLowLevelTexture(texture.TextureID);
@@ -245,7 +241,7 @@ namespace GaladHen
 			TextureDataGL dataGL{};
 			if (Texture* pointedTex = texData.TexParams.TextureSource)
 			{
-				dataGL.TextureGLObject = &Textures[pointedTex->TextureID - 1];
+				dataGL.TextureGLObject = &Textures.GetObjectWithId(pointedTex->TextureID);
 				dataGL.Parameters = &texData.TexParams;
 				dataGL.TextureUnit = texUnit;
 				dataGL.SamplerName = texData.Name.data();
@@ -255,7 +251,7 @@ namespace GaladHen
 			++texUnit;
 		}
 
-		ShaderProgramGL& program = Shaders[material.MaterialShader->ShaderProgramID - 1];
+		ShaderProgramGL& program = Shaders.GetObjectWithId(material.MaterialShader->ShaderProgramID);
 		program.LoadMaterialData(material.MaterialShadingMode, *material.Data, texs);
 	}
 
@@ -303,8 +299,8 @@ namespace GaladHen
 
 	void RendererGL::Draw(Mesh& mesh, Material& material)
 	{
-		MeshGL& meshGL = Meshes[mesh.MeshID - 1];
-		ShaderProgramGL& shaderGL = Shaders[material.MaterialShader->ShaderProgramID - 1];
+		MeshGL& meshGL = Meshes.GetObjectWithId(mesh.MeshID);
+		ShaderProgramGL& shaderGL = Shaders.GetObjectWithId(material.MaterialShader->ShaderProgramID);
 
 		LoadMaterialData(material);
 		meshGL.Draw(&shaderGL, mesh.PrimitiveType);
@@ -314,7 +310,7 @@ namespace GaladHen
 	{
 		unsigned int id = CreateBuffer();
 
-		glBindBufferBase(bufferType, binding, Buffers[id - 1]);
+		glBindBufferBase(bufferType, binding, Buffers.GetObjectWithId(id));
 		glBufferData(bufferType, totalSizeBytes, data, usage);
 
 		return id;
@@ -325,7 +321,7 @@ namespace GaladHen
 		unsigned int id = CreateBuffer();
 
 		// init
-		glBindBufferBase(bufferType, binding, Buffers[id - 1]);
+		glBindBufferBase(bufferType, binding, Buffers.GetObjectWithId(id));
 		size_t totalSizeBytes = 0;
 		for (unsigned int i = 0; i < sizesBytes.size(); ++i)
 		{
@@ -351,7 +347,7 @@ namespace GaladHen
 
 		assert(bufferID == newID); // If this fails -> something wrong in the "adding/removing ids from vectors" algorithm
 
-		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
+		glBindBufferBase(bufferType, binding, Buffers.GetObjectWithId(bufferID));
 		glBufferData(bufferType, totalSizeBytes, data, usage);
 	}
 
@@ -363,7 +359,7 @@ namespace GaladHen
 		assert(bufferID == newID); // If this fails -> something wrong in the "adding/removing ids from vectors" algorithm
 
 		// init
-		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
+		glBindBufferBase(bufferType, binding, Buffers.GetObjectWithId(bufferID));
 		size_t totalSizeBytes = 0;
 		for (unsigned int i = 0; i < sizesBytes.size(); ++i)
 		{
@@ -382,13 +378,13 @@ namespace GaladHen
 
 	void RendererGL::UpdateBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, size_t offset, size_t totalSizeBytes, void* newData)
 	{
-		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
+		glBindBufferBase(bufferType, binding, Buffers.GetObjectWithId(bufferID));
 		glBufferSubData(bufferType, offset, totalSizeBytes, newData);
 	}
 
 	void RendererGL::UpdateBufferData(unsigned int bufferID, GLenum bufferType, GLuint binding, GLenum usage, std::vector<size_t>& sizesBytes, std::vector<void*>& newDatas)
 	{
-		glBindBufferBase(bufferType, binding, Buffers[bufferID - 1]);
+		glBindBufferBase(bufferType, binding, Buffers.GetObjectWithId(bufferID));
 		size_t offset = 0;
 		for (unsigned int i = 0; i < sizesBytes.size(); ++i)
 		{
@@ -399,112 +395,43 @@ namespace GaladHen
 
 	void RendererGL::FreeBuffer(unsigned int bufferID)
 	{
-		glDeleteBuffers(1, &Buffers[bufferID - 1]);
-	}
-
-	unsigned int RendererGL::CreateLowLevelMesh()
-	{
-		if (MeshIndex >= Meshes.size())
-		{
-			Meshes.push_back(MeshGL{});
-
-			return ++MeshIndex;
-		}
-
-		unsigned int next = *(unsigned int*)(&Meshes[MeshIndex]);
-		Meshes[MeshIndex] = MeshGL{};
-		unsigned int old = MeshIndex;
-		MeshIndex = next;
-
-		return old + 1;
+		glDeleteBuffers(1, &Buffers.GetObjectWithId(bufferID));
 	}
 
 	void RendererGL::DestroyLowLevelMesh(unsigned int meshID)
 	{
-		*(unsigned int*)(&Meshes[meshID - 1]) = MeshIndex;
-		MeshIndex = meshID - 1;
-	}
+		Meshes.GetObjectWithId(meshID).FreeMemoryGPU();
 
-	unsigned int RendererGL::CreateLowLevelShaderProgram()
-	{
-		if (ShaderIndex >= Shaders.size())
-		{
-			Shaders.push_back(ShaderProgramGL{});
-
-			return ++ShaderIndex;
-		}
-
-		unsigned int next = *(unsigned int*)(&Shaders[ShaderIndex]);
-		Shaders[ShaderIndex] = ShaderProgramGL{};
-		unsigned int old = ShaderIndex;
-		ShaderIndex = next;
-
-		return old + 1;
+		Meshes.RemoveWithId(meshID);
 	}
 
 	void RendererGL::DestroyLowLevelShaderProgram(unsigned int shaderID)
 	{
-		Shaders[shaderID - 1].Delete();
+		Shaders.GetObjectWithId(shaderID).Delete();
 
-		*(unsigned int*)(&Shaders[shaderID - 1]) = ShaderIndex;
-		ShaderIndex = shaderID - 1;
-	}
-
-	unsigned int RendererGL::CreateLowLevelTexture()
-	{
-		if (TextureIndex >= Textures.size())
-		{
-			Textures.push_back(TextureGL{});
-
-			return ++TextureIndex;
-		}
-
-		unsigned int next = *(unsigned int*)(&Textures[TextureIndex]);
-		Textures[TextureIndex] = TextureGL{};
-		unsigned int old = TextureIndex;
-		TextureIndex = next;
-
-		return old + 1;
+		Shaders.RemoveWithId(shaderID);
 	}
 
 	void RendererGL::DestroyLowLevelTexture(unsigned int textureID)
 	{
-		Textures[textureID - 1].FreeMemoryGPU();
+		Textures.GetObjectWithId(textureID).FreeMemoryGPU();
 
-		*(unsigned int*)(&Textures[textureID - 1]) = TextureIndex;
-		TextureIndex = textureID - 1;
+		Textures.RemoveWithId(textureID);
 	}
 
 	unsigned int RendererGL::CreateBuffer()
 	{
-		unsigned int id;
+		unsigned int id = Buffers.AddWithId(GLuint{});
+		glGenBuffers(1, &Buffers.GetObjectWithId(id));
 
-		if (BufferIndex >= Buffers.size())
-		{
-			GLuint ssbo;
-			glGenBuffers(1, &ssbo);
-			Buffers.push_back(ssbo);
-
-			id = BufferIndex++;
-		}
-		else
-		{
-			unsigned int next = *(unsigned int*)(&Buffers[BufferIndex]);
-
-			glGenBuffers(1, &Buffers[BufferIndex]);
-			id = BufferIndex;
-			BufferIndex = next;
-		}
-
-		return id + 1;
+		return id;
 	}
 
 	void RendererGL::DestroyBuffer(unsigned int bufferID)
 	{
 		FreeBuffer(bufferID);
 
-		*(unsigned int*)(&Buffers[bufferID - 1]) = BufferIndex;
-		BufferIndex = bufferID - 1;
+		Buffers.RemoveWithId(bufferID);
 	}
 
 	void RendererGL::TranslateToShaderData(const std::vector<PointLight>& pointLights, std::vector<PointLightData>& outLightData)
