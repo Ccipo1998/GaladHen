@@ -96,13 +96,11 @@ namespace GaladHen
 
             for (unsigned int i = 0; i < mod->Meshes.size(); ++i)
             {
-                if (Material* mat = sceneObj.GetMaterial(i))
+                Material& mat = sceneObj.GetMaterial(i);
+                if (compiled.find(mat.MaterialShader->ShaderProgramID) == compiled.end())
                 {
-                    if (compiled.find(mat->MaterialShader->ShaderProgramID) == compiled.end())
-                    {
-                        compiled.insert(mat->MaterialShader->ShaderProgramID);
-                        CompileShaderPipeline(*mat->MaterialShader);
-                    }
+                    compiled.insert(mat.MaterialShader->ShaderProgramID);
+                    CompileShaderPipeline(*mat.MaterialShader);
                 }
             }
         }
@@ -189,11 +187,9 @@ namespace GaladHen
 
         for (unsigned int i = 0; i < mod->Meshes.size(); ++i)
         {
-            if (Material* mat = object.GetMaterial(i))
-            {
-                RendererAPI->UpdateTransformData(object.Transform);
-                RendererAPI->Draw(mod->Meshes[i], *mat);
-            }
+            Material& mat = object.GetMaterial(i);
+            RendererAPI->UpdateTransformData(object.Transform);
+            RendererAPI->Draw(mod->Meshes[i], mat);
         }
     }
 

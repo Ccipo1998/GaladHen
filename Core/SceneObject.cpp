@@ -12,43 +12,13 @@ namespace GaladHen
         // , SceneObjectMaterials() // TODO: get default materials in assets manager
         {}
 
-    SceneObject::SceneObject(const SceneObject& sceneObject) noexcept
-        : Transform(sceneObject.Transform)
-        , SceneObjectModel(sceneObject.SceneObjectModel)
-        , SceneObjectMaterials(sceneObject.SceneObjectMaterials)
-        {}
-
-    SceneObject& SceneObject::operator=(SceneObject& sceneObject) noexcept
-    {
-        Transform = sceneObject.Transform;
-        SceneObjectModel = sceneObject.SceneObjectModel;
-        SceneObjectMaterials = sceneObject.SceneObjectMaterials;
-
-        return *this;
-    }
-
-    SceneObject::SceneObject(SceneObject&& sceneObject) noexcept
-        : Transform(std::move(sceneObject.Transform))
-        , SceneObjectModel(std::move(sceneObject.SceneObjectModel))
-        , SceneObjectMaterials(std::move(sceneObject.SceneObjectMaterials))
-        {}
-
-    SceneObject& SceneObject::operator=(SceneObject&& sceneObject) noexcept
-    {
-        Transform = std::move(sceneObject.Transform);
-        SceneObjectModel = std::move(sceneObject.SceneObjectModel);
-        SceneObjectMaterials = std::move(sceneObject.SceneObjectMaterials);
-
-        return *this;
-    }
-
-    SceneObject::SceneObject(Model* model, std::vector<Material*>& materials)
+    SceneObject::SceneObject(Model* model, std::vector<Material>& materials)
         : Transform(TransformQuat{})
     {
         SceneObjectModel = model;
         
         // allocate correct number of materials
-        SceneObjectMaterials.resize(SceneObjectModel->Meshes.size(), nullptr);
+        SceneObjectMaterials.resize(SceneObjectModel->Meshes.size(), Material{});
 
         // fill vectors with materials
         for (unsigned int i = 0; i < materials.size(); ++i)
@@ -60,7 +30,7 @@ namespace GaladHen
             Log::Error("SceneObject", "Unmatch between materials and meshes number"); // TODO: warning
     }
 
-    void SceneObject::SetMeshMaterialLink(unsigned int meshIndex, Material* material)
+    void SceneObject::SetMeshMaterialLink(unsigned int meshIndex, const Material& material)
     {
         if (SceneObjectMaterials.size() <= meshIndex)
         {
@@ -72,33 +42,14 @@ namespace GaladHen
         SceneObjectMaterials[meshIndex] = material;
     }
 
-    Material* SceneObject::GetMaterial(unsigned int meshIndex)
+    Material& SceneObject::GetMaterial(unsigned int meshIndex)
     {
-        if (SceneObjectMaterials.size() <= meshIndex)
-        {
-            Log::Error("SceneObject", "Tried to get a material with a mesh index out of range"); // TODO: warning
-
-            return nullptr;
-        }
-
         return SceneObjectMaterials[meshIndex];
     }
 
-    std::vector<Material*> SceneObject::GetSceneObjectMaterials()
+    std::vector<Material>& SceneObject::GetSceneObjectMaterials()
     {
         return SceneObjectMaterials;
-    }
-
-    void SceneObject::ClearMeshMaterialLink(unsigned int meshIndex)
-    {
-        if (SceneObjectMaterials.size() <= meshIndex)
-        {
-            Log::Error("SceneObject", "Tried to delete a material association with a mesh index out of range"); // TODO: warning
-
-            return;
-        }
-
-        SceneObjectMaterials[meshIndex] = nullptr;
     }
 
     Model* SceneObject::GetSceneObjectModel() const

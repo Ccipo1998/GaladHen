@@ -5,12 +5,14 @@
 
 #include <imgui/imgui_internal.h>
 #include <string>
+#include <Utils/IdList.hpp>
 
 // TODO: rendere api agnostic a runtime (virtual)
 
 namespace GaladHen
 {
 	class Window;
+	class UIWidget;
 
 	struct UIContext : ImGuiContext
 	{
@@ -50,6 +52,8 @@ namespace GaladHen
 		void SendMouseKeyCallback(Window* owner, unsigned int key, unsigned int action);
 
 		// INPUT -----------------------------------------------------------
+
+		IdList<UIWidget*> Widgets;
 
 		~UIPage();
 

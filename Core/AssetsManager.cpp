@@ -19,6 +19,7 @@ namespace GaladHen
     std::map<const std::string, Shader> AssetsManager::Shaders = std::map<const std::string, Shader>{};
     Shader AssetsManager::PBR_VertexShader = Shader("../Shaders/pbr/Pbr.vert", ShaderStage::Vertex); // default
     Shader AssetsManager::PBR_FragmentShader = Shader("../Shaders/pbr/Pbr.frag", ShaderStage::Fragment); // default
+    ShaderPipeline AssetsManager::PBR_ShaderPipeline = ShaderPipeline{ &PBR_VertexShader, nullptr, nullptr, nullptr, &PBR_FragmentShader };
 
     void AssetsManager::FreeAssets()
     {
@@ -76,9 +77,9 @@ namespace GaladHen
         return &Textures[assetName];
     }
 
-    ShaderPipeline AssetsManager::GetPipelinePBR()
+    ShaderPipeline* AssetsManager::GetPipelinePBR()
     {
-        return ShaderPipeline{ &PBR_VertexShader, nullptr, nullptr, nullptr, &PBR_FragmentShader };
+        return &PBR_ShaderPipeline;
     }
 
 }

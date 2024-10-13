@@ -1,6 +1,5 @@
 
 #include "Window.h"
-#include <UI/Page.h>
 #include <Renderer/LayerAPI/IWindowAPI.h>
 #include <Renderer/LayerAPI/OpenGL/WindowGL.h>
 
@@ -8,21 +7,20 @@ namespace GaladHen
 {
     Window::Window(API apiToUse)
         : WindowName("")
-        , Width(1280)
-        , Height(720)
+        , Width(0)
+        , Height(0)
         , CurrentAPI(apiToUse)
         , WindowInput(Input{})
-        , Page(nullptr)
     {
         switch (CurrentAPI)
         {
         case API::OpenGL:
 
             // Create OpenGL window
-            WinAPI = new WindowGL(1280, 720, "");
+            WinAPI = new WindowGL{ "", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, true };
 
-            // Create UI page
-            Page = new UIPage{ "Prova", this};
+            // Because maximize window is true by default, we need to retrieve actual window size
+            WinAPI->GetWindowSize(Width, Height);
 
             break;
 
@@ -35,21 +33,20 @@ namespace GaladHen
 
     Window::Window(API apiToUse, const std::string& windowName)
         : WindowName(windowName)
-        , Width(1280)
-        , Height(720)
+        , Width(0)
+        , Height(0)
         , CurrentAPI(apiToUse)
         , WindowInput(Input{})
-        , Page(nullptr)
     {
         switch (CurrentAPI)
         {
         case API::OpenGL:
 
             // Create OpenGL window
-            WinAPI = new WindowGL(1280, 720, windowName.data());
+            WinAPI = new WindowGL{ windowName.data(), DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, true };
 
-            // Create UI page
-            Page = new UIPage{ "Prova", this };
+            // Because maximize window is true by default, we need to retrieve actual window size
+            WinAPI->GetWindowSize(Width, Height);
 
             break;
 
@@ -66,17 +63,13 @@ namespace GaladHen
         , Height(height)
         , CurrentAPI(apiToUse)
         , WindowInput(Input{})
-        , Page(nullptr)
     {
         switch (CurrentAPI)
         {
         case API::OpenGL:
 
             // Create OpenGL window
-            WinAPI = new WindowGL(width, height, windowName.data());
-
-            // Create UI page
-            Page = new UIPage{ "Prova", this };
+            WinAPI = new WindowGL(windowName.data(), width, height, false);
 
             break;
 
@@ -85,6 +78,40 @@ namespace GaladHen
         }
 
         RegisterInputCallbacks();
+    }
+
+    Window& Window::operator=(Window&& other) noexcept
+    {
+        WindowName = other.WindowName;
+        Width = other.Width;
+        Height = other.Height;
+        CurrentAPI = other.CurrentAPI;
+        WindowInput = other.WindowInput;
+
+        WinAPI = other.WinAPI;
+
+        // We need to transfer all the callbacks' function pointer to new location -> call RegisterInputCallbacks() again
+        RegisterInputCallbacks();
+
+        other.WinAPI = nullptr;
+
+        return *this;
+    }
+
+    Window::Window(Window&& other) noexcept
+    {
+        WindowName = other.WindowName;
+        Width = other.Width;
+        Height = other.Height;
+        CurrentAPI = other.CurrentAPI;
+        WindowInput = other.WindowInput;
+
+        WinAPI = other.WinAPI;
+
+        // We need to transfer all the callbacks' function pointer to new location -> call RegisterInputCallbacks() again
+        RegisterInputCallbacks();
+
+        other.WinAPI = nullptr;
     }
 
     float Window::GetAspectRatio()
@@ -148,13 +175,13 @@ namespace GaladHen
     void Window::KeyboardCallback(Window* owner, unsigned int key, unsigned int action)
     {
         owner->WindowInput.Keyboard[key] = action;
-        owner->Page->SendKeyboardCallback(owner, key, action);
+        //owner->Page->SendKeyboardCallback(owner, key, action);
     }
     
     void Window::MouseKeyCallback(Window* owner, unsigned int key, unsigned int action)
     {
         owner->WindowInput.Mouse[key] = action;
-        owner->Page->SendMouseKeyCallback(owner, key, action);
+        //owner->Page->SendMouseKeyCallback(owner, key, action);
     }
 
     void Window::MousePosCallback(Window* owner, float mouseX, float mouseY)
@@ -180,13 +207,13 @@ namespace GaladHen
         WindowInput.MouseX = currentX;
         WindowInput.MouseY = currentY;
 
-        Page->NewFrame();
-        Page->BuildPage();
+        /*Page->NewFrame();
+        Page->BuildPage();*/
     }
 
     void Window::EndFrame()
     {
-        Page->Draw();
+        //Page->Draw();
 
         WinAPI->SwapBuffers();
         WinAPI->InvokePendingCallbacks();
@@ -221,7 +248,5 @@ namespace GaladHen
     Window::~Window()
     {
         // TODO
-
-        delete Page;
     }
 }

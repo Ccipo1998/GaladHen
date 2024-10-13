@@ -38,7 +38,6 @@ target_include_directories(Renderer PRIVATE
 target_link_libraries(Renderer
     PRIVATE
     GaladHenCore
-    UserInterface
     glfw
     gl3w
     glm

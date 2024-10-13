@@ -53,7 +53,7 @@ namespace GaladHen
 
         // @brief
         // Getter for default pbr shader pipeline
-        static ShaderPipeline GetPipelinePBR();
+        static ShaderPipeline* GetPipelinePBR();
 
     protected:
 
@@ -67,6 +67,7 @@ namespace GaladHen
         // Shaders
 
         // PBR
+        static ShaderPipeline PBR_ShaderPipeline;
         static Shader PBR_VertexShader;
         static Shader PBR_FragmentShader;
 

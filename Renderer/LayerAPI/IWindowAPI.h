@@ -12,6 +12,16 @@ namespace GaladHen
     
     public:
 
+        // WINDOW ------------------------------------------------------------------------------------------------
+
+        virtual void GetScreenSize(unsigned int& width, unsigned int& height) = 0;
+
+        virtual void GetWindowSize(unsigned int& width, unsigned int& height) = 0;
+
+        virtual void SetWindowSize(unsigned int width, unsigned int height) = 0;
+
+        // WINDOW ------------------------------------------------------------------------------------------------
+
         // INPUT -------------------------------------------------------------------------------------------------
 
         virtual void FillKeyAssociations() = 0;

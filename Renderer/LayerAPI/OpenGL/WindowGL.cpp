@@ -3,6 +3,9 @@
 
 #include <Core/Input.h>
 
+// gl3w MUST be included before any other OpenGL-related header
+#include <GL/gl3w.h>
+
 // glfw
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -13,19 +16,8 @@
 
 namespace GaladHen
 {
-    WindowGL::WindowGL()
-        : WinGL(nullptr)
-        , KeyboardCallback(nullptr)
-        , MouseKeyCallback(nullptr)
-        , MousePosCallback(nullptr)
-        , KeyboardCallbackOwner(nullptr)
-        , MouseKeyCallbackOwner(nullptr)
-        , MousePosCallbackOwner(nullptr)
-    {
-        FillKeyAssociations();
-    }
 
-    WindowGL::WindowGL(unsigned int width, unsigned int height, const char* name)
+    WindowGL::WindowGL(const char* name, unsigned int width, unsigned int height, bool maximizeWindow)
         : KeyboardCallback(nullptr)
         , MouseKeyCallback(nullptr)
         , MousePosCallback(nullptr)
@@ -35,7 +27,17 @@ namespace GaladHen
     {
         FillKeyAssociations();
 
-        CreateOpenGLWindow(width, height, name);
+        if (maximizeWindow)
+        {
+            unsigned int screenWidth, screenHeight;
+            GetScreenSize(screenWidth, screenHeight);
+            CreateOpenGLWindow(screenWidth, screenHeight, name);
+            glfwMaximizeWindow(WinGL);
+        }
+        else
+        {
+            CreateOpenGLWindow(width, height, name);
+        }
     }
 
     GLFWwindow* WindowGL::GetGLFWWindow()
@@ -170,6 +172,15 @@ namespace GaladHen
         }
 
         glfwMakeContextCurrent(WinGL);
+
+        // After changes to GLFWwindow, we need to initialize gl3w context again
+        if (!gl3wInit())
+        {
+            // TODO: Find out why gl3w fails creating the context, but without this gl3wInit() call the first call to a gl function will crash
+            Log::Error("WindowGL", "Error: GL3W failed to initialize the context");
+
+            return;
+        }
     }
 
     void WindowGL::SendKeyboardCallback(unsigned int key, unsigned int action)
@@ -205,6 +216,24 @@ namespace GaladHen
     unsigned int WindowGL::TranslateKeyAction(int glSpecificAction)
     {
         return KeyActionAssociations[glSpecificAction];
+    }
+
+    void WindowGL::GetScreenSize(unsigned int& width, unsigned int& height)
+    {
+        const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        width = mode->width;
+        height = mode->height;
+    }
+
+    void WindowGL::GetWindowSize(unsigned int& width, unsigned int& height)
+    {
+        glfwGetWindowSize(WinGL, &(int&)width, &(int&)height);
+    }
+
+    void WindowGL::SetWindowSize(unsigned int width, unsigned int height)
+    {
+        glfwSetWindowSize(WinGL, width, height);
+        glViewport(0, 0, width, height);
     }
 
     void WindowGL::ClearFrontBuffers(bool colorBuffer, bool depthBuffer, bool stencilBuffer)

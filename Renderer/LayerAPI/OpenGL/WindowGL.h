@@ -12,14 +12,18 @@ namespace GaladHen
         
     public:
 
-        WindowGL();
-
-        WindowGL(unsigned int width, unsigned int height, const char* name);
+        WindowGL(const char* name, unsigned int width, unsigned int height, bool maximizeWindow = true);
 
         WindowGL(const WindowGL& other) = delete; //disallow copy
         WindowGL& operator=(const WindowGL& other) = delete;
 
         GLFWwindow* GetGLFWWindow();
+
+        virtual void GetScreenSize(unsigned int& width, unsigned int& height) override;
+
+        virtual void GetWindowSize(unsigned int& width, unsigned int& height) override;
+
+        virtual void SetWindowSize(unsigned int width, unsigned int height) override;
 
         // INPUT --------------------------------------------------------------------------------------------------------------
 
