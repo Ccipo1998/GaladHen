@@ -79,14 +79,7 @@ namespace GaladHen
 
 	void UIPage::BuildPage()
 	{
-		//ImGui::ShowDemoWindow();
-		
-		ImGui::Begin("Title");
-
-		ImGui::Text("Test");
-
-		ImGui::End();
-
+		SetContextCurrent();
 	}
 
 	void UIPage::Draw()
@@ -155,8 +148,9 @@ namespace GaladHen
 		IMGUI_CHECKVERSION();
 		CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;	// Enable Keyboard Controls
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;	// Enable Gamepad Controls
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// Enable docking
 
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();

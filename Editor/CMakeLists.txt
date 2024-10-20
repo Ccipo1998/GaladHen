@@ -12,7 +12,9 @@ add_library(Editor STATIC
     UI/Pages/MainPage.h
     UI/Pages/MainPage.cpp
     Editor.h
-    Editor.cpp)
+    Editor.cpp
+    UI/Widgets/AssetsViewWidget.h
+    UI/Widgets/AssetsViewWidget.cpp)
 
 target_include_directories(Editor PRIVATE
     ${CMAKE_SOURCE_DIR}/

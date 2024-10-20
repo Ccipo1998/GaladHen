@@ -1,5 +1,6 @@
 
 #include "Texture.h"
+#include "TextureData.h"
 
 #include <utility>
 

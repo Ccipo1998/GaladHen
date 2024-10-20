@@ -5,13 +5,7 @@
 
 namespace GaladHen
 {
-    enum class TextureFormat
-    {
-        RGB = 0,
-        RGB8 = 1,
-        SRGB = 2,
-        SRGB8
-    };
+    enum class TextureFormat;
 
     class Texture
     {

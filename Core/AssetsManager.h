@@ -49,11 +49,19 @@ namespace GaladHen
         // Get a reference to a texture owned by assets manager by its name
         static Texture* GetTextureByName(const std::string& assetName);
 
+        // @brief
+        // Store a copy of the source model, making it owned by the assets manager
+        static Model* StoreModel(const Model& source, const std::string& modelname);
+
         // DEFAULTS --------------------------------------------------------------------------------------------------
 
         // @brief
         // Getter for default pbr shader pipeline
         static ShaderPipeline* GetPipelinePBR();
+
+        // @brief
+        // Getter for default unlit shader pipeline
+        static ShaderPipeline* GetPipelineUnlit();
 
     protected:
 
@@ -64,12 +72,19 @@ namespace GaladHen
 
         // Default assets
 
-        // Shaders
+        // SHADERS ------------------------------------------------------------------------------
 
         // PBR
-        static ShaderPipeline PBR_ShaderPipeline;
         static Shader PBR_VertexShader;
         static Shader PBR_FragmentShader;
+        static ShaderPipeline PBR_ShaderPipeline;
+
+        // Unlit
+        static Shader Unlit_VertexShader;
+        static Shader Unlit_FragmentShader;
+        static ShaderPipeline Unlit_ShaderPipeline;
+
+        // SHADERS ------------------------------------------------------------------------------
 
         // Models
 

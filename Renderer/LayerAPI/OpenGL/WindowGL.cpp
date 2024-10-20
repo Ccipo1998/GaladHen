@@ -29,9 +29,8 @@ namespace GaladHen
 
         if (maximizeWindow)
         {
-            unsigned int screenWidth, screenHeight;
-            GetScreenSize(screenWidth, screenHeight);
-            CreateOpenGLWindow(screenWidth, screenHeight, name);
+            glm::uvec2 size = GetScreenSize();
+            CreateOpenGLWindow(size.x, size.y, name);
             glfwMaximizeWindow(WinGL);
         }
         else
@@ -173,6 +172,8 @@ namespace GaladHen
 
         glfwMakeContextCurrent(WinGL);
 
+        SetWindowSize(glm::uvec2(width, height));
+
         // After changes to GLFWwindow, we need to initialize gl3w context again
         if (!gl3wInit())
         {
@@ -218,22 +219,33 @@ namespace GaladHen
         return KeyActionAssociations[glSpecificAction];
     }
 
-    void WindowGL::GetScreenSize(unsigned int& width, unsigned int& height)
+    glm::uvec2 WindowGL::GetScreenSize()
     {
         const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-        width = mode->width;
-        height = mode->height;
+        
+        return glm::uvec2{ mode->width, mode->height };
     }
 
-    void WindowGL::GetWindowSize(unsigned int& width, unsigned int& height)
+    glm::uvec2 WindowGL::GetWindowPosition()
     {
-        glfwGetWindowSize(WinGL, &(int&)width, &(int&)height);
+        int posX, posY;
+        glfwGetWindowPos(WinGL, &posX, &posY);
+
+        return glm::uvec2{ posX, posY };
     }
 
-    void WindowGL::SetWindowSize(unsigned int width, unsigned int height)
+    glm::uvec2 WindowGL::GetWindowSize()
     {
-        glfwSetWindowSize(WinGL, width, height);
-        glViewport(0, 0, width, height);
+        int width, height;
+        glfwGetWindowSize(WinGL, &width, &height);
+
+        return glm::uvec2{ width, height };
+    }
+
+    void WindowGL::SetWindowSize(glm::uvec2 size)
+    {
+        glfwSetWindowSize(WinGL, size.x, size.y);
+        //glViewport(0, 0, width, height);
     }
 
     void WindowGL::ClearFrontBuffers(bool colorBuffer, bool depthBuffer, bool stencilBuffer)

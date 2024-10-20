@@ -20,7 +20,9 @@ namespace GaladHen
             WinAPI = new WindowGL{ "", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, true };
 
             // Because maximize window is true by default, we need to retrieve actual window size
-            WinAPI->GetWindowSize(Width, Height);
+            glm::uvec2 size = WinAPI->GetWindowSize();
+            Width = size.x;
+            Height = size.y;
 
             break;
 
@@ -46,7 +48,9 @@ namespace GaladHen
             WinAPI = new WindowGL{ windowName.data(), DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, true };
 
             // Because maximize window is true by default, we need to retrieve actual window size
-            WinAPI->GetWindowSize(Width, Height);
+            glm::uvec2 size = WinAPI->GetWindowSize();
+            Width = size.x;
+            Height = size.y;
 
             break;
 
@@ -132,6 +136,16 @@ namespace GaladHen
     IWindowAPI* Window::GetAPILevelWindow()
     {
         return WinAPI;
+    }
+
+    glm::uvec2 Window::GetWindowPosition()
+    {
+        return WinAPI->GetWindowPosition();
+    }
+
+    glm::uvec2 Window::GetWindowSize()
+    {
+        return WinAPI->GetWindowSize();
     }
 
     void Window::CallKeyboardCallback(KeyboardKey key, KeyAction action)

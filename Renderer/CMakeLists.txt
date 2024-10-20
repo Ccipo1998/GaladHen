@@ -26,7 +26,13 @@ add_library(Renderer STATIC
     LayerAPI/OpenGL/RendererGL.h
     LayerAPI/OpenGL/RendererGL.cpp
     Common.h
-    LayerAPI/OpenGL/ShaderData.h)
+    LayerAPI/OpenGL/ShaderData.h
+    LayerAPI/OpenGL/FrameBufferGL.h
+    LayerAPI/OpenGL/FrameBufferGL.cpp
+    LayerAPI/OpenGL/RenderFrameBufferGL.h
+    LayerAPI/OpenGL/RenderFrameBufferGL.cpp
+    LayerAPI/OpenGL/TextureFrameBufferGL.h
+    LayerAPI/OpenGL/TextureFrameBufferGL.cpp)
 
 target_include_directories(Renderer PRIVATE
     ${CMAKE_SOURCE_DIR}/

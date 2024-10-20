@@ -192,7 +192,8 @@ namespace GaladHen
             // tex image should be already loaded when arriving here
             //assert(texImage->IsLoaded());
 
-            tex.TextureGLObject->LoadTextureParameters(this, tex.TextureUnit, *tex.Parameters); // TODO: here should be wrapping for both horizontal and vertical axes
+            tex.TextureGLObject->BindToTextureUnit(this, tex.TextureUnit);
+            tex.TextureGLObject->LoadTextureParameters(*tex.Parameters); // TODO: here should be wrapping for both horizontal and vertical axes
             tex.TextureGLObject->SetTextureSamplerName(this, tex.TextureUnit, tex.SamplerName);
         }
 

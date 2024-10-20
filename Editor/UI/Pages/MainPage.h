@@ -5,6 +5,7 @@
 
 #include <Editor/UI/Page.h>
 #include <Editor/UI/Widgets/NavBarWidget.h>
+#include <Editor/UI/Widgets/AssetsViewWidget.h>
 
 namespace GaladHen
 {
@@ -17,5 +18,6 @@ namespace GaladHen
 		void BuildPage() override;
 
 		UINavBarWidget NavBar;
+		UIAssetsViewWidget AssetsView;
 	};
 }

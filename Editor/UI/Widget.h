@@ -5,6 +5,11 @@
 
 #include <string>
 
+class UINode
+{
+
+};
+
 namespace GaladHen
 {
 	class UIPage;
@@ -13,9 +18,7 @@ namespace GaladHen
 	{
 	public:
 
-		UIWidget();
-
-		UIWidget(const char* widgetName);
+		UIWidget(const char* widgetName, UIPage* ownerPage);
 
 		virtual void BuildWidget();
 
@@ -23,5 +26,10 @@ namespace GaladHen
 
 		unsigned int WidgetID;
 		std::string WidgetName;
+
+	protected:
+
+		UIPage* OwnerPage;
+
 	};
 }

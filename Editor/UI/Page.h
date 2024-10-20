@@ -37,9 +37,9 @@ namespace GaladHen
 
 		virtual void NewFrame();
 
-		virtual void Draw();
-
 		virtual void BuildPage();
+
+		virtual void Draw();
 
 		Window* GetOwningWindow();
 

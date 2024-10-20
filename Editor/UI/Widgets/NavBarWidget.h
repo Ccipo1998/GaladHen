@@ -1,5 +1,5 @@
 
-// Default view UI page
+// Main nav bar widget
 
 #pragma once
 
@@ -11,9 +11,15 @@ namespace GaladHen
 	{
 	public:
 
-		UINavBarWidget(const char* widgetName);
+		UINavBarWidget(const char* widgetName, UIPage* ownerPage);
 
 		virtual void BuildWidget() override;
+
+		static unsigned int GetNavBarHeight();
+
+	protected:
+
+		static unsigned int Height;
 
 	};
 }

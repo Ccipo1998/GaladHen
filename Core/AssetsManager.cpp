@@ -12,14 +12,21 @@
 
 namespace GaladHen
 {
-
-    // Inits
+    // STATICS ------------------------------------------------------------------------------
+    
     std::map<const std::string, Model> AssetsManager::Models = std::map<const std::string, Model>{};
     std::map<const std::string, Texture> AssetsManager::Textures = std::map<const std::string, Texture>{};
     std::map<const std::string, Shader> AssetsManager::Shaders = std::map<const std::string, Shader>{};
-    Shader AssetsManager::PBR_VertexShader = Shader("../Shaders/pbr/Pbr.vert", ShaderStage::Vertex); // default
-    Shader AssetsManager::PBR_FragmentShader = Shader("../Shaders/pbr/Pbr.frag", ShaderStage::Fragment); // default
+
+    Shader AssetsManager::PBR_VertexShader = Shader{ "../Shaders/pbr/Pbr.vert", ShaderStage::Vertex }; // default
+    Shader AssetsManager::PBR_FragmentShader = Shader{ "../Shaders/pbr/Pbr.frag", ShaderStage::Fragment }; // default
     ShaderPipeline AssetsManager::PBR_ShaderPipeline = ShaderPipeline{ &PBR_VertexShader, nullptr, nullptr, nullptr, &PBR_FragmentShader };
+
+    Shader AssetsManager::Unlit_VertexShader = Shader{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
+    Shader AssetsManager::Unlit_FragmentShader = Shader{ "../Shaders/Unlit/Unlit.frag", ShaderStage::Fragment };
+    ShaderPipeline AssetsManager::Unlit_ShaderPipeline = ShaderPipeline{ &Unlit_VertexShader, nullptr, nullptr, nullptr, &Unlit_FragmentShader };
+
+    // STATICS ------------------------------------------------------------------------------
 
     void AssetsManager::FreeAssets()
     {
@@ -77,9 +84,21 @@ namespace GaladHen
         return &Textures[assetName];
     }
 
+    Model* AssetsManager::StoreModel(const Model& source, const std::string& modelname)
+    {
+        const auto& res = Models.emplace(modelname, source);
+
+        return &(*res.first).second;
+    }
+
     ShaderPipeline* AssetsManager::GetPipelinePBR()
     {
         return &PBR_ShaderPipeline;
+    }
+
+    ShaderPipeline* AssetsManager::GetPipelineUnlit()
+    {
+        return &Unlit_ShaderPipeline;
     }
 
 }

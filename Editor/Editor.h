@@ -27,6 +27,8 @@ namespace GaladHen
 
 		static void AddDefaultBunnyToScene();
 
+		static void AddDefaultGizmosToScene();
+
 		// @brief
 		// Run the editor, assuming Init() was already called
 		static void Run();

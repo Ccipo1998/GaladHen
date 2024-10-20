@@ -18,6 +18,8 @@
 #include <Math/Ray.h>
 #include <Math/Math.h>
 
+#include <Editor/UI/Pages/MainPage.h>
+
 #include <Core/Color.h>
 
 #include <glm/glm.hpp>
@@ -57,6 +59,10 @@ namespace GaladHen
         CurrentRenderer.LoadLightingData(CurrentScene);
         CurrentRenderer.LoadCameraData(CurrentScene.MainCamera);
         CurrentRenderer.LoadTransformData();
+
+        // create main ui page
+        CurrentPages.emplace_back(new UIMainPage{ "MainPage", &MainWindow });
+        UIPage* MainPage = CurrentPages[0];
 
         AddDefaultBunnyToScene();
 	}
@@ -158,46 +164,70 @@ namespace GaladHen
         aabbMesh.Vertices[2].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[2].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
         CurrentRenderer.LoadMesh(aabbMesh);
 
-        // Gizmos
-        Mesh gizmos{};
-        gizmos.PrimitiveType = Primitive::Line;
-        VertexData v{};
-        v.Position = glm::vec3(0.0f);
-        v.Color = Color::Red;
-        gizmos.Vertices.push_back(v);
-        v.Position = glm::vec3(1.0f, 0.0f, 0.0f);
-        gizmos.Vertices.push_back(v);
-        v.Color = Color::Green;
-        v.Position = glm::vec3(0.0f);
-        gizmos.Vertices.push_back(v);
-        v.Position = glm::vec3(0.0f, 1.0f, 0.0f);
-        gizmos.Vertices.push_back(v);
-        v.Color = Color::Blue;
-        v.Position = glm::vec3(0.0f);
-        gizmos.Vertices.push_back(v);
-        v.Position = glm::vec3(0.0f, 0.0f, 1.0f);
-        gizmos.Vertices.push_back(v);
-        gizmos.Indices = std::vector<unsigned int>{ 0, 1, 2, 3, 4, 5 };
-
-        Material gizmosMat{ &unlit, ShadingMode::SmoothShading };
-        UnlitMaterialData gizmosMatData{};
-        gizmosMatData.UseVertexColor = true;
-        gizmosMat.Data = &gizmosMatData;
-
         CurrentRenderer.LoadModel(*bunny);
         CurrentRenderer.CompileShaders(CurrentScene);
         CurrentRenderer.LoadTexture(*texAlbedo);
         CurrentRenderer.LoadTexture(*texNormal);
         CurrentRenderer.LoadTexture(*texRoughness);
-        CurrentRenderer.LoadMesh(gizmos);
+    }
+
+    void Editor::AddDefaultGizmosToScene()
+    {
+        Model* storedGizmo = nullptr;
+        // Gizmos
+        {
+            Mesh gizmos{};
+            gizmos.PrimitiveType = Primitive::Line;
+            VertexData v{};
+            v.Position = glm::vec3(0.0f);
+            v.Color = Color::Red;
+            gizmos.Vertices.push_back(v);
+            v.Position = glm::vec3(1.0f, 0.0f, 0.0f);
+            gizmos.Vertices.push_back(v);
+            v.Color = Color::Green;
+            v.Position = glm::vec3(0.0f);
+            gizmos.Vertices.push_back(v);
+            v.Position = glm::vec3(0.0f, 1.0f, 0.0f);
+            gizmos.Vertices.push_back(v);
+            v.Color = Color::Blue;
+            v.Position = glm::vec3(0.0f);
+            gizmos.Vertices.push_back(v);
+            v.Position = glm::vec3(0.0f, 0.0f, 1.0f);
+            gizmos.Vertices.push_back(v);
+            gizmos.Indices = std::vector<unsigned int>{ 0, 1, 2, 3, 4, 5 };
+            Model gizmo{};
+            gizmo.Meshes.push_back(gizmos);
+            storedGizmo = AssetsManager::StoreModel(gizmo, "Gizmo");
+        }
+
+        // shaders and materials
+        ShaderPipeline* unlit = AssetsManager::GetPipelineUnlit();
+        Material aabbMat{ unlit, ShadingMode::SmoothShading };
+        UnlitMaterialData aabbMatData{};
+        aabbMatData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+        aabbMat.Data = &aabbMatData;
+        CurrentRenderer.CompileShaderPipeline(*unlit);
+
+        Material gizmosMat{ unlit, ShadingMode::SmoothShading };
+        UnlitMaterialData* gizmosMatData = new UnlitMaterialData();
+        gizmosMatData->UseVertexColor = true;
+        gizmosMat.Data = gizmosMatData;
+
+        SceneObject objGizmo{ storedGizmo, std::vector<Material>{ gizmosMat } };
+
+        CurrentScene.SceneObjects.push_back(objGizmo);
+
+        CurrentRenderer.LoadModel(*storedGizmo);
     }
 
 	void Editor::Run()
 	{
         Window& MainWindow = CurrentWindows[0];
+        UIPage* MainPage = CurrentPages[0];
         while (!MainWindow.IsCloseWindowRequested())
         {
             MainWindow.BeginFrame();
+            MainPage->NewFrame();
 
             glm::vec3 cameraMov = glm::vec3(0.0f);
             if (MainWindow.IsKeyPressed(KeyboardKey::W))
@@ -235,6 +265,9 @@ namespace GaladHen
             CurrentRenderer.Draw(CurrentScene);
             //renderer.Draw(aabbMesh, aabbMat);
             //CurrentRenderer.Draw(gizmos, gizmosMat);
+
+            MainPage->BuildPage();
+            MainPage->Draw();
 
             MainWindow.EndFrame();
         }

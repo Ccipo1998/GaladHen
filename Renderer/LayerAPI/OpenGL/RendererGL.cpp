@@ -57,6 +57,8 @@ namespace GaladHen
 
 			return;
 		}
+
+
 	}
 
 	void RendererGL::LoadMeshData(Mesh& mesh)

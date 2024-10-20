@@ -19,11 +19,13 @@ namespace GaladHen
 
         GLFWwindow* GetGLFWWindow();
 
-        virtual void GetScreenSize(unsigned int& width, unsigned int& height) override;
+        virtual glm::uvec2 GetScreenSize() override;
 
-        virtual void GetWindowSize(unsigned int& width, unsigned int& height) override;
+        virtual glm::uvec2 GetWindowPosition() override;
 
-        virtual void SetWindowSize(unsigned int width, unsigned int height) override;
+        virtual glm::uvec2 GetWindowSize() override;
+
+        virtual void SetWindowSize(glm::uvec2 size) override;
 
         // INPUT --------------------------------------------------------------------------------------------------------------
 

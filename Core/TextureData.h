@@ -27,6 +27,14 @@ namespace GaladHen
         NearestLinear = 5
     };
 
+    enum class TextureFormat
+    {
+        RGB = 0,
+        RGB8 = 1,
+        SRGB = 2,
+        SRGB8
+    };
+
     // texture rendering parameters
     struct TextureParameters
     {

@@ -109,6 +109,8 @@ namespace GaladHen
 		// Free memory allocated for a buffer
 		void FreeBuffer(unsigned int bufferID);
 
+		void CreateFrameBuffer();
+
 	protected:
 
 		void DestroyLowLevelMesh(unsigned int meshID);

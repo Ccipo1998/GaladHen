@@ -14,11 +14,13 @@ namespace GaladHen
 
         // WINDOW ------------------------------------------------------------------------------------------------
 
-        virtual void GetScreenSize(unsigned int& width, unsigned int& height) = 0;
+        virtual glm::uvec2 GetScreenSize() = 0;
 
-        virtual void GetWindowSize(unsigned int& width, unsigned int& height) = 0;
+        virtual glm::uvec2 GetWindowPosition() = 0;
 
-        virtual void SetWindowSize(unsigned int width, unsigned int height) = 0;
+        virtual glm::uvec2 GetWindowSize() = 0;
+
+        virtual void SetWindowSize(glm::uvec2 size) = 0;
 
         // WINDOW ------------------------------------------------------------------------------------------------
 

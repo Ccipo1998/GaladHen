@@ -28,11 +28,10 @@ namespace GaladHen
         // @brief
         // Load texture parameters to use with texture data
         // @param shaderProgram: the shader program which unit and texture parameters refer to
-        // @param unit: texture unit to use to set texture parameters
         // @param wrapping: wrapping mode
         // @param filtering: filtering mode
         // @param mipmap: mipmap filtering mode
-        virtual void LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, const TextureParameters& params) const = 0;
+        virtual void LoadTextureParameters(const TextureParameters& params) const = 0;
 
         // @brief
         // Bind a texture to a specific texture unit to be used inside a shader

@@ -4,14 +4,10 @@
 
 namespace GaladHen
 {
-	UIWidget::UIWidget()
-	{
-		WidgetName = "";
-	}
-
-	UIWidget::UIWidget(const char* widgetName)
+	UIWidget::UIWidget(const char* widgetName, UIPage* ownerPage)
 		: WidgetName(widgetName)
-		{}
+		, OwnerPage(ownerPage)
+	{}
 
 	void UIWidget::BuildWidget() {}
 

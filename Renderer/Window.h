@@ -38,6 +38,10 @@ namespace GaladHen
 
         IWindowAPI* GetAPILevelWindow();
 
+        glm::uvec2 GetWindowPosition();
+
+        glm::uvec2 GetWindowSize();
+
         // void ChangeWindowName(const std::string& windowName);
 
         // void ChangeWindowSize(unsigned int width, unsigned int height);

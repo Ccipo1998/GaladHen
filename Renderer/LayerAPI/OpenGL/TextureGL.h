@@ -19,7 +19,7 @@ namespace GaladHen
 
         virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps) override;
 
-        virtual void LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, const TextureParameters& params) const override;
+        virtual void LoadTextureParameters(const TextureParameters& params) const override;
 
         virtual void BindToTextureUnit(IShaderProgramAPI* shaderProgram, unsigned int unit) const override;
 
@@ -28,6 +28,12 @@ namespace GaladHen
         virtual void SetTextureSamplerName(IShaderProgramAPI* shaderProgram, unsigned int unit, const char* samplerName) const override;
 
         virtual void FreeMemoryGPU() override;
+
+        // OPENGL --------------------------------------------------------------------------------------------------------------------------
+
+        void Bind() const;
+
+        GLuint GetTextureID() const;
 
     protected:
 

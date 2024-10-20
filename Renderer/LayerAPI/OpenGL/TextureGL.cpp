@@ -91,8 +91,6 @@ namespace GaladHen
 
     void TextureGL::LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps)
     {
-        gl3wInit();
-
         // create new texture object
         glGenTextures(1, &TextureID);
         // bind new texture object to texture target
@@ -112,9 +110,9 @@ namespace GaladHen
             glGenerateTextureMipmap(TextureID);
     }
 
-    void TextureGL::LoadTextureParameters(IShaderProgramAPI* shaderProgram, unsigned int unit, const TextureParameters& params) const
+    void TextureGL::LoadTextureParameters(const TextureParameters& params) const
     {
-        BindToTextureUnit(shaderProgram, unit);
+        Bind();
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrappingAssociations[(int)params.HorizontalWrapping]);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrappingAssociations[(int)params.VerticalWrapping]);
@@ -151,5 +149,15 @@ namespace GaladHen
     void TextureGL::FreeMemoryGPU()
     {
         // TODO
+    }
+
+    void TextureGL::Bind() const
+    {
+        glBindTexture(GL_TEXTURE_2D, TextureID);
+    }
+
+    GLuint TextureGL::GetTextureID() const
+    {
+        return TextureID;
     }
 }
