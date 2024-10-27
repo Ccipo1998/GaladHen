@@ -9,6 +9,7 @@
 #include <Renderer/LayerAPI/OpenGL/MeshGL.h>
 #include <Renderer/LayerAPI/OpenGL/ShaderProgramGL.h>
 #include <Renderer/LayerAPI/OpenGL/TextureGL.h>
+#include <Renderer/LayerAPI/OpenGL/RenderBufferGL.h>
 
 #include <Utils/IdList.hpp>
 
@@ -22,6 +23,10 @@ namespace GaladHen
 		RendererGL();
 
 		virtual void Init() override;
+
+		virtual void BeginDraw() override;
+
+		virtual void EndDraw() override;
 
 		virtual void LoadMeshData(Mesh& mesh) override;
 
@@ -54,6 +59,8 @@ namespace GaladHen
 		virtual void UpdateTransformData(TransformQuat& transform) override;
 
 		virtual void Draw(Mesh& mesh, Material& material) override;
+
+		virtual IRenderBufferAPI* GetRenderBuffer() override;
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -109,7 +116,7 @@ namespace GaladHen
 		// Free memory allocated for a buffer
 		void FreeBuffer(unsigned int bufferID);
 
-		void CreateFrameBuffer();
+		RenderBufferGL& GetFrontBuffer();
 
 	protected:
 
@@ -127,6 +134,9 @@ namespace GaladHen
 		CameraData TranslateToShaderData(const Camera& camera);
 		TransformData TranslateToShaderData(const TransformQuat& transform);
 
+		void SwapFrontBuffer();
+		void ClearFrontBuffer(bool colorBuffer, bool depthBuffer, bool stencilBuffer);
+
 		IdList<MeshGL> Meshes;
 		IdList<GLuint> Buffers;
 		IdList<ShaderProgramGL> Shaders;
@@ -137,6 +147,10 @@ namespace GaladHen
 		unsigned int DirectionalLightBufferID;
 		unsigned int CameraDataUniformBufferID;
 		unsigned int TransformDataUniformBufferID;
+
+		// render targets for double buffering
+		RenderBufferGL RenderBuffers[2];
+		int32_t FrontRenderBufferIndex;
 
 	};
 }

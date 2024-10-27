@@ -5,84 +5,13 @@
 
 namespace GaladHen
 {
-    Window::Window(API apiToUse)
+    Window::Window()
         : WindowName("")
         , Width(0)
         , Height(0)
-        , CurrentAPI(apiToUse)
+        , CurrentAPI(API::OpenGL)
         , WindowInput(Input{})
-    {
-        switch (CurrentAPI)
-        {
-        case API::OpenGL:
-
-            // Create OpenGL window
-            WinAPI = new WindowGL{ "", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, true };
-
-            // Because maximize window is true by default, we need to retrieve actual window size
-            glm::uvec2 size = WinAPI->GetWindowSize();
-            Width = size.x;
-            Height = size.y;
-
-            break;
-
-        default:
-            break;
-        }
-
-        RegisterInputCallbacks();
-    }
-
-    Window::Window(API apiToUse, const std::string& windowName)
-        : WindowName(windowName)
-        , Width(0)
-        , Height(0)
-        , CurrentAPI(apiToUse)
-        , WindowInput(Input{})
-    {
-        switch (CurrentAPI)
-        {
-        case API::OpenGL:
-
-            // Create OpenGL window
-            WinAPI = new WindowGL{ windowName.data(), DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, true };
-
-            // Because maximize window is true by default, we need to retrieve actual window size
-            glm::uvec2 size = WinAPI->GetWindowSize();
-            Width = size.x;
-            Height = size.y;
-
-            break;
-
-        default:
-            break;
-        }
-
-        RegisterInputCallbacks();
-    }
-
-    Window::Window(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height)
-        : WindowName(windowName)
-        , Width(width)
-        , Height(height)
-        , CurrentAPI(apiToUse)
-        , WindowInput(Input{})
-    {
-        switch (CurrentAPI)
-        {
-        case API::OpenGL:
-
-            // Create OpenGL window
-            WinAPI = new WindowGL(windowName.data(), width, height, false);
-
-            break;
-
-        default:
-            break;
-        }
-
-        RegisterInputCallbacks();
-    }
+    {}
 
     Window& Window::operator=(Window&& other) noexcept
     {
@@ -116,6 +45,70 @@ namespace GaladHen
         RegisterInputCallbacks();
 
         other.WinAPI = nullptr;
+    }
+
+    void Window::Init(API apiToUse)
+    {
+        switch (CurrentAPI)
+        {
+        case API::OpenGL:
+
+            // Create OpenGL window
+            WinAPI = new WindowGL{ "", DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, true };
+
+            // Because maximize window is true by default, we need to retrieve actual window size
+            glm::uvec2 size = WinAPI->GetWindowSize();
+            Width = size.x;
+            Height = size.y;
+
+            break;
+
+        default:
+            break;
+        }
+
+        RegisterInputCallbacks();
+    }
+
+    void Window::Init(API apiToUse, const std::string& windowName)
+    {
+        switch (CurrentAPI)
+        {
+        case API::OpenGL:
+
+            // Create OpenGL window
+            WinAPI = new WindowGL{ windowName.data(), DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, true };
+
+            // Because maximize window is true by default, we need to retrieve actual window size
+            glm::uvec2 size = WinAPI->GetWindowSize();
+            Width = size.x;
+            Height = size.y;
+
+            break;
+
+        default:
+            break;
+        }
+
+        RegisterInputCallbacks();
+    }
+
+    void Window::Init(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height)
+    {
+        switch (CurrentAPI)
+        {
+        case API::OpenGL:
+
+            // Create OpenGL window
+            WinAPI = new WindowGL(windowName.data(), width, height, false);
+
+            break;
+
+        default:
+            break;
+        }
+
+        RegisterInputCallbacks();
     }
 
     float Window::GetAspectRatio()

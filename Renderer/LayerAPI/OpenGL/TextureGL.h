@@ -10,6 +10,12 @@
 
 namespace GaladHen
 {
+    enum class TextureAllocationType
+    {
+        Mutable,
+        Immutable
+    };
+
     class TextureGL : public ITextureAPI
     {
 
@@ -18,6 +24,8 @@ namespace GaladHen
         TextureGL();
 
         virtual void LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps) override;
+
+        void LoadDepthStencilMemoryGPU(unsigned int width, unsigned int height);
 
         virtual void LoadTextureParameters(const TextureParameters& params) const override;
 
@@ -31,13 +39,19 @@ namespace GaladHen
 
         // OPENGL --------------------------------------------------------------------------------------------------------------------------
 
+        void SetAllocationType(TextureAllocationType allocationType);
+
+        TextureAllocationType GetAllocationType() const;
+
         void Bind() const;
 
         GLuint GetTextureID() const;
 
+        GLuint TextureID;
     protected:
 
-        GLuint TextureID;
+
+        TextureAllocationType AllocationType;
 
         // OpenGL texture formats are called Sized Internal Formats
         // https://www.khronos.org/opengl/wiki/Image_Format

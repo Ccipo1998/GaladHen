@@ -33,15 +33,17 @@ namespace GaladHen
 		// Run the editor, assuming Init() was already called
 		static void Run();
 
+		static const Renderer& GetEditorRenderer();
+
 	private:
 
-		static API CurrentAPI;
+		static API EditorAPI;
 
-		static Scene CurrentScene;
+		static Scene EditorScene;
 
-		static Renderer CurrentRenderer;
-		static std::vector<Window> CurrentWindows;
-		static std::vector<UIPage*> CurrentPages;
+		static Renderer EditorRenderer;
+		static Window EditorWindow;
+		static std::vector<UIPage*> EditorPages;
 
 	};
 }

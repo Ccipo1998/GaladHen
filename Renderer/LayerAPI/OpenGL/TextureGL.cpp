@@ -87,27 +87,54 @@ namespace GaladHen
 
     TextureGL::TextureGL()
         : TextureID(0)
+        , AllocationType(TextureAllocationType::Immutable)
     {}
 
     void TextureGL::LoadMemoryGPU(const void* textureBytes, unsigned int width, unsigned int height, unsigned int numberOfChannels, TextureFormat textureFormat, unsigned int numberOfMipMaps)
     {
+        // free old memory
+        FreeMemoryGPU();
+
         // create new texture object
         glGenTextures(1, &TextureID);
         // bind new texture object to texture target
         glBindTexture(GL_TEXTURE_2D, TextureID);
 
-        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureBytes);
+        switch (AllocationType)
+        {
+        case GaladHen::TextureAllocationType::Mutable:
+        {
+            glTexImage2D(GL_TEXTURE_2D, numberOfMipMaps, TextureFormatAssociations[(int)textureFormat], width, height, 0, PixelChannelsAssociations[numberOfChannels - 1], PixelChannelDepthAssociations[0], textureBytes);
+            break;
+        }
+        case GaladHen::TextureAllocationType::Immutable:
+        {
+            // allocate immutable storage basing on number of channels and on bit depth
+            // IMPORTANT: internal format is an external variable because not all the textures need to be interpreted as SRGB (example: normal maps are already stored in linear values)
+            // levels are the number of mipmaps
+            glTexStorage2D(GL_TEXTURE_2D, numberOfMipMaps, TextureFormatAssociations[(int)textureFormat], width, height);
 
-        // allocate immutable storage basing on number of channels and on bit depth
-        // IMPORTANT: internal format is an external variable because not all the textures need to be interpreted as SRGB (example: normal maps are already stored in linear values)
-        // levels are the number of mipmaps
-        glTexStorage2D(GL_TEXTURE_2D, numberOfMipMaps, TextureFormatAssociations[(int)textureFormat], width, height);
-
-        // copy texture data to texture object
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PixelChannelsAssociations[numberOfChannels - 1], PixelChannelDepthAssociations[0], textureBytes);
+            // copy texture data to texture object
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, PixelChannelsAssociations[numberOfChannels - 1], PixelChannelDepthAssociations[0], textureBytes);
+        }
+        default:
+            break;
+        }
 
         if (numberOfMipMaps > 0)
             glGenerateTextureMipmap(TextureID);
+    }
+
+    void TextureGL::LoadDepthStencilMemoryGPU(unsigned int width, unsigned int height)
+    {
+        // free old memory
+        FreeMemoryGPU();
+
+        glGenTextures(1, &TextureID);
+        glBindTexture(GL_TEXTURE_2D, TextureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
 
     void TextureGL::LoadTextureParameters(const TextureParameters& params) const
@@ -149,6 +176,17 @@ namespace GaladHen
     void TextureGL::FreeMemoryGPU()
     {
         // TODO
+        glDeleteTextures(1, &TextureID);
+    }
+
+    void TextureGL::SetAllocationType(TextureAllocationType allocationType)
+    {
+        AllocationType = allocationType;
+    }
+
+    TextureAllocationType TextureGL::GetAllocationType() const
+    {
+        return AllocationType;
     }
 
     void TextureGL::Bind() const

@@ -12,6 +12,8 @@
 
 #include <Utils/Log.h>
 
+#include <Renderer/Common.h>
+
 #include <glm/glm.hpp>
 
 namespace GaladHen
@@ -26,6 +28,7 @@ namespace GaladHen
         , MousePosCallbackOwner(nullptr)
     {
         FillKeyAssociations();
+        Init();
 
         if (maximizeWindow)
         {
@@ -162,12 +165,35 @@ namespace GaladHen
         winGL->SendClosingWindowCallback();
     }
 
+    void WindowGL::Init()
+    {
+        // Init context
+
+        if (!glfwInit())
+        {
+            Log::Error("RendererGL", "GLFW failed to initialize the context");
+
+            return;
+        }
+
+        // setting the minimum required version of OpenGL
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GLSL_VERSION_MAJOR);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GLSL_VERSION_MINOR);
+        // core profile is a subset of OpenGL features (without the backward-compatible features)
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        // for MacOS:
+        //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    }
+
     void WindowGL::CreateOpenGLWindow(unsigned int width, unsigned int height, const char* name)
     {
+
         WinGL = glfwCreateWindow(width, height, name, nullptr, nullptr);
         if (WinGL == nullptr)
         {
             Log::Error("WindowGL", "GLFW failed to create the window");
+
+            return;
         }
 
         glfwMakeContextCurrent(WinGL);
@@ -179,8 +205,6 @@ namespace GaladHen
         {
             // TODO: Find out why gl3w fails creating the context, but without this gl3wInit() call the first call to a gl function will crash
             Log::Error("WindowGL", "Error: GL3W failed to initialize the context");
-
-            return;
         }
     }
 

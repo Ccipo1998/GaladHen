@@ -17,11 +17,7 @@ namespace GaladHen
 
     public:
 
-        Window(API apiToUse);
-        
-        Window(API apiToUse, const std::string& windowName);
-
-        Window(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height);
+        Window();
 
         Window(const Window& other) = delete;
         Window& operator=(const Window& other) = delete;
@@ -29,6 +25,12 @@ namespace GaladHen
         Window(Window&& other) noexcept;
 
         // WINDOW ----------------------------------------------------------------------------------------------------------------
+
+        void Init(API apiToUse);
+
+        void Init(API apiToUse, const std::string& windowName);
+
+        void Init(API apiToUse, const std::string& windowName, unsigned int width, unsigned int height);
 
         float GetAspectRatio();
 

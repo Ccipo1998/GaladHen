@@ -19,12 +19,17 @@ namespace GaladHen
 	class ShaderProgram;
 	class Camera;
 	class TransformQuat;
+	class IRenderBufferAPI;
 
 	class IRendererAPI
 	{
 	public:
 
 		virtual void Init() = 0;
+
+		virtual void BeginDraw() = 0;
+
+		virtual void EndDraw() = 0;
 
 		virtual void LoadMeshData(Mesh& mesh) = 0;
 
@@ -57,5 +62,7 @@ namespace GaladHen
 		virtual void UpdateTransformData(TransformQuat& transform) = 0;
 
 		virtual void Draw(Mesh& mesh, Material& material) = 0;
+
+		virtual IRenderBufferAPI* GetRenderBuffer() = 0;
 	};
 }

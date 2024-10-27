@@ -30,35 +30,32 @@ namespace GaladHen
 		, DirectionalLightBufferID(0)
 		, CameraDataUniformBufferID(0)
 		, TransformDataUniformBufferID(0)
+		, FrontRenderBufferIndex(0)
 	{}
 
 	void RendererGL::Init()
 	{
-		// Init context
-
-		if (!glfwInit())
-		{
-			Log::Error("RendererGL", "GLFW failed to initialize the context");
-
-			return;
-		}
-
-		// setting the minimum required version of OpenGL
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GLSL_VERSION_MAJOR);
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GLSL_VERSION_MINOR);
-		// core profile is a subset of OpenGL features (without the backward-compatible features)
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		// for MacOS:
-		//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
 		if (!gl3wInit())
 		{
 			Log::Error("RendererGL", "Error: GL3W failed to initialize the context");
-
-			return;
 		}
 
+		// Create render target resources
+		RenderBuffers[0].Create(1920, 1080);
+		RenderBuffers[1].Create(1920, 1080);
+	}
 
+	void RendererGL::BeginDraw()
+	{
+		ClearFrontBuffer(true, true, true);
+
+		//glViewport(0, 0, 1280, 720);
+		GetFrontBuffer().Bind();
+	}
+
+	void RendererGL::EndDraw()
+	{
+		SwapFrontBuffer();
 	}
 
 	void RendererGL::LoadMeshData(Mesh& mesh)
@@ -308,6 +305,11 @@ namespace GaladHen
 		meshGL.Draw(&shaderGL, mesh.PrimitiveType);
 	}
 
+	IRenderBufferAPI* RendererGL::GetRenderBuffer()
+	{
+		return &GetFrontBuffer();
+	}
+
 	unsigned int RendererGL::LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, size_t totalSizeBytes, void* data)
 	{
 		unsigned int id = CreateBuffer();
@@ -400,6 +402,11 @@ namespace GaladHen
 		glDeleteBuffers(1, &Buffers.GetObjectWithId(bufferID));
 	}
 
+	RenderBufferGL& RendererGL::GetFrontBuffer()
+	{
+		return RenderBuffers[FrontRenderBufferIndex];
+	}
+
 	void RendererGL::DestroyLowLevelMesh(unsigned int meshID)
 	{
 		Meshes.GetObjectWithId(meshID).FreeMemoryGPU();
@@ -486,6 +493,23 @@ namespace GaladHen
 			ModelMatrix,
 			NormalMatrix
 		};
+	}
+
+	void RendererGL::SwapFrontBuffer()
+	{
+		// Unbind old frame buffer
+		RenderBufferGL& FrontBuffer = RenderBuffers[FrontRenderBufferIndex];
+		FrontBuffer.Unbind();
+
+		FrontRenderBufferIndex = glm::abs(FrontRenderBufferIndex - 1);
+	}
+
+	void RendererGL::ClearFrontBuffer(bool colorBuffer, bool depthBuffer, bool stencilBuffer)
+	{
+		GetFrontBuffer().Bind();
+		GLbitfield mask = (colorBuffer ? GL_COLOR_BUFFER_BIT : 0) | (depthBuffer ? GL_DEPTH_BUFFER_BIT : 0) | (stencilBuffer ? GL_STENCIL_BUFFER_BIT : 0);
+		glClear(mask);
+		GetFrontBuffer().Unbind();
 	}
 }
 

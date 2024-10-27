@@ -25,16 +25,25 @@ namespace GaladHen
     class Texture;
     class Camera;
     class SceneObject;
+    class RenderBuffer;
 
     class Renderer final
     {
     public:
 
-        Renderer(API apiToUse);
+        Renderer();
 
         // @brief
         // Perform generic initialization operations
-        void Init();
+        void Init(API apiToUse = API::OpenGL);
+
+        // @brief
+        // Operations needed before draw calls
+        void BeginDraw();
+
+        // @brief
+        // Operations needed after draw calls
+        void EndDraw();
 
         // @brief
         // Load all the models used by the scene
@@ -128,6 +137,10 @@ namespace GaladHen
         // Compile a compute shader program
         // @returns: compilation result
         bool CompileComputeShader(ComputeShader& program);
+
+        // @brief
+        // Returns the current render buffer object
+        const RenderBuffer GetRenderBuffer() const;
 
     protected:
 

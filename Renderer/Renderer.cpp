@@ -2,6 +2,7 @@
 #include "Renderer.h"
 #include "LayerAPI/OpenGL/RendererGL.h"
 #include "LayerAPI/OpenGL/MaterialDataGL.h"
+#include "RenderBuffer.h"
 
 #include <Core/Mesh.h>
 #include <Core/Model.h>
@@ -20,29 +21,38 @@
 
 namespace GaladHen
 {
-    Renderer::Renderer(API apiToUse)
-        : CurrentAPI(apiToUse)
+    Renderer::Renderer()
+        : CurrentAPI(API::OpenGL)
         , RendererAPI(nullptr)
+    {}
+
+    void Renderer::Init(API apiToUse)
     {
         // Initialization basing on API
 
         switch (apiToUse)
         {
+        default:
         case API::OpenGL:
-
+        {
             // Create low level OpenGL Renderer
             RendererAPI = new RendererGL{};
 
             break;
-
-        default:
-            break;
         }
+        }
+
+        RendererAPI->Init();
     }
 
-    void Renderer::Init()
+    void Renderer::BeginDraw()
     {
-        RendererAPI->Init();
+        RendererAPI->BeginDraw();
+    }
+
+    void Renderer::EndDraw()
+    {
+        RendererAPI->EndDraw();
     }
 
     void Renderer::LoadModels(Scene& scene)
@@ -321,5 +331,10 @@ namespace GaladHen
         }
 
         return result.Success();
+    }
+
+    const RenderBuffer Renderer::GetRenderBuffer() const
+    {
+        return RenderBuffer{ RendererAPI->GetRenderBuffer() };
     }
 }

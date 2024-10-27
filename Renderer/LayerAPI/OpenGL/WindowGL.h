@@ -90,6 +90,8 @@ namespace GaladHen
 
         // OPENGL ----------------------------------------------------------------------------------------------------
 
+        void Init();
+
         void CreateOpenGLWindow(unsigned int width, unsigned int height, const char* name);
 
         GLFWwindow* WinGL;

@@ -3,6 +3,7 @@
 
 #include <Renderer/Renderer.h>
 #include <Renderer/Window.h>
+#include <Renderer/RenderBuffer.h>
 #include <Core/Scene.h>
 #include <Core/ShaderProgram.h>
 #include <Core/Shader.h>
@@ -24,17 +25,19 @@
 
 #include <glm/glm.hpp>
 
+#include <imgui/imgui.h>
+
 #include <string>
 
 namespace GaladHen
 {
     // STATIC INITIALIZATIONS -----------------------------------------------------------------------------------
 
-    API Editor::CurrentAPI = API::OpenGL;
-    Scene Editor::CurrentScene{};
-    Renderer Editor::CurrentRenderer{ API::OpenGL };
-    std::vector<Window> Editor::CurrentWindows{};
-    std::vector<UIPage*> Editor::CurrentPages{};
+    API Editor::EditorAPI = API::OpenGL;
+    Scene Editor::EditorScene{};
+    Renderer Editor::EditorRenderer{};
+    Window Editor::EditorWindow{};
+    std::vector<UIPage*> Editor::EditorPages{};
 
     // STATIC INITIALIZATIONS -----------------------------------------------------------------------------------
 
@@ -42,27 +45,25 @@ namespace GaladHen
 	{
 		// TODO: check if the editor was already initialized -> reload and reset to init state is required
 
-        // create renderer
-        CurrentRenderer = Renderer{ apiToUse };
-        CurrentRenderer.Init();
-
 		// make MainWindow
-		CurrentWindows.emplace_back(Window{ API::OpenGL, "GaladHen" });
-		Window& MainWindow = CurrentWindows[0];
-		MainWindow.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
-		MainWindow.EnableDepthTest(true);
+		EditorWindow.Init(API::OpenGL, "GaladHen");
+        EditorWindow.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
+        EditorWindow.EnableDepthTest(true);
+
+        // create renderer
+        EditorRenderer.Init(apiToUse);
 
 		// create scene
-		CurrentScene = Scene{};
+		EditorScene = Scene{};
 
         // init scene for renderer;
-        CurrentRenderer.LoadLightingData(CurrentScene);
-        CurrentRenderer.LoadCameraData(CurrentScene.MainCamera);
-        CurrentRenderer.LoadTransformData();
+        EditorRenderer.LoadLightingData(EditorScene);
+        EditorRenderer.LoadCameraData(EditorScene.MainCamera);
+        EditorRenderer.LoadTransformData();
 
         // create main ui page
-        CurrentPages.emplace_back(new UIMainPage{ "MainPage", &MainWindow });
-        UIPage* MainPage = CurrentPages[0];
+        EditorPages.emplace_back(new UIMainPage{ "MainPage", &EditorWindow });
+        UIPage* MainPage = EditorPages[0];
 
         AddDefaultBunnyToScene();
 	}
@@ -130,12 +131,12 @@ namespace GaladHen
         UnlitMaterialData aabbMatData{};
         aabbMatData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
         aabbMat.Data = &aabbMatData;
-        CurrentRenderer.CompileShaderPipeline(unlit);
+        EditorRenderer.CompileShaderPipeline(unlit);
 
         // ray
         Ray ray
         {
-            CurrentScene.MainCamera.Transform.GetPosition(),
+            EditorScene.MainCamera.Transform.GetPosition(),
             glm::vec3(0.0f, 0.0f, -1.0f),
             1000.0f
         };
@@ -146,7 +147,7 @@ namespace GaladHen
         SceneObject objBunny{ bunny, bunnyMats };
         objBunny.Transform.SetPosition(glm::vec3(0.0f, 1.5f, 0.0f));
         objBunny.Transform.SetYaw(50.0f);
-        CurrentScene.SceneObjects.push_back(objBunny);
+        EditorScene.SceneObjects.push_back(objBunny);
         std::vector<Material> planeMats;
         planeMats.push_back(planeMat);
         SceneObject objPlane{ plane, planeMats };
@@ -162,13 +163,13 @@ namespace GaladHen
         aabbMesh.Vertices[1].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[1].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
         aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex2]);
         aabbMesh.Vertices[2].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[2].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
-        CurrentRenderer.LoadMesh(aabbMesh);
+        EditorRenderer.LoadMesh(aabbMesh);
 
-        CurrentRenderer.LoadModel(*bunny);
-        CurrentRenderer.CompileShaders(CurrentScene);
-        CurrentRenderer.LoadTexture(*texAlbedo);
-        CurrentRenderer.LoadTexture(*texNormal);
-        CurrentRenderer.LoadTexture(*texRoughness);
+        EditorRenderer.LoadModel(*bunny);
+        EditorRenderer.CompileShaders(EditorScene);
+        EditorRenderer.LoadTexture(*texAlbedo);
+        EditorRenderer.LoadTexture(*texNormal);
+        EditorRenderer.LoadTexture(*texRoughness);
     }
 
     void Editor::AddDefaultGizmosToScene()
@@ -206,7 +207,7 @@ namespace GaladHen
         UnlitMaterialData aabbMatData{};
         aabbMatData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
         aabbMat.Data = &aabbMatData;
-        CurrentRenderer.CompileShaderPipeline(*unlit);
+        EditorRenderer.CompileShaderPipeline(*unlit);
 
         Material gizmosMat{ unlit, ShadingMode::SmoothShading };
         UnlitMaterialData* gizmosMatData = new UnlitMaterialData();
@@ -215,63 +216,69 @@ namespace GaladHen
 
         SceneObject objGizmo{ storedGizmo, std::vector<Material>{ gizmosMat } };
 
-        CurrentScene.SceneObjects.push_back(objGizmo);
+        EditorScene.SceneObjects.push_back(objGizmo);
 
-        CurrentRenderer.LoadModel(*storedGizmo);
+        EditorRenderer.LoadModel(*storedGizmo);
     }
 
 	void Editor::Run()
 	{
-        Window& MainWindow = CurrentWindows[0];
-        UIPage* MainPage = CurrentPages[0];
-        while (!MainWindow.IsCloseWindowRequested())
+        UIPage* MainPage = EditorPages[0];
+        while (!EditorWindow.IsCloseWindowRequested())
         {
-            MainWindow.BeginFrame();
-            MainPage->NewFrame();
+            EditorWindow.BeginFrame();
 
             glm::vec3 cameraMov = glm::vec3(0.0f);
-            if (MainWindow.IsKeyPressed(KeyboardKey::W))
+            if (EditorWindow.IsKeyPressed(KeyboardKey::W))
             {
                 cameraMov.z += 1.0f;
             }
-            if (MainWindow.IsKeyPressed(KeyboardKey::S))
+            if (EditorWindow.IsKeyPressed(KeyboardKey::S))
             {
                 cameraMov.z += -1.0f;
             }
-            if (MainWindow.IsKeyPressed(KeyboardKey::D))
+            if (EditorWindow.IsKeyPressed(KeyboardKey::D))
             {
                 cameraMov.x += 1.0f;
             }
-            if (MainWindow.IsKeyPressed(KeyboardKey::A))
+            if (EditorWindow.IsKeyPressed(KeyboardKey::A))
             {
                 cameraMov.x += -1.0f;
             }
-            if (MainWindow.IsKeyPressed(KeyboardKey::E))
+            if (EditorWindow.IsKeyPressed(KeyboardKey::E))
             {
                 cameraMov.y += 1.0f;
             }
-            if (MainWindow.IsKeyPressed(KeyboardKey::Q))
+            if (EditorWindow.IsKeyPressed(KeyboardKey::Q))
             {
                 cameraMov.y += -1.0f;
             }
             glm::vec2 cameraRot = glm::vec2(0.0f);
-            if (MainWindow.IsKeyPressed(MouseKey::Right))
+            if (EditorWindow.IsKeyPressed(MouseKey::Right))
             {
-                MainWindow.GetMousePositionDelta(cameraRot.x, cameraRot.y);
+                EditorWindow.GetMousePositionDelta(cameraRot.x, cameraRot.y);
             }
-            CurrentScene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
-            CurrentRenderer.UpdateCameraData(CurrentScene.MainCamera);
+            EditorScene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
+            EditorRenderer.UpdateCameraData(EditorScene.MainCamera);
 
-            CurrentRenderer.Draw(CurrentScene);
+            EditorRenderer.BeginDraw();
+            EditorRenderer.Draw(EditorScene);
+            EditorRenderer.EndDraw();
             //renderer.Draw(aabbMesh, aabbMat);
             //CurrentRenderer.Draw(gizmos, gizmosMat);
 
+            MainPage->NewFrame();
             MainPage->BuildPage();
             MainPage->Draw();
 
-            MainWindow.EndFrame();
+            EditorWindow.EndFrame();
         }
 
-        MainWindow.CloseWindow();
+        EditorWindow.CloseWindow();
 	}
+
+    const Renderer& Editor::GetEditorRenderer()
+    {
+        return EditorRenderer;
+    }
 }
