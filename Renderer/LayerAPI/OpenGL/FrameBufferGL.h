@@ -15,6 +15,11 @@ namespace GaladHen
 
 		FrameBufferGL();
 
+		FrameBufferGL(const FrameBufferGL& other) = delete;
+		FrameBufferGL& operator=(const FrameBufferGL& other) = delete;
+		FrameBufferGL& operator=(FrameBufferGL&& other) = delete;
+		FrameBufferGL(FrameBufferGL&& other) = delete;
+
 		void Create();
 
 		virtual void Bind();

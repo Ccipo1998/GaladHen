@@ -260,12 +260,12 @@ namespace GaladHen
             }
             EditorScene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
             EditorRenderer.UpdateCameraData(EditorScene.MainCamera);
+            //renderer.Draw(aabbMesh, aabbMat);
+            //CurrentRenderer.Draw(gizmos, gizmosMat);
 
             EditorRenderer.BeginDraw();
             EditorRenderer.Draw(EditorScene);
             EditorRenderer.EndDraw();
-            //renderer.Draw(aabbMesh, aabbMat);
-            //CurrentRenderer.Draw(gizmos, gizmosMat);
 
             MainPage->NewFrame();
             MainPage->BuildPage();

@@ -14,13 +14,25 @@ namespace GaladHen
 
 	void UIAssetsViewWidget::BuildWidget()
 	{	
-		/*glm::uvec2 pos = OwnerPage->GetOwningWindow()->GetWindowPosition();
-		glm::uvec2 size = OwnerPage->GetOwningWindow()->GetWindowSize();*/
-
-		if (ImGui::Begin("Assets View"))
+		if (ImGui::Begin(WidgetName.data()))
 		{
-			/*ImGui::SetWindowPos(ImVec2{ (float)pos.x, (float)pos.y });
-			ImGui::SetWindowSize(ImVec2{ (float)size.x * WidthScale, (float)size.y * HeightScale });*/
+			//static bool dock_builder = true;
+			//if (dock_builder)
+			//{
+			//	dock_builder = false;
+
+			//	// init dockspace
+			//	ImGuiID dockspace_id = ImGui::GetID(WidgetName.data());
+			//	ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+
+			//	// clear previous layout
+			//	ImGui::DockBuilderRemoveNode(dockspace_id);
+
+			//	// create new docking node
+			//	ImGui::DockBuilderAddNode(dockspace_id);
+
+			//	ImGui::DockBuilderFinish(dockspace_id);
+			//}
 
 			ImGui::End();
 		}

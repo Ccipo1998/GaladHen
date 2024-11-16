@@ -41,8 +41,8 @@ namespace GaladHen
 		}
 
 		// Create render target resources
-		RenderBuffers[0].Create(1920, 1080);
-		RenderBuffers[1].Create(1920, 1080);
+		RenderBuffers[0].Create(DEFAULT_RENDER_BUFFER_WIDTH, DEFAULT_RENDER_BUFFER_HEIGHT);
+		RenderBuffers[1].Create(DEFAULT_RENDER_BUFFER_WIDTH, DEFAULT_RENDER_BUFFER_HEIGHT);
 	}
 
 	void RendererGL::BeginDraw()
@@ -308,6 +308,20 @@ namespace GaladHen
 	IRenderBufferAPI* RendererGL::GetRenderBuffer()
 	{
 		return &GetFrontBuffer();
+	}
+
+	void RendererGL::SetViewport(const glm::uvec2& position, const glm::uvec2& size)
+	{
+		glViewport(position.x, position.y, size.x, size.y);
+	}
+
+	void RendererGL::SetRenderTargetSize(const glm::uvec2& size)
+	{
+		RenderBuffers[0].Free();
+		RenderBuffers[1].Free();
+
+		RenderBuffers[0].Create(size.x, size.y);
+		RenderBuffers[1].Create(size.x, size.y);
 	}
 
 	unsigned int RendererGL::LoadBufferData(GLenum bufferType, GLuint binding, GLenum usage, size_t totalSizeBytes, void* data)

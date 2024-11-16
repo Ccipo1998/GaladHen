@@ -337,4 +337,14 @@ namespace GaladHen
     {
         return RenderBuffer{ RendererAPI->GetRenderBuffer() };
     }
+
+    void Renderer::SetViewport(const glm::uvec2& position, const glm::uvec2& size)
+    {
+        RendererAPI->SetViewport(position, size);
+    }
+
+    void Renderer::SetRenderTargetSize(const glm::uvec2& size)
+    {
+        RendererAPI->SetRenderTargetSize(size);
+    }
 }

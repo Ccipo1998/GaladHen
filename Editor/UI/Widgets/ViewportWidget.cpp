@@ -1,7 +1,6 @@
 
 #include "ViewportWidget.h"
 
-#include <glm/glm.hpp>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -16,23 +15,51 @@ namespace GaladHen
 
 	void UIViewportWidget::BuildWidget()
 	{
+		// Docking tests, todo
+
 		// Parent dockspace
-		ImGuiID dockspace_id = ImGui::GetID("Root");
+		//ImGuiID dockspace_id = ImGui::GetID("Viewport");
 
-		static bool first_time = true;
-		if (first_time)
+		//static bool first_time = true;
+		//if (first_time)
+		//{
+		//	first_time = false;
+
+		//	ImGui::DockBuilderRemoveNode(dockspace_id);
+		//	ImGui::DockBuilderAddNode(dockspace_id);
+
+
+		//	ImGui::DockBuilderFinish(dockspace_id);
+		//}
+
+		/*ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->Pos);
+		ImGui::SetNextWindowSize(viewport->Size);
+		ImGui::SetNextWindowViewport(viewport->ID);*/
+		
+		static bool first_execution = true;
+		if (first_execution)
 		{
-			first_time = false;
+			ImGuiID dockspace_id = ImGui::GetID("RootDockSpace");
+			ImGuiDockNode* node = ImGui::DockBuilderGetNode(dockspace_id);
+			ImGui::DockBuilderAddNode(dockspace_id);
+			ImGuiID left_id, right_id;
+			ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.3f, &left_id, &right_id);
+			ImGui::DockBuilderDockWindow(WidgetName.data(), left_id);
 
-			auto dock_id_center = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Up, 1.0f, nullptr, &dockspace_id);
-
-			ImGui::DockBuilderDockWindow(WidgetName.data(), dock_id_center);
-
-			ImGui::DockBuilderFinish(dockspace_id);
+			first_execution = false;
 		}
 
 		ImGui::Begin(WidgetName.data());
-		ImGui::GetWindowDrawList()->AddImage(Editor::GetEditorRenderer().GetRenderBuffer().GetRenderBufferColorID(), ImGui::GetWindowContentRegionMin(), ImGui::GetWindowContentRegionMax(), ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		ImVec2 pos = ImGui::GetWindowPos();
+		pos.x += 10.0f;
+		pos.y += 10.0f;
+		ImVec2 size = ImGui::GetWindowPos();
+		size.x += ImGui::GetWindowSize().x - 10.0f;
+		size.y += ImGui::GetWindowSize().y - 10.0f;
+		ImGui::GetWindowDrawList()->AddImage(Editor::GetEditorRenderer().GetRenderBuffer().GetRenderBufferColorID(), pos, size, ImVec2{0, 1}, ImVec2{1, 0});
+
 		ImGui::End();
 	}
 }

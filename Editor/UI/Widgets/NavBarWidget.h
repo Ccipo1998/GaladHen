@@ -15,11 +15,5 @@ namespace GaladHen
 
 		virtual void BuildWidget() override;
 
-		static unsigned int GetNavBarHeight();
-
-	protected:
-
-		static unsigned int Height;
-
 	};
 }

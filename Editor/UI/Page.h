@@ -5,7 +5,9 @@
 
 #include <imgui/imgui_internal.h>
 #include <string>
-#include <Utils/IdList.hpp>
+#include <vector>
+
+#include <glm/fwd.hpp>
 
 // TODO: rendere api agnostic a runtime (virtual)
 
@@ -24,7 +26,7 @@ namespace GaladHen
 
 	public:
 
-		UIPage(const char* pageTitle, Window* ownerWindow);
+		UIPage(const char* pageName, Window* ownerWindow);
 
 		// Copy constructor
 		UIPage(const UIPage& other) noexcept;
@@ -53,17 +55,19 @@ namespace GaladHen
 
 		// INPUT -----------------------------------------------------------
 
-		IdList<UIWidget*> Widgets;
+		std::string PageName;
+		std::vector<UIWidget*> Widgets;
 
 		~UIPage();
 
 	protected:
 
+		void BuildWidgets();
+
 		void CreateContext();
 
 		void Init();
 
-		std::string PageTitle;
 		Window* OwnerWindow;
 		UIContext* Context;
 

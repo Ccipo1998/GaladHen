@@ -1,5 +1,7 @@
 
 #include "Page.h"
+#include "Widget.h"
+
 #include <Renderer/Window.h>
 
 #include <Renderer/Window.h>
@@ -15,8 +17,8 @@
 
 namespace GaladHen
 {
-	UIPage::UIPage(const char* pageTitle, Window* ownerWindow)
-		: PageTitle(pageTitle)
+	UIPage::UIPage(const char* pageName, Window* ownerWindow)
+		: PageName(pageName)
 		, OwnerWindow(ownerWindow)
 	{
 		Init();
@@ -25,7 +27,7 @@ namespace GaladHen
 	UIPage::UIPage(const UIPage& other) noexcept
 	{
 		OwnerWindow = other.OwnerWindow;
-		PageTitle = other.PageTitle;
+		PageName = other.PageName;
 
 		Init();
 	}
@@ -33,7 +35,7 @@ namespace GaladHen
 	UIPage& UIPage::operator=(const UIPage& other) noexcept
 	{
 		OwnerWindow = other.OwnerWindow;
-		PageTitle = other.PageTitle;
+		PageName = other.PageName;
 
 		Init();
 
@@ -44,26 +46,26 @@ namespace GaladHen
 	{
 		Context = other.Context;
 		OwnerWindow = other.OwnerWindow;
-		PageTitle = other.PageTitle;
+		PageName = other.PageName;
 
 		Init();
 
 		other.Context = nullptr;
 		other.OwnerWindow = nullptr;
-		other.PageTitle.clear();
+		other.PageName.clear();
 	}
 
 	UIPage& UIPage::operator=(UIPage&& other) noexcept
 	{
 		Context = other.Context;
 		OwnerWindow = other.OwnerWindow;
-		PageTitle = other.PageTitle;
+		PageName = other.PageName;
 
 		Init();
 
 		other.Context = nullptr;
 		other.OwnerWindow = nullptr;
-		other.PageTitle.clear();
+		other.PageName.clear();
 
 		return *this;
 	}
@@ -135,6 +137,20 @@ namespace GaladHen
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
+
+		for (UIWidget* widget : Widgets)
+		{
+			delete widget;
+		}
+	}
+
+	void UIPage::BuildWidgets()
+	{
+		// Call build page on each UI widget
+		for (UIWidget* widget : Widgets)
+		{
+			widget->BuildWidget();
+		}
 	}
 
 	void UIPage::CreateContext()

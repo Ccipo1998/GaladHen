@@ -15,10 +15,5 @@ namespace GaladHen
 
 		virtual void BuildWidget() override;
 
-	protected:
-
-		float WidthScale = 0.2f;
-		float HeightScale = 0.7f;
-
 	};
 }

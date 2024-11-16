@@ -142,6 +142,10 @@ namespace GaladHen
         // Returns the current render buffer object
         const RenderBuffer GetRenderBuffer() const;
 
+        void SetViewport(const glm::uvec2& position, const glm::uvec2& size);
+
+        void SetRenderTargetSize(const glm::uvec2& size);
+
     protected:
 
         API CurrentAPI;

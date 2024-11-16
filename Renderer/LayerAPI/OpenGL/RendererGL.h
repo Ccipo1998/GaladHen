@@ -62,6 +62,10 @@ namespace GaladHen
 
 		virtual IRenderBufferAPI* GetRenderBuffer() override;
 
+		virtual void SetViewport(const glm::uvec2& position, const glm::uvec2& size) override;
+
+		virtual void SetRenderTargetSize(const glm::uvec2& size) override;
+
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
 
 		// @brief

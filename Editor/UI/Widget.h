@@ -5,11 +5,6 @@
 
 #include <string>
 
-class UINode
-{
-
-};
-
 namespace GaladHen
 {
 	class UIPage;
@@ -24,7 +19,6 @@ namespace GaladHen
 
 		~UIWidget();
 
-		unsigned int WidgetID;
 		std::string WidgetName;
 
 	protected:

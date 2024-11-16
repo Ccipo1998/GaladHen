@@ -8,6 +8,8 @@
 
 #include <Core/Light.h>
 
+#include <glm/fwd.hpp>
+
 namespace GaladHen
 {
 	class CompilationResult;
@@ -64,5 +66,9 @@ namespace GaladHen
 		virtual void Draw(Mesh& mesh, Material& material) = 0;
 
 		virtual IRenderBufferAPI* GetRenderBuffer() = 0;
+
+		virtual void SetViewport(const glm::uvec2& position, const glm::uvec2& size) = 0;
+
+		virtual void SetRenderTargetSize(const glm::uvec2& size) = 0;
 	};
 }

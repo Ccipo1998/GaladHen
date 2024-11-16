@@ -19,6 +19,12 @@ namespace GaladHen
 
 		RenderBufferGL();
 
+		// Explicit copy needed for a render buffer
+		RenderBufferGL(const RenderBufferGL& other) = delete;
+		RenderBufferGL& operator=(const RenderBufferGL& other) = delete;
+		RenderBufferGL& operator=(RenderBufferGL&& other) = delete;
+		RenderBufferGL(RenderBufferGL&& other) = delete;
+
 		// FRAMEBUFFER ----------------------------------------------------------------------------------------
 
 		void Create(unsigned int width, unsigned int height);
