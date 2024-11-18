@@ -14,29 +14,7 @@ namespace GaladHen
 	{}
 
 	void UIViewportWidget::BuildWidget()
-	{
-		// Docking tests, todo
-
-		// Parent dockspace
-		//ImGuiID dockspace_id = ImGui::GetID("Viewport");
-
-		//static bool first_time = true;
-		//if (first_time)
-		//{
-		//	first_time = false;
-
-		//	ImGui::DockBuilderRemoveNode(dockspace_id);
-		//	ImGui::DockBuilderAddNode(dockspace_id);
-
-
-		//	ImGui::DockBuilderFinish(dockspace_id);
-		//}
-
-		/*ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(viewport->Pos);
-		ImGui::SetNextWindowSize(viewport->Size);
-		ImGui::SetNextWindowViewport(viewport->ID);*/
-		
+	{	
 		static bool first_execution = true;
 		if (first_execution)
 		{

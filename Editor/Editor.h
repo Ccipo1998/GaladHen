@@ -43,7 +43,8 @@ namespace GaladHen
 
 		static Renderer EditorRenderer;
 		static Window EditorWindow;
-		static std::vector<UIPage*> EditorPages;
+
+		static UIPage* EditorUIPage;
 
 	};
 }

@@ -4,6 +4,7 @@
 #include <Editor/UI/Widgets/NavBarWidget.h>
 #include <Editor/UI/Widgets/AssetsViewWidget.h>
 #include <Editor/UI/Widgets/ViewportWidget.h>
+#include <Editor/UI/Widgets/InspectorWidget.h>
 
 #include <glm/glm.hpp>
 
@@ -15,6 +16,7 @@ namespace GaladHen
 		// Populate widgets for main page
 		Widgets.emplace_back(new UINavBarWidget{ "NavBar", this });
 		Widgets.emplace_back(new UIViewportWidget{ "Viewport", this });
+		Widgets.emplace_back(new UIInspectorWidget{ "Inspector", this });
 	}
 
 	void UIMainPage::BuildPage()

@@ -37,7 +37,7 @@ namespace GaladHen
     Scene Editor::EditorScene{};
     Renderer Editor::EditorRenderer{};
     Window Editor::EditorWindow{};
-    std::vector<UIPage*> Editor::EditorPages{};
+    UIPage* Editor::EditorUIPage{};
 
     // STATIC INITIALIZATIONS -----------------------------------------------------------------------------------
 
@@ -62,8 +62,7 @@ namespace GaladHen
         EditorRenderer.LoadTransformData();
 
         // create main ui page
-        EditorPages.emplace_back(new UIMainPage{ "MainPage", &EditorWindow });
-        UIPage* MainPage = EditorPages[0];
+        EditorUIPage = new UIMainPage{ "MainPage", &EditorWindow };
 
         AddDefaultBunnyToScene();
 	}
@@ -223,7 +222,6 @@ namespace GaladHen
 
 	void Editor::Run()
 	{
-        UIPage* MainPage = EditorPages[0];
         while (!EditorWindow.IsCloseWindowRequested())
         {
             EditorWindow.BeginFrame();
@@ -267,9 +265,9 @@ namespace GaladHen
             EditorRenderer.Draw(EditorScene);
             EditorRenderer.EndDraw();
 
-            MainPage->NewFrame();
-            MainPage->BuildPage();
-            MainPage->Draw();
+            EditorUIPage->NewFrame();
+            EditorUIPage->BuildPage();
+            EditorUIPage->Draw();
 
             EditorWindow.EndFrame();
         }

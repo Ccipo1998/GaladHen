@@ -1,7 +1,6 @@
 
 #include "NavBarWidget.h"
 #include <Editor/UI/Page.h>
-#include <Renderer/Window.h>
 
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
