@@ -10,8 +10,12 @@
 
 #include <glm/fwd.hpp>
 
+#include <Renderer/CommandBuffer.h>
+
 namespace GaladHen
 {
+	struct TextureData;
+
 	class CompilationResult;
 	class Material;
 	class Mesh;
@@ -21,7 +25,7 @@ namespace GaladHen
 	class ShaderProgram;
 	class Camera;
 	class TransformQuat;
-	class IRenderBufferAPI;
+	class RenderBuffer;
 
 	class IRendererAPI
 	{
@@ -29,46 +33,17 @@ namespace GaladHen
 
 		virtual void Init() = 0;
 
-		virtual void BeginDraw() = 0;
+		virtual unsigned int CreateRenderBuffer(const TextureData& textureData) = 0;
 
-		virtual void EndDraw() = 0;
+		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) = 0;
 
-		virtual void LoadMeshData(Mesh& mesh) = 0;
+		virtual void Draw(CommandBuffer<RenderCommand>& renderCommandBuffer) = 0;
 
-		virtual void FreeMeshData(Mesh& mesh) = 0;
+		// This function should write on each MemoryTransferCommand the new id of eventually created resource, in MemoryTargetID field
+		virtual void TransferData(CommandBuffer<MemoryTransferCommand>& memoryCommandBuffer) = 0;
 
-		virtual void LoadLightingData(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) = 0;
+		virtual bool Compile(CommandBuffer<CompileCommand&> compileCommandBuffer) = 0; // TODO: CompileResult instead of bool as return type
 
-		virtual void UpdateLightingData(const std::vector<PointLight>& pointLights, const std::vector<DirectionalLight>& dirLights) = 0;
-
-		virtual void FreeLightingData() = 0;
-
-		virtual CompilationResult CompileShaderPipeline(ShaderPipeline& pipeline) = 0;
-
-		virtual CompilationResult CompileComputeShader(ComputeShader& compute) = 0;
-
-		virtual void FreeShaderProgram(ShaderProgram* program) = 0;
-
-		virtual void LoadTexture(Texture& texture) = 0;
-
-		virtual void FreeTexture(Texture& texture) = 0;
-
-		virtual void LoadMaterialData(Material& material) = 0;
-
-		virtual void LoadCameraData(Camera& camera) = 0;
-
-		virtual void UpdateCameraData(Camera& camera) = 0;
-
-		virtual void LoadTransformData() = 0;
-
-		virtual void UpdateTransformData(TransformQuat& transform) = 0;
-
-		virtual void Draw(Mesh& mesh, Material& material) = 0;
-
-		virtual IRenderBufferAPI* GetRenderBuffer() = 0;
-
-		virtual void SetViewport(const glm::uvec2& position, const glm::uvec2& size) = 0;
-
-		virtual void SetRenderTargetSize(const glm::uvec2& size) = 0;
+		virtual ~IRendererAPI() = 0;
 	};
 }
