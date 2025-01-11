@@ -4,29 +4,29 @@
 #include <memory>
 #include <unordered_set>
 
+#include "GPUResourceInspector.h"
+
+#include <Renderer/Entities/Model.h>
+#include <Renderer/Entities/Mesh.h>
+#include <Renderer/Entities/Camera.h>
+#include <Renderer/Entities/Scene.h>
+#include <Renderer/Entities/SceneObject.h>
+#include <Renderer/Entities/ShaderPipeline.h>
+#include <Renderer/Entities/Texture.h>
+
 #include "LayerAPI/OpenGL/RendererGL.h"
-#include "LayerAPI/OpenGL/MaterialDataGL.h"
-#include "RenderBuffer.h"
+#include "Entities/RenderBuffer.h"
 #include "LayerAPI/IRendererAPI.h"
 #include "CommandBuffer.h"
 
-#include <Core/Mesh.h>
-#include <Core/Model.h>
-#include <Core/Scene.h>
-#include <Core/SceneObject.h>
-#include <Core/Model.h>
-#include <Core/ShaderProgram.h>
-#include <Core/Shader.h>
-#include <Core/Material.h>
-#include <Core/FileLoader.h>
-#include <Core/Texture.h>
-
 #include <Utils/Log.h>
+#include <Utils/FileLoader.h>
 
 #include <unordered_set>
 
-#define GH_DEFAULT_RENDER_CLEAR_COLOR glm::vec4{ 0.1f, 0.1f, 0.1f, 1.0f }
 #define GH_DEFAULT_RENDER_BUFFER_SIZE glm::uvec2{ 1920, 1080 }
+#define GH_CAMERA_DATA_BUFFER_NAME "CameraData"
+#define GH_TRANSFORM_DATA_BUFFER_NAME "TransformData"
 
 namespace GaladHen
 {
@@ -35,6 +35,11 @@ namespace GaladHen
         namespace // renderer's private namespace
         {
             // RENDERER DATA -----------------------------------------------------------------------------------------------------------------------------------------
+
+            // Static Renderer Data
+            API CurrentAPI = API::OpenGL;
+            std::unique_ptr<IRendererAPI> RendererAPI = nullptr; // API-specific renderer for API-specific operations
+            bool Initialized = false;
 
             enum class RenderContextType
             {
@@ -48,15 +53,20 @@ namespace GaladHen
             public:
                 // RenderScene -> collection of models and theirs Bounding Volumes + spatial partitioning structure containing all the models (for frustum culling)
 
-                // TODO: creare i buffers
-
                 RenderContext(unsigned int width, unsigned int height, RenderContextType renderContextType)
                     : FrontBuffer(CreateRenderBuffer(width, height))
                     , BackBuffer(std::shared_ptr<RenderBuffer>{})
                     , RenderContextType(renderContextType)
                 {
+                    // Create render buffer at api level
+                    GPUResourceInspector::SetResourceID(FrontBuffer.get(), RendererAPI->CreateRenderBuffer(width, height));
+
                     if (RenderContextType == RenderContextType::DoubleBuffering)
+                    {
                         BackBuffer = CreateRenderBuffer(width, height);
+                        // Create render buffer at api level
+                        GPUResourceInspector::SetResourceID(BackBuffer.get(), RendererAPI->CreateRenderBuffer(width, height));
+                    }
                 }
 
                 RenderContextType GetRenderContextType()
@@ -91,21 +101,53 @@ namespace GaladHen
 
             };
 
-            // Static Renderer Data
-            API CurrentAPI = API::OpenGL;
-            std::unique_ptr<IRendererAPI> RendererAPI = nullptr; // API-specific renderer for API-specific operations
-            bool Initialized = false;
-
             // Rendering Data
             IdList<RenderContext> RenderContexts; // the RenderContext with id 1 is the default one
             std::unordered_set<unsigned int> LoadedMeshesCache; // cache of already loaded meshes -> for reloading, it requires that a mesh knows when it has been modified
+            std::unordered_set<unsigned int> LoadedTexturesCache; // cache of already loaded textures -> for reloading, it requires that a texture knows when it has been modified
+            std::unordered_set<unsigned int> LoadedBuffersCache; // cache of already loaded buffers -> for reloading, it requires that a buffer knows when it has been modified
             std::unordered_set<unsigned int> CompiledShadersCache; // cache of already compiled shaders -> for reloading, it requires that a shader knows when it has been modified
-
-            CommandBuffer<RenderCommand> RenderCommandBuffer{};
-            CommandBuffer<MemoryTransferCommand> MemoryCommandBuffer{};
-            CommandBuffer<CompileCommand> CompileCommandBuffer{};
+            // Buffers
+            std::shared_ptr<Buffer> CameraDataBuffer;
+            std::shared_ptr<Buffer> TransformDataBuffer;
+            std::shared_ptr<Buffer> LightingDataBuffer;
 
             // RENDERER FUNCTIONALITIES ------------------------------------------------------------------------------------------------------------------------------
+
+            RenderContext& GetDefaultRenderContext();
+            void BeforeDraw(RenderContext& renderContext);
+            void AfterDraw(RenderContext& renderContext);
+            bool IsMeshCached(unsigned int meshID);
+            void CacheMesh(unsigned int meshID);
+            void UncacheMesh(unsigned int meshID);
+            bool IsShaderCached(unsigned int shaderID);
+            void CacheShader(unsigned int shaderID);
+            void UncacheShader(unsigned int shaderID);
+            bool IsTextureCached(unsigned int textureID);
+            void CacheTexture(unsigned int textureID);
+            void UncacheTexture(unsigned int textureID);
+            bool IsBufferCached(unsigned int bufferID);
+            void CacheBuffer(unsigned int bufferID);
+            void UncacheBuffer(unsigned int bufferID);
+            void LoadModels(Scene& scene, std::unordered_set<unsigned int>& outLoadedMeshesIDs);
+            void LoadMesh(Mesh& mesh);
+            void FreeUnusedMeshes(const std::unordered_set<unsigned int>& usedMeshesIDs);
+            void FreeMeshes(const std::unordered_set<unsigned int>& meshesToFree);
+            void FreeMesh(unsigned int meshID);
+            void LoadMaterialsData(Scene& scene, std::unordered_set<unsigned int>& outLoadedTexturesIDs, std::unordered_set<unsigned int>& outLoadedBuffersIDs);
+            void LoadMaterialData(std::shared_ptr<Material> material, std::unordered_set<unsigned int>& outLoadedTextures, std::unordered_set<unsigned int>& outLoadedBuffers);
+            void LoadTexture(std::shared_ptr<Texture> texture);
+            void LoadBuffer(Buffer& buffer);
+            void FreeUnusedTextures(const std::unordered_set<unsigned int>& usedTexturesIDs);
+            void FreeTextures(const std::unordered_set<unsigned int>& texturesToFree);
+            void FreeTexture(unsigned int textureID);
+            void FreeUnusedBuffers(const std::unordered_set<unsigned int>& usedBuffersIDs);
+            void FreeBuffers(const std::unordered_set<unsigned int>& buffersToFree);
+            void FreeBuffer(unsigned int bufferID);
+            void InitCameraDataBuffer();
+            void InitTransformDataBuffer();
+            void LoadCameraData(const Camera& camera);
+            void LoadTransformData(const Transform& transform);
 
             RenderContext& GetDefaultRenderContext()
             {
@@ -117,7 +159,7 @@ namespace GaladHen
                 // Operations needed before drawing
 
                 // Clear back render buffer
-                ClearRenderBuffer(renderContext.GetBackBuffer(), GH_DEFAULT_RENDER_CLEAR_COLOR);
+                ClearRenderBuffer(renderContext.GetBackBuffer());
             }
 
             void AfterDraw(RenderContext& renderContext)
@@ -125,12 +167,12 @@ namespace GaladHen
                 // Operations needed after drawing
 
                 // Swap buffers
-                renderContext.SwapBuffers();
+                //renderContext.SwapBuffers();
             }
 
-            bool IsCached(const Mesh& mesh)
+            bool IsMeshCached(unsigned int meshID)
             {
-                if (LoadedMeshesCache.find(mesh.MeshID) != LoadedMeshesCache.end())
+                if (LoadedMeshesCache.find(meshID) != LoadedMeshesCache.end())
                 {
                     return true;
                 }
@@ -138,14 +180,356 @@ namespace GaladHen
                 return false;
             }
 
-            void Cache(const Mesh& mesh)
+            void CacheMesh(unsigned int meshID)
             {
-                LoadedMeshesCache.insert(mesh.MeshID);
+                LoadedMeshesCache.insert(meshID);
             }
 
-            void Uncache(const Mesh& mesh)
+            void UncacheMesh(unsigned int meshID)
             {
-                LoadedMeshesCache.erase(mesh.MeshID);
+                LoadedMeshesCache.erase(meshID);
+            }
+
+            bool IsShaderCached(unsigned int shaderID)
+            {
+                if (CompiledShadersCache.find(shaderID) != CompiledShadersCache.end())
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            void CacheShader(unsigned int shaderID)
+            {
+                CompiledShadersCache.insert(shaderID);
+            }
+
+            void UncacheShader(unsigned int shaderID)
+            {
+                CompiledShadersCache.erase(shaderID);
+            }
+
+            bool IsTextureCached(unsigned int textureID)
+            {
+                if (LoadedTexturesCache.find(textureID) != LoadedTexturesCache.end())
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            void CacheTexture(unsigned int textureID)
+            {
+                LoadedTexturesCache.insert(textureID);
+            }
+
+            void UncacheTexture(unsigned int textureID)
+            {
+                LoadedTexturesCache.erase(textureID);
+            }
+
+            bool IsBufferCached(unsigned int bufferID)
+            {
+                if (LoadedBuffersCache.find(bufferID) != LoadedBuffersCache.end())
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            void CacheBuffer(unsigned int bufferID)
+            {
+                LoadedBuffersCache.insert(bufferID);
+            }
+
+            void UncacheBuffer(unsigned int bufferID)
+            {
+                LoadedBuffersCache.erase(bufferID);
+            }
+
+            void LoadModels(Scene& scene, std::unordered_set<unsigned int>& outLoadedMeshesIDs)
+            {
+                for (SceneObject& sceneObject : scene.SceneObjects)
+                {
+                    std::shared_ptr<Model> model = std::shared_ptr<Model>(sceneObject.GetSceneObjectModel());
+
+                    for (Mesh& mesh : model->GetMeshes())
+                    {
+                        LoadMesh(mesh);
+
+                        unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
+                        outLoadedMeshesIDs.insert(meshID);
+                    }
+                }
+            }
+
+            void LoadMesh(Mesh& mesh)
+            {
+                unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
+
+                if (IsMeshCached(meshID))
+                {
+                    return;
+                }
+
+                CommandBuffer<MemoryTransferCommand> memoryCommands;
+                memoryCommands.emplace_back(MemoryTransferCommand{});
+
+                MemoryTransferCommand& command = memoryCommands[0];
+                command.Data = &mesh;
+                command.MemoryTargetID = 0;
+                command.TargetType = MemoryTargetType::Mesh;
+                command.TransferType = MemoryTransferType::Load;
+
+                // Load, assign id and cache
+
+                RendererAPI->TransferData(memoryCommands);
+                GPUResourceInspector::SetResourceID(&mesh, command.MemoryTargetID);
+                CacheMesh(command.MemoryTargetID);
+            }
+
+            void FreeUnusedMeshes(const std::unordered_set<unsigned int>& usedMeshesIDs)
+            {
+                std::unordered_set<unsigned int> meshesToFree;
+                for (unsigned int id : LoadedMeshesCache)
+                {
+                    if (usedMeshesIDs.find(id) == usedMeshesIDs.end())
+                    {
+                        meshesToFree.insert(id);
+                    }
+                }
+
+                FreeMeshes(meshesToFree);
+            }
+
+            void FreeMeshes(const std::unordered_set<unsigned int>& meshesToFree)
+            {
+                for (unsigned int meshID : meshesToFree)
+                {
+                    FreeMesh(meshID);
+                }
+            }
+
+            void FreeMesh(unsigned int meshID)
+            {
+                if (!IsMeshCached(meshID))
+                    return;
+
+                CommandBuffer<MemoryTransferCommand> memoryCommands;
+                memoryCommands.emplace_back(MemoryTransferCommand{});
+
+                MemoryTransferCommand& command = memoryCommands[0];
+                command.MemoryTargetID = meshID;
+                command.TargetType = MemoryTargetType::Mesh;
+                command.TransferType = MemoryTransferType::Free;
+
+                // Free and remove from cache
+                RendererAPI->TransferData(memoryCommands);
+                LoadedMeshesCache.erase(meshID);
+            }
+
+            void LoadMaterialsData(Scene& scene, std::unordered_set<unsigned int>& outLoadedTexturesIDs, std::unordered_set<unsigned int>& outLoadedBuffersIDs)
+            {
+                for (SceneObject& sceneObject : scene.SceneObjects)
+                {
+                    std::vector<std::shared_ptr<Material>> materials = sceneObject.GetSceneObjectMaterials();
+
+                    for (std::shared_ptr<Material>& material : materials)
+                    {
+                        LoadMaterialData(material, outLoadedTexturesIDs, outLoadedBuffersIDs);
+                    }
+                }
+            }
+
+            void LoadMaterialData(std::shared_ptr<Material> material, std::unordered_set<unsigned int>& outLoadedTextures, std::unordered_set<unsigned int>& outLoadedBuffers)
+            {
+                CommandBuffer<MemoryTransferCommand> commandBuffer; // TODO: send all with one request?
+
+                // Load textures
+                for (std::pair<const std::string, std::shared_ptr<Texture>>& textureData : material->TextureData)
+                {
+                    LoadTexture(textureData.second);
+                    outLoadedTextures.insert(GPUResourceInspector::GetResourceID(textureData.second.get()));
+                }
+
+                // Load buffers
+                for (std::pair<const std::string, std::shared_ptr<Buffer>>& bufferData : material->BufferData)
+                {
+                    LoadBuffer(*bufferData.second);
+                    outLoadedBuffers.insert(GPUResourceInspector::GetResourceID(bufferData.second.get()));
+                }
+            }
+
+            void LoadTexture(std::shared_ptr<Texture> texture)
+            {
+                unsigned int textureID = GPUResourceInspector::GetResourceID(texture.get());
+
+                if (IsTextureCached(textureID))
+                {
+                    return;
+                }
+
+                CommandBuffer<MemoryTransferCommand> commandBuffer;
+                commandBuffer.emplace_back(MemoryTransferCommand{});
+
+                MemoryTransferCommand& command = commandBuffer[0];
+                command.Data = texture.get();
+                command.MemoryTargetID = 0;
+                command.TargetType = MemoryTargetType::Texture;
+                command.TransferType = MemoryTransferType::Load;
+
+                // Load, assign id and cache
+
+                RendererAPI->TransferData(commandBuffer);
+                GPUResourceInspector::SetResourceID(texture.get(), command.MemoryTargetID);
+                CacheTexture(command.MemoryTargetID);
+            }
+
+            void LoadBuffer(Buffer& buffer)
+            {
+                unsigned int bufferID = GPUResourceInspector::GetResourceID(&buffer);
+
+                if (IsBufferCached(bufferID))
+                {
+                    return;
+                }
+
+                CommandBuffer<MemoryTransferCommand> commandBuffer;
+                commandBuffer.emplace_back(MemoryTransferCommand{});
+
+                MemoryTransferCommand& command = commandBuffer[0];
+                command.Data = &buffer;
+                command.MemoryTargetID = 0;
+                command.TargetType = MemoryTargetType::Buffer;
+                command.TransferType = MemoryTransferType::Load;
+
+                // Load, assign id and cache
+
+                RendererAPI->TransferData(commandBuffer);
+                GPUResourceInspector::SetResourceID(&buffer, command.MemoryTargetID);
+                CacheBuffer(command.MemoryTargetID);
+            }
+
+            void FreeUnusedTextures(const std::unordered_set<unsigned int>& usedTexturesIDs)
+            {
+                std::unordered_set<unsigned int> texturesToFree;
+                for (unsigned int id : LoadedTexturesCache)
+                {
+                    if (usedTexturesIDs.find(id) == usedTexturesIDs.end())
+                    {
+                        texturesToFree.insert(id);
+                    }
+                }
+                FreeTextures(texturesToFree);
+            }
+
+            void FreeTextures(const std::unordered_set<unsigned int>& texturesToFree)
+            {
+                for (unsigned int textureID : texturesToFree)
+                {
+                    FreeTexture(textureID);
+                }
+            }
+
+            void FreeTexture(unsigned int textureID)
+            {
+                if (!IsTextureCached(textureID))
+                    return;
+
+                CommandBuffer<MemoryTransferCommand> memoryCommands;
+                memoryCommands.emplace_back(MemoryTransferCommand{});
+
+                MemoryTransferCommand& command = memoryCommands[0];
+                command.MemoryTargetID = textureID;
+                command.TargetType = MemoryTargetType::Texture;
+                command.TransferType = MemoryTransferType::Free;
+
+                // Free and remove from cache
+                RendererAPI->TransferData(memoryCommands);
+                LoadedTexturesCache.erase(textureID);
+            }
+
+            void FreeUnusedBuffers(const std::unordered_set<unsigned int>& usedBuffersIDs)
+            {
+                std::unordered_set<unsigned int> buffersToFree;
+                for (unsigned int id : LoadedBuffersCache)
+                {
+                    if (usedBuffersIDs.find(id) == usedBuffersIDs.end())
+                    {
+                        buffersToFree.insert(id);
+                    }
+                }
+                FreeBuffers(buffersToFree);
+            }
+
+            void FreeBuffers(const std::unordered_set<unsigned int>& buffersToFree)
+            {
+                for (unsigned int bufferID : buffersToFree)
+                {
+                    FreeBuffer(bufferID);
+                }
+            }
+
+            void FreeBuffer(unsigned int bufferID)
+            {
+                if (!IsBufferCached(bufferID))
+                    return;
+
+                CommandBuffer<MemoryTransferCommand> memoryCommands;
+                memoryCommands.emplace_back(MemoryTransferCommand{});
+
+                MemoryTransferCommand& command = memoryCommands[0];
+                command.MemoryTargetID = bufferID;
+                command.TargetType = MemoryTargetType::Buffer;
+                command.TransferType = MemoryTransferType::Free;
+
+                // Free and remove from cache
+                RendererAPI->TransferData(memoryCommands);
+                LoadedBuffersCache.erase(bufferID);
+            }
+
+            void InitCameraDataBuffer()
+            {
+                Buffer* data = new Buffer();
+                data->AddData<glm::mat4>(glm::mat4{});
+                data->AddData<glm::mat4>(glm::mat4{});
+                data->AddData<glm::vec3>(glm::vec3{});
+
+                CameraDataBuffer = std::shared_ptr<Buffer>(data);
+                
+                // TODO: populate buffer basing on API (to match shader data structure)
+            }
+
+            void InitTransformDataBuffer()
+            {
+                Buffer* data = new Buffer();
+
+                data->AddData<glm::mat4>(glm::mat4{});
+                data->AddData<glm::mat4>(glm::mat4{});
+
+                TransformDataBuffer = std::shared_ptr<Buffer>(data);
+
+                // TODO: populate buffer basing on API (to match shader data structure)
+            }
+
+            void LoadCameraData(const Camera& camera)
+            {
+                CameraDataBuffer->SetDataAt<glm::mat4>(camera.GetViewMatrix(), 0);
+                CameraDataBuffer->SetDataAt<glm::mat4>(camera.GetProjectionMatrix(), 1);
+                CameraDataBuffer->SetDataAt<glm::vec3>(camera.Transform.GetPosition(), 2);
+
+                LoadBuffer(*CameraDataBuffer);
+            }
+
+            void LoadTransformData(const Transform& transform)
+            {
+                TransformDataBuffer->SetDataAt<glm::mat4>(transform.ToMatrix(), 0);
+                TransformDataBuffer->SetDataAt<glm::mat4>(glm::inverse(glm::transpose(transform.ToMatrix())), 1);
+
+                LoadBuffer(*TransformDataBuffer);
             }
         }
 
@@ -170,345 +554,199 @@ namespace GaladHen
                 CurrentAPI = API::OpenGL;
                 RendererAPI = std::unique_ptr<RendererGL>{ new RendererGL{} };
 
-                // Create default RenderContext
-                RenderContexts.AddWithId(RenderContext{ GH_DEFAULT_RENDER_BUFFER_SIZE.x, GH_DEFAULT_RENDER_BUFFER_SIZE.y, RenderContextType::DoubleBuffering });
-
                 break;
             }
             }
 
             RendererAPI->Init();
 
+            // Create default RenderContext
+            RenderContexts.AddWithId(RenderContext{ GH_DEFAULT_RENDER_BUFFER_SIZE.x, GH_DEFAULT_RENDER_BUFFER_SIZE.y, RenderContextType::DoubleBuffering });
+
+            RendererAPI->EnableDepthTest(true);
+
+            // Create default buffers
+            InitCameraDataBuffer();
+            LoadCameraData(Camera{});
+            InitTransformDataBuffer();
+            LoadTransformData(Transform{});
+
             Initialized = true;
         }
 
         std::shared_ptr<RenderBuffer> CreateRenderBuffer(unsigned int width, unsigned int height)
         {
-            // TODO
+            return std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height } };
         }
 
-        void ClearRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer, glm::vec4 clearColor)
+        std::shared_ptr<RenderBuffer> GetFrontRenderBuffer()
         {
-            // TODO
+            return GetDefaultRenderContext().GetFrontBuffer();
         }
 
-        void Draw(const Scene& scene)
+        unsigned int GetRenderBufferApiID(std::shared_ptr<RenderBuffer> renderBuffer)
+        {
+            return RendererAPI->GetTextureApiID(GPUResourceInspector::GetResourceID(renderBuffer.get()));
+        }
+
+        void ClearRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer)
+        {
+            RendererAPI->ClearRenderBuffer(GPUResourceInspector::GetResourceID(renderBuffer.get()), renderBuffer->ClearColor);
+        }
+
+        void Draw(Scene& scene)
         {
             BeforeDraw(GetDefaultRenderContext());
 
-            //for (SceneObject& sceneObj : scene.SceneObjects)
-            //{
-            //    Draw(sceneObj);
-            //}
+            std::unordered_set<unsigned int> loadedMeshesIDs;
+            LoadModels(scene, loadedMeshesIDs);
+            CompileShaders(scene);
+            std::unordered_set<unsigned int> loadedTexturesIDs, loadedBuffersIDs;
+            LoadMaterialsData(scene, loadedTexturesIDs, loadedBuffersIDs);
+            LoadCameraData(scene.MainCamera);
+            loadedBuffersIDs.emplace(GPUResourceInspector::GetResourceID(CameraDataBuffer.get()));
+
+            // TODO: load lights
+
+            // TODO: instanced draw
+
+            for (SceneObject& sceneObject : scene.SceneObjects)
+            {
+                CommandBuffer<RenderCommand> renderBuffer;
+
+                std::shared_ptr<Model> model = std::shared_ptr<Model>(sceneObject.GetSceneObjectModel());
+
+                unsigned int index = 0;
+                for (Mesh& mesh : model->GetMeshes())
+                {
+                    RenderCommand command;
+                    command.DataSourceID = GPUResourceInspector::GetResourceID(&mesh);
+                    command.Material = sceneObject.GetMaterial(index);
+                    command.ShaderSourceID = GPUResourceInspector::GetResourceID(command.Material->GetPipeline().get());
+
+                    // Add common rendering data
+                    command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, CameraDataBuffer);
+                    LoadTransformData(sceneObject.Transform);
+                    loadedBuffersIDs.emplace(GPUResourceInspector::GetResourceID(TransformDataBuffer.get()));
+                    command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, TransformDataBuffer);
+
+                    renderBuffer.emplace_back(command);
+                }
+
+                RendererAPI->Draw(renderBuffer);
+                // A single Render Command at time because at the moment we use a TransformDataBuffer that invalidates itself when changing data ->
+                // passing the same TransformDataBuffer inside the AdditionalBufferData means using the same buffer but also the latest same data stored inside it
+                // (we should have instead a different buffer for each Render Command)
+            }
+
+            // Free unused gpu data
+            FreeUnusedMeshes(loadedMeshesIDs);
+            FreeUnusedTextures(loadedTexturesIDs);
+            FreeUnusedBuffers(loadedBuffersIDs);
 
             AfterDraw(GetDefaultRenderContext());
         }
 
-        void UpdateModel(const Model& model)
+        //void UpdateModel(const Model& model)
+        //{
+        //    for (const Mesh& mesh : model.GetMeshes())
+        //    {
+        //        UpdateMesh(mesh);
+        //    }
+        //}
+
+        //void UpdateMesh(const Mesh& mesh)
+        //{
+        //    unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
+
+        //    if (IsMeshCached(meshID))
+        //        return;
+
+        //    CommandBuffer<MemoryTransferCommand> memoryBuffer;
+        //    memoryBuffer.push_back(MemoryTransferCommand{});
+        //    MemoryTransferCommand& command = memoryBuffer[0];
+
+        //    command.Data = (void*)&mesh;
+        //    command.MemoryTargetID = 0;
+        //    command.TargetType = MemoryTargetType::Mesh;
+        //    command.TransferType = MemoryTransferType::Load;
+
+        //    RendererAPI->TransferData(memoryBuffer);
+
+        //    // No need to retrieve mesh id, already in cache
+        //}
+
+        bool CompileShaders(const Scene& scene)
         {
-            // TODO
-        }
+            bool success = true;
 
-        void UpdateMesh(const Mesh& mesh)
-        {
-            // TODO
-        }
-
-        void FreeModel(const Model& model)
-        {
-            // TODO
-        }
-
-        void FreeMesh(const Mesh& mesh)
-        {
-            // TODO
-        }
-
-
-
-        void LoadModels(Scene& scene)
-        {
-            // Load mesh data
-            for (SceneObject& sceneObj : scene.SceneObjects)
+            for (const SceneObject& sceneObj : scene.SceneObjects)
             {
-                LoadModel(*sceneObj.GetSceneObjectModel());
-            }
-        }
-
-        void FreeModels(Scene& scene)
-        {
-            // Free mesh data
-            for (SceneObject& sceneObj : scene.SceneObjects)
-            {
-                Model* mod = sceneObj.GetSceneObjectModel();
-
-                for (Mesh& mesh : mod->Meshes)
+                std::vector<std::shared_ptr<Material>> materials = sceneObj.GetSceneObjectMaterials();
+                
+                for (std::shared_ptr<Material>& material : materials)
                 {
-                    FreeMesh(mesh);
+                    std::shared_ptr<ShaderPipeline> shader = material->GetPipeline();
+                    unsigned int shaderID = GPUResourceInspector::GetResourceID(shader.get());
+
+                    // Compile, set id and cache
+                    success &= CompileShader(*shader);
                 }
             }
+
+            // Here we could delete unused shaders from cache, but for now it is not needed
+
+            return success;
         }
 
-        void LoadLightingData(Scene& scene)
+        bool CompileShader(ShaderPipeline& program)
         {
-            // Allocate and populate memory for lighting
-            RendererAPI->LoadLightingData(scene.PointLights, scene.DirectionalLights);
-        }
+            unsigned int shaderID = GPUResourceInspector::GetResourceID(&program);
 
-        void UpdateLightingData(Scene& scene)
-        {
-            RendererAPI->UpdateLightingData(scene.PointLights, scene.DirectionalLights);
-        }
+            if (IsShaderCached(shaderID))
+                return true;
 
-        void FreeLightingData(Scene& scene)
-        {
-            // Free lighting data
-            RendererAPI->FreeLightingData();
-        }
+            CommandBuffer<CompileCommand> compileBuffer;
+            compileBuffer.emplace_back(CompileCommand{});
+            CompileCommand& command = compileBuffer[0];
 
-        void CompileShaders(Scene& scene)
-        {
-            // shaders already compiled
-            std::unordered_set<unsigned int> compiled;
-
-            for (SceneObject& sceneObj : scene.SceneObjects)
+            if (program.GetType() == ShaderPipelineType::ShaderPipeline)
             {
-                Model* mod = sceneObj.GetSceneObjectModel();
+                command.VertexCode = FileLoader::ReadTextFile(program.GetVertexShaderPath().data());
+                command.TessContCode = FileLoader::ReadTextFile(program.GetTessContShaderPath().data());
+                command.TessEvalCode = FileLoader::ReadTextFile(program.GetTessEvalShaderPath().data());
+                command.GeometryCode = FileLoader::ReadTextFile(program.GetGeometryShaderPath().data());
+                command.FragmentCode = FileLoader::ReadTextFile(program.GetFragmentShaderPath().data());
+            }
+            else
+            {
+                command.ComputeCode = FileLoader::ReadTextFile(program.GetComputeShaderPath().data());
+            }
 
-                for (unsigned int i = 0; i < mod->Meshes.size(); ++i)
+            command.ShaderPipelineID = 0;
+            command.Type = CompileType::Compile;
+
+            RendererAPI->Compile(compileBuffer);
+
+            if (command.Result.Succeed)
+            {
+                if (command.Result.Description.length() > 0)
                 {
-                    Material& mat = sceneObj.GetMaterial(i);
-                    if (compiled.find(mat.MaterialShader->ShaderProgramID) == compiled.end())
-                    {
-                        compiled.insert(mat.MaterialShader->ShaderProgramID);
-                        CompileShaderPipeline(*mat.MaterialShader);
-                    }
-                }
-            }
-        }
-
-        void LoadMesh(Mesh& mesh)
-        {
-            RendererAPI->LoadMeshData(mesh);
-        }
-
-        void FreeMesh(Mesh& mesh)
-        {
-            RendererAPI->FreeMeshData(mesh);
-        }
-
-        void LoadModel(Model& model)
-        {
-            for (Mesh& mesh : model.Meshes)
-            {
-                LoadMesh(mesh);
-            }
-        }
-
-        void FreeModel(Model& model)
-        {
-            for (Mesh& mesh : model.Meshes)
-            {
-                FreeMesh(mesh);
-            }
-        }
-
-        void LoadTexture(Texture& texture)
-        {
-            RendererAPI->LoadTexture(texture);
-        }
-
-        void FreeTexture(Texture& texture)
-        {
-            RendererAPI->FreeTexture(texture);
-        }
-
-        void LoadMaterialData(Material& material)
-        {
-            RendererAPI->LoadMaterialData(material);
-        }
-
-        void LoadCameraData(Camera& camera)
-        {
-            RendererAPI->LoadCameraData(camera);
-        }
-
-        void UpdateCameraData(Camera& camera)
-        {
-            RendererAPI->UpdateCameraData(camera);
-        }
-
-        void LoadTransformData()
-        {
-            RendererAPI->LoadTransformData();
-        }
-
-        void UpdateTransformData(TransformQuat& transform)
-        {
-            RendererAPI->UpdateTransformData(transform);
-        }
-
-        void Draw(Mesh& mesh, Material& material)
-        {
-            RendererAPI->UpdateTransformData(TransformQuat{});
-            RendererAPI->Draw(mesh, material);
-        }
-
-        void Draw(SceneObject& object)
-        {
-            Model* mod = object.GetSceneObjectModel();
-
-            for (unsigned int i = 0; i < mod->Meshes.size(); ++i)
-            {
-                Material& mat = object.GetMaterial(i);
-                RendererAPI->UpdateTransformData(object.Transform);
-                RendererAPI->Draw(mod->Meshes[i], mat);
-            }
-        }
-
-        bool CompileShaderPipeline(ShaderPipeline& program)
-        {
-            std::string vertPath, tessContPath, tessEvalPath, geomPath, fragPath; // For error log
-
-            if (program.VertexShader)
-            {
-                vertPath = program.VertexShader->ShaderFilePath;
-            }
-            if (program.TessContShader)
-            {
-                tessContPath = program.TessContShader->ShaderFilePath;
-            }
-            if (program.TessEvalShader)
-            {
-                tessEvalPath = program.TessEvalShader->ShaderFilePath;
-            }
-            if (program.GeometryShader)
-            {
-                geomPath = program.GeometryShader->ShaderFilePath;
-            }
-            if (program.FragmentShader)
-            {
-                fragPath = program.FragmentShader->ShaderFilePath;
-            }
-
-            CompilationResult result = RendererAPI->CompileShaderPipeline(program);
-
-            if (!result.Success())
-            {
-                std::string error;
-
-                if (result.linkSuccess)
-                {
-                    error = "Compilation error for shader pipeline:\n";
-                }
-                else
-                {
-                    error = "Linking error in shader pipeline:\n";
+                    // Non fatal errors
+                    Log::Warning("Renderer", command.Result.Description);
                 }
 
-                if (!result.vSuccess)
-                {
-                    error.append("ERROR in vertex shader ");
-                    error.append(vertPath);
-                    error.append(": ");
-                    error.append(result.vLog);
-                    error.append("\n");
-                }
-                if (!result.tcSuccess)
-                {
-                    error.append("ERROR in tesselation control shader ");
-                    error.append(tessContPath);
-                    error.append(": ");
-                    error.append(result.tcLog);
-                    error.append("\n");
-                }
-                if (!result.teSuccess)
-                {
-                    error.append("ERROR in tesselation evaluation shader ");
-                    error.append(tessEvalPath);
-                    error.append(": ");
-                    error.append(result.teLog);
-                    error.append("\n");
-                }
-                if (!result.gSuccess)
-                {
-                    error.append("ERROR in geomerty shader ");
-                    error.append(geomPath);
-                    error.append(": ");
-                    error.append(result.gLog);
-                    error.append("\n");
-                }
-                if (!result.fSuccess)
-                {
-                    error.append("ERROR in fragment shader ");
-                    error.append(fragPath);
-                    error.append(": ");
-                    error.append(result.fLog);
-                    error.append("\n");
-                }
+                // Assign id and cache
+                GPUResourceInspector::SetResourceID(&program, command.ShaderPipelineID);
+                CacheShader(command.ShaderPipelineID);
 
-                if (!result.linkSuccess)
-                {
-                    error.append(result.linkLog);
-                }
-
-                Log::Error("Renderer", error);
+                return true;
             }
 
-            return result.Success();
-        }
+            // Fatal errors
+            Log::Error("Renderer", command.Result.Description);
 
-        bool CompileComputeShader(ComputeShader& program)
-        {
-            // Read files
-
-            std::string computePath; // For error log
-
-            if (program.CompShader)
-            {
-                computePath = program.CompShader->ShaderFilePath;
-            }
-
-            CompilationResult result = RendererAPI->CompileComputeShader(program);
-
-            if (!result.Success())
-            {
-                std::string error;
-
-                if (result.linkSuccess)
-                {
-                    error = "Compilation error for compute shader:\n";
-                }
-                else
-                {
-                    error = "Linking error for compute shader:\n";
-                }
-
-                error.append("ERROR in compute shader ");
-                error.append(computePath);
-                error.append(": ");
-                error.append(result.cLog);
-                error.append("\n");
-
-                Log::Error("Renderer", error);
-            }
-
-            return result.Success();
-        }
-
-        const std::shared_ptr<RenderBuffer> GetRenderBuffer()
-        {
-            return RenderBuffer{ RendererAPI->GetRenderBuffer() };
-        }
-
-        void SetViewport(const glm::uvec2& position, const glm::uvec2& size)
-        {
-            RendererAPI->SetViewport(position, size);
-        }
-
-        void SetRenderTargetSize(const glm::uvec2& size)
-        {
-            RendererAPI->SetRenderTargetSize(size);
+            return false;
         }
     }
 }

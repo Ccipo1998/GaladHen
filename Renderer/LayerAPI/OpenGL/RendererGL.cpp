@@ -2,9 +2,6 @@
 #include "RendererGL.h"
 #include <Renderer/Common.h>
 
-// gl3w MUST be included before any other OpenGL-related header
-#include <GL/gl3w.h>
-
 // glfw
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -14,15 +11,10 @@
 
 #include <Utils/Log.h>
 
-#include <Core/Material.h>
-#include <Core/ShaderProgram.h>
-#include <Core/Shader.h>
-#include <Core/FileLoader.h>
-#include <Core/Camera.h>
-#include <Core/Transform.h>
-#include <Renderer/MeshData.h>
-#include <Renderer/BufferData.h>
-#include <Renderer/TextureData.h>
+#include <Renderer/GPUResourceInspector.h>
+#include <Renderer/Entities/Texture.h>
+#include <Renderer/Entities/Mesh.h>
+#include <Renderer/Entities/Buffer.h>
 
 namespace GaladHen
 {
@@ -143,13 +135,15 @@ namespace GaladHen
 
 	void RendererGL::Init()
 	{
-		if (!gl3wInit())
+		if (gl3wInit() != GL3W_OK)
 		{
 			Log::Error("RendererGL", "Error: GL3W failed to initialize the context");
+
+			return;
 		}
 	}
 
-	unsigned int RendererGL::CreateRenderBuffer(const TextureData& textureData)
+	unsigned int RendererGL::CreateRenderBuffer(unsigned int width, unsigned int height)
 	{
 		unsigned int id = RenderBuffers.AddWithId();
 		RenderBufferGLTest& rb = RenderBuffers.GetObjectWithId(id);
@@ -157,20 +151,16 @@ namespace GaladHen
 		glGenFramebuffers(1, &rb.FrameBufferID);
 		glBindFramebuffer(GL_FRAMEBUFFER, rb.FrameBufferID);
 
-		TextureParameters params{};
-		params.MinFiltering = TextureFiltering::Linear;
-		params.MagFiltering = TextureFiltering::Linear;
+		Texture texture{ nullptr, width, height, 4, 0, TextureFormat::RGB8 };
+		texture.SetFiltering(TextureFiltering::Linear);
 
-		assert(textureData.AccessType == TextureAccessType::ReadWrite); // For a render target we want to be able to read and write from it
+		//assert(textureData.AccessType == TextureAccessType::ReadWrite); // For a render target we want to be able to read and write from it
 
-		rb.ColorTextureID = CreateTexture(textureData);
-		rb.DepthStencilTextureID = CreateDepthStencilTexture(textureData.Width, textureData.Height);
+		rb.ColorTextureID = CreateTexture(texture);
+		rb.DepthStencilTextureID = CreateDepthStencilTexture(width, height);
 
 		TextureGLTest& colorTexture = Textures.GetObjectWithId(rb.ColorTextureID);
 		TextureGLTest& depthStencilTexture = Textures.GetObjectWithId(rb.DepthStencilTextureID);
-
-		SetTextureParameters(colorTexture, params);
-		SetTextureParameters(depthStencilTexture, params);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.TextureID, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthStencilTexture.TextureID, 0);
@@ -186,7 +176,7 @@ namespace GaladHen
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		return 0;
+		return id;
 	}
 
 	void RendererGL::ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor)
@@ -215,59 +205,68 @@ namespace GaladHen
 			GLuint program = Shaders.GetObjectWithId(rc.ShaderSourceID);
 			glUseProgram(program);
 
-			for (ShaderScalarData& data : rc.ShaderData.ScalarData)
+			std::shared_ptr<Material> material = std::shared_ptr<Material>(rc.Material);
+
+			for (auto& scalar : material->ScalarData)
 			{
-				glProgramUniform1f(program, glGetUniformLocation(program, data.DataName.data()), data.Scalar);
+				glProgramUniform1f(program, glGetUniformLocation(program, scalar.first.data()), scalar.second);
 			}
 
-			for (ShaderVec2Data& data : rc.ShaderData.Vec2Data)
+			for (auto& vec2 : material->Vec2Data)
 			{
-				glProgramUniform2f(program, glGetUniformLocation(program, data.DataName.data()), data.Vec2.x, data.Vec2.y);
+				glProgramUniform2f(program, glGetUniformLocation(program, vec2.first.data()), vec2.second.x, vec2.second.y);
 			}
 
-			for (ShaderVec3Data& data : rc.ShaderData.Vec3Data)
+			for (auto& vec3 : material->Vec3Data)
 			{
-				glProgramUniform3f(program, glGetUniformLocation(program, data.DataName.data()), data.Vec3.x, data.Vec3.y, data.Vec3.z);
+				glProgramUniform3f(program, glGetUniformLocation(program, vec3.first.data()), vec3.second.x, vec3.second.y, vec3.second.z);
 			}
 
-			for (ShaderVec4Data& data : rc.ShaderData.Vec4Data)
+			for (auto& vec4 : material->Vec4Data)
 			{
-				glProgramUniform4f(program, glGetUniformLocation(program, data.DataName.data()), data.Vec4.x, data.Vec4.y, data.Vec4.z, data.Vec4.w);
+				glProgramUniform4f(program, glGetUniformLocation(program, vec4.first.data()), vec4.second.x, vec4.second.y, vec4.second.z, vec4.second.w);
 			}
 
-			for (ShaderIntegerData& data : rc.ShaderData.IntegerData)
-			{
-				glProgramUniform1i(program, glGetUniformLocation(program, data.DataName.data()), data.Integer);
-			}
+			//for (ShaderIntegerData& data : rc.ShaderData.IntegerData)
+			//{
+			//	glProgramUniform1i(program, glGetUniformLocation(program, data.DataName.data()), data.Integer);
+			//}
 
-			//unsigned int unit = 0;
-			for (ShaderTextureData& data : rc.ShaderData.TextureData)
+			unsigned int unit = 0;
+			for (auto& texture : material->TextureData)
 			{
 				// select texture unit for the binded texture
-				glActiveTexture(TextureUnits[data.TextureUnit]);
-				glBindTexture(GL_TEXTURE_2D, data.TextureID);
+				glActiveTexture(TextureUnits[unit]);
+				glBindTexture(GL_TEXTURE_2D, GPUResourceInspector::GetResourceID(texture.second.get()));
 				// create uniform sampler
-				int loc = glGetUniformLocation(program, data.DataName.data());
-				glUniform1i(loc, data.TextureUnit);
+				int loc = glGetUniformLocation(program, texture.first.data());
+				glUniform1i(loc, unit);
 
-				//++unit;
+				++unit;
 			}
 
 			std::vector<GLuint> locations;
-			locations.reserve(rc.ShaderData.FunctionsData.size() + 1);
+			locations.reserve(material->FunctionsData.size() + 1);
 			//locations.emplace_back((GLuint)shadingMode);
-			for (ShaderData& data : rc.ShaderData.FunctionsData)
+			for (std::string& function : material->FunctionsData)
 			{
-				locations.emplace_back(glGetSubroutineIndex(program, GL_FRAGMENT_SHADER, data.DataName.data()));
+				locations.emplace_back(glGetSubroutineIndex(program, GL_FRAGMENT_SHADER, function.data()));
 			}
 			// subroutine selection
 			glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, locations.size(), locations.data());
 
 			// Bind buffer data to shader pipeline
-			for (ShaderBufferData& data : rc.ShaderData.BufferData)
+			for (auto& buffer : material->BufferData)
 			{
-				BufferGLTest& buffer = Buffers.GetObjectWithId(data.BufferID);
-				glBindBufferBase(buffer.Target, data.BufferBinding, buffer.BufferID);
+				BufferGLTest& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
+				GLuint ssbIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
+				glBindBufferBase(bufferGL.Target, ssbIndex, bufferGL.BufferID);
+			}
+			for (auto& buffer : rc.AdditionalBufferData)
+			{
+				BufferGLTest& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
+				GLuint ssbIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
+				glBindBufferBase(bufferGL.Target, ssbIndex, bufferGL.BufferID);
 			}
 
 			// draw
@@ -285,44 +284,84 @@ namespace GaladHen
 			{
 			case MemoryTargetType::Mesh:
 			{
-				// Load mesh request
+				Mesh* mesh = static_cast<Mesh*>(mtc.Data);
+				unsigned int& meshID = mtc.MemoryTargetID; // update memory target id
 
-				MeshData* meshData = static_cast<MeshData*>(mtc.Data);
-				unsigned int meshID = mtc.MemoryTargetID;
+				switch (mtc.TransferType)
+				{
+				case MemoryTransferType::Load:
 
-				if (meshID == 0)
-				{
-					// New OpenGL resource
-					meshID = CreateMesh(*meshData);
-				}
-				else
-				{
-					MeshGLTest& mesh = Meshes.GetObjectWithId(meshID);
-					LoadMesh(mesh, *meshData);
+					if (meshID == 0)
+					{
+						// New OpenGL resource
+						meshID = CreateMesh(*mesh);
+					}
+					else
+					{
+						LoadMesh(meshID, *mesh);
+					}
+
+					break;
+
+				case MemoryTransferType::Free:
+
+					FreeMesh(meshID);
+
+					break;
+
+				default:
+					break;
 				}
 
 				break;
 			}
 			case MemoryTargetType::Buffer:
 			{
-				BufferData* bufferData = static_cast<BufferData*>(mtc.Data);
-				unsigned int bufferID = mtc.MemoryTargetID;
+				Buffer* buffer = static_cast<Buffer*>(mtc.Data);
+				unsigned int& bufferID = mtc.MemoryTargetID; // update memory target id
 
-				if (bufferID == 0)
+				switch (mtc.TransferType)
 				{
-					// New OpenGL resource
-					bufferID = CreateBuffer(*bufferData);
-				}
-				else
-				{
-					LoadBuffer(bufferID, *bufferData);
+				case MemoryTransferType::Load:
+
+					if (bufferID == 0)
+					{
+						// New OpenGL resource
+						bufferID = CreateBuffer(*buffer);
+					}
+					else
+					{
+						LoadBuffer(bufferID, *buffer);
+					}
+
+					break;
+
+				case MemoryTransferType::Free:
+
+					FreeBuffer(bufferID);
+
+					break;
+
+				default:
+					break;
 				}
 
 				break;
 			}
 			case MemoryTargetType::Texture:
 			{
+				Texture* texture = static_cast<Texture*>(mtc.Data);
+				unsigned int& textureID = mtc.MemoryTargetID; // update memory target id
 
+				if (textureID == 0)
+				{
+					// New opengl resource
+					textureID = CreateTexture(*texture);
+				}
+				else
+				{
+					LoadTexture(textureID, *texture);
+				}
 
 				break;
 			}
@@ -333,18 +372,43 @@ namespace GaladHen
 		}
 	}
 
-	bool RendererGL::Compile(CommandBuffer<CompileCommand&> compileCommandBuffer)
+	bool RendererGL::Compile(CommandBuffer<CompileCommand>& compileCommandBuffer)
 	{
-		for (CompileCommand cc : compileCommandBuffer)
+		bool success = true;
+
+		for (CompileCommand& cc : compileCommandBuffer)
 		{
-			unsigned int shaderID = cc.ShaderPipelineID;
+			unsigned int& shaderID = cc.ShaderPipelineID;
 
 			if (shaderID == 0)
 			{
 				// New OpenGL resource
-
+				shaderID = CreateShaderPipeline(cc);
 			}
+			else
+			{
+				CompileShaderPipeline(shaderID, cc);
+			}
+
+			success &= cc.Result.Succeed;
 		}
+
+		return success;
+	}
+
+	void RendererGL::EnableDepthTest(bool enable)
+	{
+		if (enable)
+			glEnable(GL_DEPTH_TEST);
+		else
+			glDisable(GL_DEPTH_TEST);
+	}
+
+	unsigned int RendererGL::GetTextureApiID(unsigned int resourceID)
+	{
+		TextureGLTest& texture = Textures.GetObjectWithId(resourceID);
+
+		return texture.TextureID;
 	}
 
 	RendererGL::~RendererGL()
@@ -352,21 +416,15 @@ namespace GaladHen
 
 	}
 
-	unsigned int RendererGL::CreateTexture(const TextureData& textureData)
+	unsigned int RendererGL::CreateTexture(const Texture& texture)
 	{
 		unsigned int id = Textures.AddWithId();
-		TextureGLTest& texture = Textures.GetObjectWithId(id);
+		TextureGLTest& textureGL = Textures.GetObjectWithId(id);
 
 		// create new texture object
-		glGenTextures(1, &texture.TextureID);
+		glGenTextures(1, &textureGL.TextureID);
 
-		texture.AllocationType = TextureAllocationType::Mutable; // TODO: allocation type basing on access type
-		texture.TextureFormat = TextureFormatAssociations[(int)textureData.Format];
-		texture.PixelChannels = PixelChannelsAssociations[textureData.NumberOfChannels - 1];
-		texture.PixelChannelDepth = PixelChannelDepthAssociations[0];
-		texture.NumberOfMipMaps = textureData.NumberOfMipMaps;
-
-		LoadTexture(texture, textureData);
+		LoadTexture(id, texture);
 
 		return id;
 	}
@@ -385,16 +443,6 @@ namespace GaladHen
 		return id;
 	}
 
-	void RendererGL::SetTextureParameters(const TextureGLTest& texture, const TextureParameters& params)
-	{
-		glBindTexture(GL_TEXTURE_2D, texture.TextureID);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, WrappingAssociations[(int)params.HorizontalWrapping]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, WrappingAssociations[(int)params.VerticalWrapping]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, FilteringAssociations[(int)params.MinFiltering]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, FilteringAssociations[(int)params.MagFiltering]);
-	}
-
 	void RendererGL::FreeTexture(unsigned int textureID)
 	{
 		TextureGLTest& texture = Textures.GetObjectWithId(textureID);
@@ -404,16 +452,35 @@ namespace GaladHen
 		Textures.RemoveWithId(textureID);
 	}
 
-	void RendererGL::LoadTexture(const TextureGLTest& texture, const TextureData& textureData)
+	void RendererGL::LoadTexture(unsigned int textureID, const Texture& texture)
 	{
-		// bind new texture object to texture target
-		glBindTexture(GL_TEXTURE_2D, texture.TextureID);
+		TextureGLTest& textureGL = Textures.GetObjectWithId(textureID);
 
-		switch (texture.AllocationType)
+		// Copy texture data in opengl texture data
+		textureGL.AllocationType = TextureAllocationType::Mutable; // TODO: allocation basing on texture access type
+		textureGL.Filtering = FilteringAssociations[(int)texture.GetFiltering()];
+		textureGL.Wrapping = WrappingAssociations[(int)texture.GetWrapping()];
+		textureGL.TextureFormat = TextureFormatAssociations[(int)texture.GetFormat()];
+		textureGL.PixelChannels = PixelChannelsAssociations[texture.GetNumberOfChannels() - 1];
+		textureGL.PixelChannelDepth = PixelChannelDepthAssociations[0];
+		textureGL.NumberOfMipMaps = texture.GetNumberOfMipMaps();
+
+		// bind new texture object to texture target
+		glBindTexture(GL_TEXTURE_2D, textureGL.TextureID);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, textureGL.Wrapping);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, textureGL.Wrapping);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureGL.Filtering);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureGL.Filtering);
+
+		switch (textureGL.AllocationType)
 		{
 		case TextureAllocationType::Mutable:
 		{
-			glTexImage2D(GL_TEXTURE_2D, texture.NumberOfMipMaps, texture.TextureFormat, textureData.Width, textureData.Height, 0, texture.PixelChannels, texture.PixelChannelDepth, textureData.Data);
+			glm::uvec2 textureSize;
+			texture.GetSize(textureSize);
+			std::shared_ptr<unsigned char> data = texture.GetData().lock(); // need to convert to shared ptr to use a weak ptr
+			glTexImage2D(GL_TEXTURE_2D, textureGL.NumberOfMipMaps, textureGL.TextureFormat, textureSize.x, textureSize.y, 0, textureGL.PixelChannels, textureGL.PixelChannelDepth, data.get());
 			break;
 		}
 		case TextureAllocationType::Immutable:
@@ -421,71 +488,77 @@ namespace GaladHen
 			// allocate immutable storage basing on number of channels and on bit depth
 			// IMPORTANT: internal format is an external variable because not all the textures need to be interpreted as SRGB (example: normal maps are already stored in linear values)
 			// levels are the number of mipmaps
-			glTexStorage2D(GL_TEXTURE_2D, texture.NumberOfMipMaps, texture.TextureFormat, textureData.Width, textureData.Height);
+			glm::uvec2 textureSize;
+			texture.GetSize(textureSize);
+			glTexStorage2D(GL_TEXTURE_2D, textureGL.NumberOfMipMaps, textureGL.TextureFormat, textureSize.x, textureSize.y);
 
 			// copy texture data to texture object
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureData.Width, textureData.Height, texture.PixelChannels, texture.PixelChannelDepth, textureData.Data);
+			std::shared_ptr<unsigned char> data = texture.GetData().lock();
+			assert(data.get() != nullptr); // always valid texture arrives here
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureSize.x, textureSize.y, textureGL.PixelChannels, textureGL.PixelChannelDepth, data.get());
 		}
 		default:
 			break;
 		}
 
-		if (texture.NumberOfMipMaps > 0)
-			glGenerateTextureMipmap(texture.TextureID);
+		if (textureGL.NumberOfMipMaps > 0)
+			glGenerateTextureMipmap(textureGL.TextureID);
 	}
 
-	unsigned int RendererGL::CreateMesh(const MeshData& meshData)
+	unsigned int RendererGL::CreateMesh(const Mesh& mesh)
 	{
 		unsigned int id = Meshes.AddWithId();
-		MeshGLTest mesh = Meshes.GetObjectWithId(id);
-		mesh.NumberOfIndices = meshData.Indices.size();
-		mesh.PrimitiveType = PrimitiveTypes[(int)meshData.PrimitiveType];
-		
-		// we create the buffers
-		glGenVertexArrays(1, &mesh.VAO);
-		glGenBuffers(1, &mesh.VBO);
-		glGenBuffers(1, &mesh.EBO);
+		MeshGLTest& meshGL = Meshes.GetObjectWithId(id);
 
-		LoadMesh(mesh, meshData);
+		// we create the buffers
+		glGenVertexArrays(1, &meshGL.VAO);
+		glGenBuffers(1, &meshGL.VBO);
+		glGenBuffers(1, &meshGL.EBO);
+
+		LoadMesh(id, mesh);
 
 		return id;
 	}
 
-	void RendererGL::LoadMesh(MeshGLTest& mesh, const MeshData& meshData)
+	void RendererGL::LoadMesh(unsigned int meshID, const Mesh& mesh)
 	{
+		MeshGLTest& meshGL = Meshes.GetObjectWithId(meshID);
+		
+		// Copy mesh data to opengl mesh data
+		meshGL.NumberOfIndices = mesh.GetIndices().size();
+		meshGL.PrimitiveType = PrimitiveTypes[(int)mesh.GetPrimitive()];
+
 		// VAO is made "active"
-		glBindVertexArray(mesh.VAO);
+		glBindVertexArray(meshGL.VAO);
 		// we copy data in the VBO - we must set the data dimension, and the pointer to the structure cointaining the data
-		glBindBuffer(GL_ARRAY_BUFFER, mesh.VBO);
-		glBufferData(GL_ARRAY_BUFFER, meshData.Vertices.size() * sizeof(VertexData), &meshData.Vertices[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, meshGL.VBO);
+		glBufferData(GL_ARRAY_BUFFER, mesh.GetVertices().size() * sizeof(MeshVertexData), &mesh.GetVertices()[0], GL_STATIC_DRAW);
 		// we copy data in the EBO - we must set the data dimension, and the pointer to the structure cointaining the data
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshData.Indices.size() * sizeof(GLuint), &meshData.Indices[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshGL.EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.GetIndices().size() * sizeof(GLuint), &mesh.GetIndices()[0], GL_STATIC_DRAW);
 
 		// we set in the VAO the pointers to the different vertex attributes (with the relative offsets inside the data structure)
 		// vertex positions
 		// these will be the positions to use in the layout qualifiers in the shaders ("layout (location = ...)"")
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertexData), (GLvoid*)0);
 		// Normals
 		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, Normal));
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertexData), (GLvoid*)offsetof(MeshVertexData, Normal));
 		// Texture Coordinates
 		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, UV));
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(MeshVertexData), (GLvoid*)offsetof(MeshVertexData, UV));
 		// Tangent
 		glEnableVertexAttribArray(3);
-		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, Tangent));
+		glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertexData), (GLvoid*)offsetof(MeshVertexData, Tangent));
 		// Bitangent
 		glEnableVertexAttribArray(4);
-		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, Bitangent));
+		glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(MeshVertexData), (GLvoid*)offsetof(MeshVertexData, Bitangent));
 		// Vertex color
 		glEnableVertexAttribArray(5);
-		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(VertexData), (GLvoid*)offsetof(VertexData, Color));
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(MeshVertexData), (GLvoid*)offsetof(MeshVertexData, Color));
 
 		glBindVertexArray(0);
-
-		mesh.NumberOfIndices = meshData.Indices.size();
 	}
 
 	void RendererGL::FreeMesh(unsigned int meshID)
@@ -502,11 +575,10 @@ namespace GaladHen
 	unsigned int RendererGL::CreateShaderPipeline(CompileCommand& compileCommand)
 	{
 		unsigned int id = Shaders.AddWithId();
-
-		GLuint& program = Shaders.GetObjectWithId(id);
-		program = glCreateProgram();
 		
 		CompileShaderPipeline(id, compileCommand);
+
+		return id;
 	}
 
 	bool RendererGL::CompileShaderPipeline(unsigned int shaderID, CompileCommand& compileCommand)
@@ -522,9 +594,6 @@ namespace GaladHen
 		const char* teCode = compileCommand.TessEvalCode.c_str();
 		const char* gCode = compileCommand.GeometryCode.c_str();
 		const char* fCode = compileCommand.FragmentCode.c_str();
-
-		// previous shader program delete
-		FreeShaderPipeline(shaderID);
 
 		// shader program creation
 		program = glCreateProgram();
@@ -709,40 +778,61 @@ namespace GaladHen
 		Shaders.RemoveWithId(shaderID);
 	}
 
-	unsigned int RendererGL::CreateBuffer(const BufferData& bufferData)
+	unsigned int RendererGL::CreateBuffer(const Buffer& buffer)
 	{
 		unsigned int id = Buffers.AddWithId();
-		BufferGLTest& buffer = Buffers.GetObjectWithId(id);
-		glCreateBuffers(1, &buffer.BufferID);
-		LoadBuffer(id, bufferData);
+		BufferGLTest& bufferGL = Buffers.GetObjectWithId(id);
+		glCreateBuffers(1, &bufferGL.BufferID);
+		LoadBuffer(id, buffer);
+
+		return id;
 	}
 
-	void RendererGL::LoadBuffer(unsigned int bufferID, const BufferData& bufferData)
+	void RendererGL::LoadBuffer(unsigned int bufferID, const Buffer& buffer)
 	{
 		// We assume data arrays are created correctly
-		assert(bufferData.Sizes.size() == bufferData.Datas.size());
+		assert(buffer.GetSizes().size() == buffer.GetDatas().size());
 
 		// init
 		//glBindBufferBase(bufferType, binding, Buffers.GetObjectWithId(id));
-		BufferGLTest& buffer = Buffers.GetObjectWithId(bufferID);
-		buffer.Target = BufferTypesAssociations[(int)bufferData.Type];
-		glBindBuffer(buffer.Target, buffer.BufferID);
+		BufferGLTest& bufferGL = Buffers.GetObjectWithId(bufferID);
+
+		// Copy buffer data to opengl buffer data
+		bufferGL.Target = BufferTypesAssociations[(int)buffer.GetType()];
+		switch (buffer.GetType())
+		{
+		case BufferType::Uniform:
+			bufferGL.ResourceProgramInterface = GL_UNIFORM_BLOCK;
+			break;
+
+		case BufferType::ShaderStorage:
+			bufferGL.ResourceProgramInterface = GL_SHADER_STORAGE_BLOCK;
+			break;
+
+		default:
+			break;
+		}
+
+		glBindBuffer(bufferGL.Target, bufferGL.BufferID);
 
 		// We need to calculate for each data its gpu occupancy (using std430 OpenGL buffer layout: https://www.oreilly.com/library/view/opengl-programming-guide/9780132748445/app09lev1sec3.html)
 		// Assuming the order of the data inside Datas array matches gpu buffer data order
+		const std::vector<std::shared_ptr<void>>& datas = buffer.GetDatas();
+		const std::vector<size_t>& sizes = buffer.GetSizes();
+		
 		size_t totalSizeBytes = 0;
-		for (unsigned int i = 0; i < bufferData.Datas.size(); ++i)
+		for (unsigned int i = 0; i < datas.size(); ++i)
 		{	
-			totalSizeBytes += bufferData.Sizes[i];
+			totalSizeBytes += sizes[i];
 		}
-		glBufferData(buffer.Target, totalSizeBytes, nullptr, BufferUsageAssociations[(int)bufferData.AccessType]); // reallocation of memory
+		glBufferData(bufferGL.Target, totalSizeBytes, nullptr, BufferUsageAssociations[(int)buffer.GetAccessType()]); // reallocation of memory
 
 		// fill
 		size_t offset = 0;
-		for (unsigned int i = 0; i < bufferData.Sizes.size(); ++i)
+		for (unsigned int i = 0; i < sizes.size(); ++i)
 		{
-			glBufferSubData(buffer.Target, offset, bufferData.Sizes[i], bufferData.Datas[i]);
-			offset += bufferData.Sizes[i];
+			glBufferSubData(bufferGL.Target, offset, sizes[i], datas[i].get());
+			offset += sizes[i];
 		}
 	}
 
@@ -752,58 +842,6 @@ namespace GaladHen
 		glDeleteBuffers(1, &buffer.BufferID);
 
 		Buffers.RemoveWithId(bufferID);
-	}
-
-	void RendererGL::TranslateToShaderData(const std::vector<PointLight>& pointLights, std::vector<PointLightData>& outLightData)
-	{
-		for (const PointLight& pl : pointLights)
-		{
-			outLightData.emplace_back(
-				PointLightData
-				{
-					glm::vec4(pl.Color, 1.0),
-					pl.Transform.GetPosition(),
-					pl.Intensity,
-					pl.BulbSize,
-					pl.Radius
-				});
-		}
-	}
-
-	void RendererGL::TranslateToShaderData(const std::vector<DirectionalLight>& dirLights, std::vector<DirectionalLightData>& outLightData)
-	{
-		for (const DirectionalLight& dl : dirLights)
-		{
-			outLightData.emplace_back(
-				DirectionalLightData
-				{
-					glm::vec4(dl.Color, 1.0),
-					dl.Transform.GetPosition(),
-					dl.Intensity,
-					dl.GetDirection()
-				});
-		}
-	}
-	CameraData RendererGL::TranslateToShaderData(const Camera& camera)
-	{
-		return CameraData
-		{
-			camera.GetViewMatrix(),
-			camera.GetProjectionMatrix(),
-			camera.Transform.GetPosition()
-		};
-	}
-
-	TransformData RendererGL::TranslateToShaderData(const TransformQuat& transform)
-	{
-		glm::mat4 ModelMatrix = transform.GetModelMatrix();
-		glm::mat4 NormalMatrix = glm::inverse(glm::transpose(ModelMatrix));
-
-		return TransformData
-		{
-			ModelMatrix,
-			NormalMatrix
-		};
 	}
 }
 

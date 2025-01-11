@@ -13,12 +13,11 @@ namespace GaladHen
 	struct RayTriangleMeshHitInfo;
 	struct RayHitInfo;
 	struct RayModelHitInfo;
-	struct BVH;
+	class BVH;
 	enum class BVHTraversalMethod;
 	class Mesh;
 	class Model;
-	class SceneObject;
-	class TransformQuat;
+	class Transform;
 
 	namespace Math
 	{
@@ -41,19 +40,24 @@ namespace GaladHen
 		// @brief
 		// Check if a ray intersects an triangle mesh, using its BVH
 		// @returns intersection info
-		RayTriangleMeshHitInfo RayTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, BVHTraversalMethod traversalMethod);
+		RayTriangleMeshHitInfo RayTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVH& bvh, BVHTraversalMethod traversalMethod);
 
 		// @brief
-		// Check if a ray intersects a model's triangle mesh, using its BVH
+		// Check if a ray intersects an triangle mesh with a transform applied, using its BVH
 		// @returns intersection info
-		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, BVHTraversalMethod traversalMethod);
+		RayTriangleMeshHitInfo RayTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVH& bvh, const Transform& transform, BVHTraversalMethod traversalMethod);
 
 		// @brief
-		// Check if a ray intersects the scene object's model (triangle mesh), using its BVH
+		// Check if a ray intersects a model (set of triangle meshes), using its BVH
 		// @returns intersection info
-		RayModelHitInfo RaySceneObjectIntersection(const Ray& ray, const SceneObject& sceneObject, BVHTraversalMethod traversalMethod);
+		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, const BVH& bvh, BVHTraversalMethod traversalMethod);
 
-		Ray operator*(const TransformQuat transform, const Ray ray);
-		Ray operator*(const Ray ray, const TransformQuat transform);
+		// @brief
+		// Check if a ray intersects a model (set of triangle meshes) with a transform applied, using its BVH
+		// @returns intersection info
+		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, const BVH& bvh, const Transform& transform, BVHTraversalMethod traversalMethod);
+
+		Ray operator*(const Transform transform, const Ray ray);
+		Ray operator*(const Ray ray, const Transform transform);
 	}
 }

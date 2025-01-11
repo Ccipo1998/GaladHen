@@ -1,8 +1,6 @@
 
 #include "WindowGL.h"
 
-#include <Core/Input.h>
-
 // gl3w MUST be included before any other OpenGL-related header
 #include <GL/gl3w.h>
 
@@ -11,10 +9,9 @@
 #include <GLFW/glfw3native.h>
 
 #include <Utils/Log.h>
-
 #include <Renderer/Common.h>
-
 #include <glm/glm.hpp>
+#include <Renderer/Window.h>
 
 namespace GaladHen
 {
@@ -49,18 +46,18 @@ namespace GaladHen
 
     void WindowGL::FillKeyAssociations()
     {
-        KeyboardKeyAssociations[GLFW_KEY_W] = (int)KeyboardKey::W;
-        KeyboardKeyAssociations[GLFW_KEY_A] = (int)KeyboardKey::A;
-        KeyboardKeyAssociations[GLFW_KEY_S] = (int)KeyboardKey::S;
-        KeyboardKeyAssociations[GLFW_KEY_D] = (int)KeyboardKey::D;
-        KeyboardKeyAssociations[GLFW_KEY_E] = (int)KeyboardKey::E;
-        KeyboardKeyAssociations[GLFW_KEY_Q] = (int)KeyboardKey::Q;
+        KeyboardKeyAssociations[GLFW_KEY_W] = (int)Input::KeyboardKey::W;
+        KeyboardKeyAssociations[GLFW_KEY_A] = (int)Input::KeyboardKey::A;
+        KeyboardKeyAssociations[GLFW_KEY_S] = (int)Input::KeyboardKey::S;
+        KeyboardKeyAssociations[GLFW_KEY_D] = (int)Input::KeyboardKey::D;
+        KeyboardKeyAssociations[GLFW_KEY_E] = (int)Input::KeyboardKey::E;
+        KeyboardKeyAssociations[GLFW_KEY_Q] = (int)Input::KeyboardKey::Q;
         
-        MouseKeyAssociations[GLFW_MOUSE_BUTTON_LEFT] = (int)MouseKey::Left;
-        MouseKeyAssociations[GLFW_MOUSE_BUTTON_RIGHT] = (int)MouseKey::Right;
+        MouseKeyAssociations[GLFW_MOUSE_BUTTON_LEFT] = (int)Input::MouseKey::Left;
+        MouseKeyAssociations[GLFW_MOUSE_BUTTON_RIGHT] = (int)Input::MouseKey::Right;
 
-        KeyActionAssociations[GLFW_PRESS] = (int)KeyAction::Pressed;
-        KeyActionAssociations[GLFW_RELEASE] = (int)KeyAction::Released;
+        KeyActionAssociations[GLFW_PRESS] = (int)Input::KeyAction::Pressed;
+        KeyActionAssociations[GLFW_RELEASE] = (int)Input::KeyAction::Released;
     }
 
     void WindowGL::RegisterKeyboardCallback(void (*callback)(void* owner, unsigned int key, unsigned int action), void* owner)
@@ -201,11 +198,11 @@ namespace GaladHen
         SetWindowSize(glm::uvec2(width, height));
 
         // After changes to GLFWwindow, we need to initialize gl3w context again
-        if (!gl3wInit())
-        {
-            // TODO: Find out why gl3w fails creating the context, but without this gl3wInit() call the first call to a gl function will crash
-            Log::Error("WindowGL", "Error: GL3W failed to initialize the context");
-        }
+        //if (!gl3wInit())
+        //{
+        //    // TODO: Find out why gl3w fails creating the context, but without this gl3wInit() call the first call to a gl function will crash
+        //    Log::Error("WindowGL", "Error: GL3W failed to initialize the context");
+        //}
     }
 
     void WindowGL::SendKeyboardCallback(unsigned int key, unsigned int action)
@@ -272,34 +269,15 @@ namespace GaladHen
         //glViewport(0, 0, width, height);
     }
 
-    void WindowGL::ClearFrontBuffers(bool colorBuffer, bool depthBuffer, bool stencilBuffer)
+    void WindowGL::CloseWindow()
     {
-        GLbitfield mask = (colorBuffer ? GL_COLOR_BUFFER_BIT : 0) | (depthBuffer ? GL_DEPTH_BUFFER_BIT : 0) | (stencilBuffer ? GL_STENCIL_BUFFER_BIT : 0);
-        glClear(mask);
+        glfwDestroyWindow(WinGL);
+        glfwTerminate();
     }
 
     void WindowGL::SwapBuffers()
     {
         glfwSwapBuffers(WinGL);
-    }
-
-    void WindowGL::SetColorBufferClearColor(glm::vec4 color)
-    {
-        glClearColor(color.x, color.y, color.z, color.w);
-    }
-
-    void WindowGL::EnableDephtTest(bool enable)
-    {
-        if (enable)
-            glEnable(GL_DEPTH_TEST);
-        else
-            glDisable(GL_DEPTH_TEST);
-    }
-
-    void WindowGL::CloseWindow()
-    {
-        glfwDestroyWindow(WinGL);
-        glfwTerminate();
     }
 
     WindowGL::~WindowGL()

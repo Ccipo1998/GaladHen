@@ -7,9 +7,7 @@ add_executable(GaladHenApp
 
 target_include_directories(GaladHenApp PRIVATE
     ${CMAKE_SOURCE_DIR}/
-    ${CMAKE_SOURCE_DIR}/Libs/
-    ${CMAKE_SOURCE_DIR}/Libs/assimp/include
-    ${CMAKE_SOURCE_DIR}/Utils/)
+    ${CMAKE_SOURCE_DIR}/Libs)
 
 set_target_properties(GaladHenApp
     PROPERTIES

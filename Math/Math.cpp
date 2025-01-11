@@ -2,10 +2,9 @@
 #include "Math.h"
 
 #include "Ray.h"
-#include <Core/AABB/AABB.h>
-#include <Core/BVH/BVH.h>
-#include <Core/Model.h>
-#include <Core/SceneObject.h>
+#include "AABB/AABB.h"
+#include "BVH/BVH.h"
+#include "Transform.h"
 
 namespace GaladHen
 {
@@ -86,31 +85,39 @@ namespace GaladHen
 			info.HitDistance = std::numeric_limits<float>::max();
 		}
 
-		RayTriangleMeshHitInfo RayTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, BVHTraversalMethod traversalMethod)
+		RayTriangleMeshHitInfo RayTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVH& bvh, BVHTraversalMethod traversalMethod)
 		{
-			return mesh.MeshBVH.CheckTriangleMeshIntersection(ray, mesh, traversalMethod);
+			return bvh.CheckTriangleMeshIntersection(ray, mesh, traversalMethod);
 		}
 
-		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, BVHTraversalMethod traversalMethod)
+		RayTriangleMeshHitInfo RayTriangleMeshIntersection(const Ray& ray, const Mesh& mesh, const BVH& bvh, const Transform& transform, BVHTraversalMethod traversalMethod)
 		{
-			return model.ModelBVH.CheckModelIntersection(ray, model, traversalMethod);
+			// Transform world space ray into given transform space
+			Ray inverseRay = transform.Inverse() * ray;
+
+			return bvh.CheckTriangleMeshIntersection(ray, mesh, traversalMethod);
 		}
 
-		RayModelHitInfo RaySceneObjectIntersection(const Ray& ray, const SceneObject& sceneObject, BVHTraversalMethod traversalMethod)
+		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, const BVH& bvh, BVHTraversalMethod traversalMethod)
 		{
-			// Transform world space ray into model space
-			Ray inverseRay = sceneObject.Transform.Inverse() * ray;
-
-			return RayModelIntersection(inverseRay, *sceneObject.GetSceneObjectModel(), BVHTraversalMethod::FrontToBack);
+			return bvh.CheckModelIntersection(ray, model, traversalMethod);
 		}
 
-		Ray operator*(const TransformQuat transform, const Ray ray)
+		RayModelHitInfo RayModelIntersection(const Ray& ray, const Model& model, const BVH& bvh, const Transform& transform, BVHTraversalMethod traversalMethod)
 		{
-			return Ray{ transform.GetModelMatrix() * glm::vec4(ray.Origin, 1.0f), transform.GetOrientation() * glm::vec4(ray.Direction, 1.0f), ray.Length };
+			// Transform world space ray into given transform space
+			Ray inverseRay = transform.Inverse() * ray;
+
+			return bvh.CheckModelIntersection(ray, model, traversalMethod);
 		}
-		Ray operator*(const Ray ray, const TransformQuat transform)
+
+		Ray operator*(const Transform transform, const Ray ray)
 		{
-			return Ray{ glm::vec4(ray.Origin, 1.0f) * transform.GetModelMatrix(), glm::vec4(ray.Direction, 1.0f) * transform.GetOrientation(), ray.Length };
+			return Ray{ transform.ToMatrix() * glm::vec4(ray.Origin, 1.0f), transform.GetOrientation() * glm::vec4(ray.Direction, 1.0f), ray.Length };
+		}
+		Ray operator*(const Ray ray, const Transform transform)
+		{
+			return Ray{ glm::vec4(ray.Origin, 1.0f) * transform.ToMatrix(), glm::vec4(ray.Direction, 1.0f) * transform.GetOrientation(), ray.Length };
 		}
 	}
 }

@@ -3,21 +3,22 @@
 
 #pragma once
 
-#include "ShaderData.h"
-
 #include <Renderer/LayerAPI/IRendererAPI.h>
-#include <Renderer/LayerAPI/OpenGL/MeshGL.h>
-#include <Renderer/LayerAPI/OpenGL/ShaderProgramGL.h>
-#include <Renderer/LayerAPI/OpenGL/TextureGL.h>
-#include <Renderer/LayerAPI/OpenGL/RenderBufferGL.h>
+//#include <Renderer/LayerAPI/OpenGL/MeshGL.h>
+//#include <Renderer/LayerAPI/OpenGL/ShaderProgramGL.h>
+//#include <Renderer/LayerAPI/OpenGL/TextureGL.h>
+//#include <Renderer/LayerAPI/OpenGL/RenderBufferGL.h>
 
 #include <Utils/IdList.hpp>
 
+// gl3w MUST be included before any other OpenGL-related header
+#include <GL/gl3w.h>
+
 namespace GaladHen
 {
-	struct MeshData;
-	struct BufferData;
-	struct TextureData;
+	class Texture;
+	class Mesh;
+	class Buffer;
 
 	class RendererGL : public IRendererAPI
 	{
@@ -27,7 +28,7 @@ namespace GaladHen
 
 		virtual void Init() override;
 
-		virtual unsigned int CreateRenderBuffer(const TextureData& textureData) override;
+		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height) override;
 
 		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) override;
 
@@ -35,9 +36,13 @@ namespace GaladHen
 
 		virtual void TransferData(CommandBuffer<MemoryTransferCommand>& memoryCommandBuffer) override;
 
-		virtual bool Compile(CommandBuffer<CompileCommand&> compileCommandBuffer) override; // TODO: CompileResult instead of bool as return type
+		virtual bool Compile(CommandBuffer<CompileCommand>& compileCommandBuffer) override; // TODO: CompileResult instead of bool as return type
 
-		virtual ~RendererGL() override;
+		virtual void EnableDepthTest(bool enable) override;
+
+		virtual unsigned int GetTextureApiID(unsigned int resourceID) override;
+
+		~RendererGL();
 
 		//virtual void SetViewport(const glm::uvec2& position, const glm::uvec2& size) override;
 
@@ -45,7 +50,7 @@ namespace GaladHen
 
 	protected:
 
-		static GLenum MeshGL::PrimitiveTypes[3];
+		static GLenum RendererGL::PrimitiveTypes[3];
 		struct MeshGLTest
 		{
 			GLuint VAO, VBO, EBO;
@@ -100,22 +105,22 @@ namespace GaladHen
 		{
 			GLuint BufferID;
 			GLenum Target;
+			GLenum ResourceProgramInterface;
 		};
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
 
-		unsigned int CreateTexture(const TextureData& textureData);
+		unsigned int CreateTexture(const Texture& texture);
 		unsigned int CreateDepthStencilTexture(unsigned int width, unsigned int height);
-		void SetTextureParameters(const TextureGLTest& texture, const TextureParameters& params);
 		void FreeTexture(unsigned int textureID);
-		void LoadTexture(const TextureGLTest& texture, const TextureData& textureData);
+		void LoadTexture(unsigned int textureID, const Texture& texture);
 
-		unsigned int CreateMesh(const MeshData& meshData);
-		void LoadMesh(MeshGLTest& mesh, const MeshData& meshData);
+		unsigned int CreateMesh(const Mesh& mesh);
+		void LoadMesh(unsigned int meshID, const Mesh& mesh);
 		void FreeMesh(unsigned int meshID);
 
-		unsigned int CreateBuffer(const BufferData& bufferData);
-		void LoadBuffer(unsigned int bufferID, const BufferData& bufferData);
+		unsigned int CreateBuffer(const Buffer& buffer);
+		void LoadBuffer(unsigned int bufferID, const Buffer& buffer);
 		void FreeBuffer(unsigned int bufferID);
 
 		unsigned int CreateShaderPipeline(CompileCommand& compileCommand);
@@ -123,11 +128,6 @@ namespace GaladHen
 		bool CheckShaderPipelineCompilation(GLuint shaderProgram, char* outLog, unsigned int outLogLength);
 		bool CheckShaderPipelineLinking(GLuint shaderProgram, char* outLog, unsigned int outLogLength);
 		void FreeShaderPipeline(unsigned int shaderID);
-
-		void TranslateToShaderData(const std::vector<PointLight>& pointLights, std::vector<PointLightData>& outLightData);
-		void TranslateToShaderData(const std::vector<DirectionalLight>& dirLights, std::vector<DirectionalLightData>& outLightData);
-		CameraData TranslateToShaderData(const Camera& camera);
-		TransformData TranslateToShaderData(const TransformQuat& transform);
 
 		IdList<MeshGLTest> Meshes;
 		IdList<BufferGLTest> Buffers;

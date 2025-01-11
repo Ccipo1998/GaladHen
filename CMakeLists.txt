@@ -7,7 +7,6 @@ project(GaladHen VERSION 0.1.0)
 # set global variable to override runtime output directory of all the libs
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/Bin)
 
-add_subdirectory(Core)
 add_subdirectory(Renderer)
 add_subdirectory(Libs/assimp)
 add_subdirectory(Libs/gl3w)

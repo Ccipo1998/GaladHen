@@ -141,12 +141,12 @@ namespace GaladHen
         return WinAPI->GetWindowSize();
     }
 
-    void Window::CallKeyboardCallback(KeyboardKey key, KeyAction action)
+    void Window::CallKeyboardCallback(Input::KeyboardKey key, Input::KeyAction action)
     {
         Window::KeyboardCallback(this, (int)key, (int)action);
     }
 
-    void Window::CallMouseKeyCallback(MouseKey key, KeyAction action)
+    void Window::CallMouseKeyCallback(Input::MouseKey key, Input::KeyAction action)
     {
         Window::MouseKeyCallback(this, (int)key, (int)action);
     }
@@ -161,12 +161,12 @@ namespace GaladHen
         Window::ClosingWindowCallback(this);
     }
 
-    bool Window::IsKeyPressed(KeyboardKey key)
+    bool Window::IsKeyPressed(Input::KeyboardKey key)
     {
         return WindowInput.Keyboard[(int)key];
     }
 
-    bool Window::IsKeyPressed(MouseKey key)
+    bool Window::IsKeyPressed(Input::MouseKey key)
     {
         return WindowInput.Mouse[(int)key];
     }
@@ -204,8 +204,6 @@ namespace GaladHen
 
     void Window::BeginFrame()
     {
-        WinAPI->ClearFrontBuffers(true, true, true); // TODO: clear parameters exposed in Window class?
-
         // update mouse position
         float currentX, currentY;
         GetMousePosition(currentX, currentY);
@@ -224,16 +222,6 @@ namespace GaladHen
 
         WinAPI->SwapBuffers();
         WinAPI->InvokePendingCallbacks();
-    }
-
-    void Window::SetColorBufferClearColor(glm::vec4 color)
-    {
-        WinAPI->SetColorBufferClearColor(color);
-    }
-
-    void Window::EnableDepthTest(bool enable)
-    {
-        WinAPI->EnableDephtTest(enable);
     }
 
     void Window::GetMousePosition(float& mouseX, float& mouseY)

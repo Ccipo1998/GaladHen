@@ -4,7 +4,7 @@
 #include <Editor/UI/Page.h>
 #include <imgui/imgui.h>
 
-#include <Core/SceneObject.h>
+#include <Renderer/Entities/SceneObject.h>
 
 namespace GaladHen
 {

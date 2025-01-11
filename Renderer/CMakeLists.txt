@@ -9,38 +9,44 @@ add_library(Renderer STATIC
     Window.h
     Window.cpp
     LayerAPI/IWindowAPI.h
-    LayerAPI/ITextureAPI.h
-    LayerAPI/IShaderProgramAPI.h
-    LayerAPI/IMeshAPI.h
-    LayerAPI/IMaterialDataAPI.h
     LayerAPI/OpenGL/WindowGL.cpp
     LayerAPI/OpenGL/WindowGL.h
-    LayerAPI/OpenGL/MeshGL.cpp
-    LayerAPI/OpenGL/MeshGL.h
-    LayerAPI/OpenGL/ShaderProgramGL.cpp
-    LayerAPI/OpenGL/ShaderProgramGL.h
-    LayerAPI/OpenGL/MaterialDataGL.h
-    LayerAPI/OpenGL/TextureGL.cpp
-    LayerAPI/OpenGL/TextureGL.h
     LayerAPI/IRendererAPI.h
     LayerAPI/OpenGL/RendererGL.h
     LayerAPI/OpenGL/RendererGL.cpp
     Common.h
-    LayerAPI/OpenGL/ShaderData.h
-    LayerAPI/OpenGL/FrameBufferGL.h
-    LayerAPI/OpenGL/FrameBufferGL.cpp
-    LayerAPI/OpenGL/RenderBufferGL.h
-    LayerAPI/OpenGL/RenderBufferGL.cpp
-    LayerAPI/OpenGL/TextureFrameBufferGL.h
-    LayerAPI/OpenGL/TextureFrameBufferGL.cpp
-    RenderBuffer.h
-    LayerAPI/IRenderBufferAPI.h
-    RenderBuffer.cpp
+    Entities/RenderBuffer.h
+    Entities/RenderBuffer.cpp
     CommandBuffer.h
-    ShaderData.h
-    MeshData.h
-    BufferData.h
-    TextureData.h)
+    Entities/Material.h
+    Entities/Texture.h
+    Entities/Texture.cpp
+    Entities/Buffer.h
+    Entities/IGPUResource.h
+    Entities/IGPUResource.cpp
+    Entities/Buffer.cpp
+    Entities/Material.cpp
+    Entities/ShaderPipeline.h
+    Entities/ShaderPipeline.cpp
+    Entities/Mesh.h
+    Entities/Mesh.cpp
+    GPUResourceInspector.h
+    GPUResourceInspector.cpp
+    Entities/Camera.h
+    Entities/Camera.cpp
+    Entities/Scene.h
+    Entities/SceneObject.h
+    Entities/SceneObject.cpp
+    Entities/Light.h
+    Entities/Light.cpp
+    Entities/PointLight.h
+    Entities/PointLight.cpp
+    Entities/DirectionalLight.h
+    Entities/DirectionalLight.cpp
+    Entities/SpotLight.h
+    Entities/SpotLight.cpp
+    Entities/Scene.cpp
+    Entities/Model.cpp)
 
 target_include_directories(Renderer PRIVATE
     ${CMAKE_SOURCE_DIR}/
@@ -51,9 +57,8 @@ target_include_directories(Renderer PRIVATE
 
 target_link_libraries(Renderer
     PRIVATE
-    GaladHenCore
     glfw
     gl3w
     glm
-    imgui
+    GaladHenMath
     Utils)

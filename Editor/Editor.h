@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Core/Scene.h>
+#include <Renderer/Entities/Scene.h>
 #include <Renderer/Common.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Window.h>
@@ -33,16 +33,11 @@ namespace GaladHen
 		// Run the editor, assuming Init() was already called
 		static void Run();
 
-		static const Renderer& GetEditorRenderer();
-
 	private:
 
-		static API EditorAPI;
-
-		static Scene EditorScene;
-
-		static Renderer EditorRenderer;
-		static Window EditorWindow;
+		static API API;
+		static Scene Scene;
+		static Window Window;
 
 		static UIPage* EditorUIPage;
 

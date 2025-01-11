@@ -7,8 +7,7 @@
 #include <memory>
 #include <string>
 
-#include <Core/ShaderProgram.h>
-#include <Renderer/ShaderData.h>
+#include <Renderer/Entities/Material.h>
 
 namespace GaladHen
 {
@@ -26,7 +25,8 @@ namespace GaladHen
 		unsigned int DataSourceID;
 		// unsigned int InstanceCount; TODO: instanced rendering
 		unsigned int ShaderSourceID;
-		ShaderDataCollection ShaderData;
+		std::shared_ptr<Material> Material;
+		std::unordered_map<std::string, std::shared_ptr<Buffer>> AdditionalBufferData; // Like buffers managed by renderer (camera data, transform data, ...)
 	};
 
 	enum class MemoryTargetType

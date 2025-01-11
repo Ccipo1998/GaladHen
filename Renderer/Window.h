@@ -5,12 +5,50 @@
 
 #include <glm/glm.hpp>
 #include "Common.h"
-#include <Core/Input.h>
 
 namespace GaladHen
 {
     class IWindowAPI;
     class UIPage;
+
+    struct Input
+    {
+        enum class KeyboardKey
+        {
+            W = 0,
+            A = 1,
+            S = 2,
+            D = 3,
+            E = 4,
+            Q = 5
+        };
+
+        enum class MouseKey
+        {
+            Left = 0,
+            Right = 1
+        };
+
+        enum class KeyAction
+        {
+            Released = 0,
+            Pressed = 1
+        };
+
+        // array of booleans for each keybord key
+        bool Keyboard[1024];
+
+        // array for mouse buttons
+        bool Mouse[12];
+
+        // mouse coordinates
+        float MouseX;
+        float MouseY;
+        float LastMouseX;
+        float LastMouseY;
+
+        bool CloseWindowRequested;
+    };
 
     class Window
     {
@@ -54,13 +92,13 @@ namespace GaladHen
         // Manual call to keyboard callback
         // @param key: the activated key
         // @param action: the action type on the key
-        void CallKeyboardCallback(KeyboardKey key, KeyAction action);
+        void CallKeyboardCallback(Input::KeyboardKey key, Input::KeyAction action);
 
         // @brief
         // Manual call to mouse callback
         // @param key: the activated key
         // @param action: the action type on the key
-        void CallMouseKeyCallback(MouseKey key, KeyAction action);
+        void CallMouseKeyCallback(Input::MouseKey key, Input::KeyAction action);
 
         // @brief
         // Manual call to mouse callback on the owner
@@ -74,11 +112,11 @@ namespace GaladHen
 
         // @brief
         // Check if a keyboard key is currently pressed
-        bool IsKeyPressed(KeyboardKey key);
+        bool IsKeyPressed(Input::KeyboardKey key);
 
         // @brief
         // Check if a mouse key is currently pressed
-        bool IsKeyPressed(MouseKey key);
+        bool IsKeyPressed(Input::MouseKey key);
 
         // @brief
         // Get current mouse position
@@ -97,10 +135,6 @@ namespace GaladHen
         // @brief
         // Perform operations needed at the end of a frame
         void EndFrame();
-
-        void SetColorBufferClearColor(glm::vec4 color);
-
-        void EnableDepthTest(bool enable);
 
         ~Window();
 

@@ -42,15 +42,9 @@ namespace GaladHen
 
         // RENDERING ---------------------------------------------------------------------------------------------
 
-        virtual void ClearFrontBuffers(bool colorBuffer, bool depthBuffer, bool stencilBuffer) = 0;
+        virtual void CloseWindow() = 0;
 
         virtual void SwapBuffers() = 0;
-
-        virtual void SetColorBufferClearColor(glm::vec4 color) = 0;
-
-        virtual void EnableDephtTest(bool enable) = 0;
-
-        virtual void CloseWindow() = 0;
 
         virtual ~IWindowAPI() {}; // not pure virtual because of linking errors
 

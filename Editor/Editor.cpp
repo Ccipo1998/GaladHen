@@ -3,28 +3,16 @@
 
 #include <Renderer/Renderer.h>
 #include <Renderer/Window.h>
-#include <Renderer/RenderBuffer.h>
-#include <Core/Scene.h>
-#include <Core/ShaderProgram.h>
-#include <Core/Shader.h>
-#include <Core/AssetsManager.h>
-#include <Core/Model.h>
-#include <Core/Material.h>
-#include <Core/Texture.h>
-
-#include <Core/BVH/BVH.h>
-#include <Core/BVH/BVHNode.h>
-#include <Core/AABB/AABB.h>
-
+#include <Renderer/Entities/RenderBuffer.h>
 #include <Math/Ray.h>
 #include <Math/Math.h>
-
 #include <Editor/UI/Pages/MainPage.h>
-
-#include <Core/Color.h>
+#include "AssetsManager/AssetsManager.h"
+#include <Renderer/Entities/Texture.h>
+#include <Renderer/Entities/Material.h>
+#include <Renderer/Entities/Model.h>
 
 #include <glm/glm.hpp>
-
 #include <imgui/imgui.h>
 
 #include <string>
@@ -33,250 +21,219 @@ namespace GaladHen
 {
     // STATIC INITIALIZATIONS -----------------------------------------------------------------------------------
 
-    API Editor::EditorAPI = API::OpenGL;
-    Scene Editor::EditorScene{};
-    Renderer Editor::EditorRenderer{};
-    Window Editor::EditorWindow{};
+    API Editor::API = API::OpenGL;
+    Scene Editor::Scene{};
+    Window Editor::Window{};
     UIPage* Editor::EditorUIPage{};
 
     // STATIC INITIALIZATIONS -----------------------------------------------------------------------------------
 
-	void Editor::Init(API apiToUse)
+	void Editor::Init(GaladHen::API apiToUse)
 	{
 		// TODO: check if the editor was already initialized -> reload and reset to init state is required
 
 		// make MainWindow
-		EditorWindow.Init(API::OpenGL, "GaladHen");
-        EditorWindow.SetColorBufferClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
-        EditorWindow.EnableDepthTest(true);
+		Window.Init(apiToUse, "GaladHen");
 
-        // create renderer
-        EditorRenderer.Init(apiToUse);
-
-		// create scene
-		EditorScene = Scene{};
+        // init renderer
+        Renderer::Init(apiToUse);
 
         // init scene for renderer;
-        EditorRenderer.LoadLightingData(EditorScene);
-        EditorRenderer.LoadCameraData(EditorScene.MainCamera);
-        EditorRenderer.LoadTransformData();
+        //EditorRenderer.LoadLightingData(EditorScene);
+        //EditorRenderer.LoadCameraData(EditorScene.MainCamera);
+        //EditorRenderer.LoadTransformData();
 
         // create main ui page
-        EditorUIPage = new UIMainPage{ "MainPage", &EditorWindow };
+        EditorUIPage = new UIMainPage{ "MainPage", &Window };
 
-        AddDefaultBunnyToScene();
+        // Load and save pbr shader pipeline
+        AssetsManager::LoadAndStoreShaderPipeline("../Shaders/pbr/Pbr.vert", "", "", "", "../Shaders/pbr/Pbr.frag", "", "PBR");
+
+        AddDefaultGizmosToScene();
 	}
 
     void Editor::AddDefaultBunnyToScene()
     {
         // load textures
-        Texture* texAlbedo = AssetsManager::LoadAndStoreTexture(
+        std::shared_ptr<Texture> texAlbedo = AssetsManager::LoadAndStoreTexture(
             "../Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png",
             "StuccoAlbedo",
             TextureFormat::SRGB8);
-        texAlbedo->NumberOfMipMaps = 4;
-        Texture* texNormal = AssetsManager::LoadAndStoreTexture(
+        texAlbedo->SetNumberOfMipMaps(4);
+        std::shared_ptr<Texture> texNormal = AssetsManager::LoadAndStoreTexture(
             "../Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png",
             "StuccoNormal",
             TextureFormat::RGB8);
-        texNormal->NumberOfMipMaps = 4;
-        Texture* texRoughness = AssetsManager::LoadAndStoreTexture(
+        texNormal->SetNumberOfMipMaps(4);
+        std::shared_ptr<Texture> texRoughness = AssetsManager::LoadAndStoreTexture(
             "../Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png",
             "StuccoRoughness",
             TextureFormat::RGB);
-        texRoughness->NumberOfMipMaps = 4;
+        texRoughness->SetNumberOfMipMaps(4);
 
         // get pbr shader pipeline
-        ShaderPipeline* pbr = AssetsManager::GetPipelinePBR();
+        std::shared_ptr<ShaderPipeline> pbr = AssetsManager::GetShaderPipelineByName("PBR");
 
         // materials
-        Material bunnyMat{ pbr, ShadingMode::SmoothShading };
-        bunnyMat.Data = new PBRMaterialData{};
-        TextureParameters diffuse{};
-        diffuse.TextureSource = texAlbedo;
-        TextureParameters normal{};
-        normal.TextureSource = texNormal;
-        PBRMaterialData* bunnyMatData = (PBRMaterialData*)(bunnyMat.Data);
-        bunnyMatData->Metallic = 0.0f;
-        bunnyMatData->Roughness = 0.5f;
-        /*TextureParameters roughness{};
-        roughness.TextureSource = texRoughness;*/
-        bunnyMatData->DiffuseTexture = diffuse;
-        bunnyMatData->Diffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        bunnyMatData->NormalTexture = normal;
-        //bunnyMatData->RoughnessTexture = roughness;
+        std::shared_ptr<Material> bunnyMat = std::shared_ptr<Material>{ new Material{ pbr } };
+        bunnyMat->TextureData.emplace("DiffuseTexture", texAlbedo);
+        bunnyMat->TextureData.emplace("NormalTexture", texNormal);
+        bunnyMat->ScalarData.emplace("Metallic", 0.0f);
+        bunnyMat->ScalarData.emplace("Roughness", 0.5f);
+        bunnyMat->FunctionsData.emplace_back("DiffuseSampling");
+        bunnyMat->FunctionsData.emplace_back("NormalSampling");
+        bunnyMat->FunctionsData.emplace_back("MetallicConstant");
+        bunnyMat->FunctionsData.emplace_back("RoughnessConstant");
 
-        Material planeMat{ pbr, ShadingMode::SmoothShading };
-        PBRMaterialData planeMatData{};
-        planeMatData.Diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-        planeMatData.Roughness = 0.1f;
-        planeMatData.Metallic = 0.0f;
-        planeMat.Data = &planeMatData;
+        std::shared_ptr<Material> planeMat = std::shared_ptr<Material>{ new Material { pbr } };
+        planeMat->Vec4Data.emplace("Diffuse", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+        bunnyMat->ScalarData.emplace("Metallic", 0.0f);
+        bunnyMat->ScalarData.emplace("Roughness", 0.1f);
+        bunnyMat->FunctionsData.emplace_back("DiffuseConstant");
+        bunnyMat->FunctionsData.emplace_back("NormalInterpolated");
+        bunnyMat->FunctionsData.emplace_back("MetallicConstant");
+        bunnyMat->FunctionsData.emplace_back("RoughnessConstant");
 
         // load models
-        Model* bunny = AssetsManager::LoadAndStoreModel("../Assets/Models/bunny.glb", "Bunny");
-        Model* plane = AssetsManager::LoadAndStoreModel("../Assets/Models/plane.glb", "Plane");
+        std::shared_ptr<Model> bunny = AssetsManager::LoadAndStoreModel("../Assets/Models/bunny.glb", "Bunny");
+        std::shared_ptr<Model> plane = AssetsManager::LoadAndStoreModel("../Assets/Models/plane.glb", "Plane");
 
         // bvh
-        bunny->BuildModelBVH(AABBSplitMethod::PlaneCandidates, AABBSplitMethod::PlaneCandidates);
+        bunny->GetMeshes()[0].BVH.BuildBVH(bunny->GetMeshes()[0], AABBSplitMethod::PlaneCandidates);
+        bunny->BVH.BuildBVH(*bunny, AABBSplitMethod::PlaneCandidates);
 
         // shaders and materials
-        Shader vUnlit{ "../Shaders/Unlit/Unlit.vert", ShaderStage::Vertex };
-        Shader fUnlit{ "../Shaders/Unlit/Unlit.frag", ShaderStage::Fragment };
-        ShaderPipeline unlit{};
-        unlit.VertexShader = &vUnlit;
-        unlit.FragmentShader = &fUnlit;
-        Material aabbMat{ &unlit, ShadingMode::SmoothShading };
-        UnlitMaterialData aabbMatData{};
-        aabbMatData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        aabbMat.Data = &aabbMatData;
-        EditorRenderer.CompileShaderPipeline(unlit);
+        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("../Shaders/Unlit/Unlit.vert", "", "", "", "../Shaders/Unlit/Unlit.frag", "", "Unlit");
+        std::shared_ptr<Material> aabbMat = std::shared_ptr<Material>{ new Material { unlit } };
+        aabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        aabbMat->FunctionsData.emplace_back("DiffuseConstant");
 
         // ray
         Ray ray
         {
-            EditorScene.MainCamera.Transform.GetPosition(),
+            Scene.MainCamera.Transform.GetPosition(),
             glm::vec3(0.0f, 0.0f, -1.0f),
             1000.0f
         };
 
         // load into scene
-        std::vector<Material> bunnyMats;
-        bunnyMats.push_back(bunnyMat);
-        SceneObject objBunny{ bunny, bunnyMats };
-        objBunny.Transform.SetPosition(glm::vec3(0.0f, 1.5f, 0.0f));
-        objBunny.Transform.SetYaw(50.0f);
-        EditorScene.SceneObjects.push_back(objBunny);
-        std::vector<Material> planeMats;
-        planeMats.push_back(planeMat);
-        SceneObject objPlane{ plane, planeMats };
-        objPlane.Transform.SetScale(glm::vec3(5.0f, 1.0f, 5.0f));
-        //scene.SceneObjects.push_back(objPlane);
+        SceneObject bunnyObj{ bunny };
+        bunnyObj.SetMeshMaterialLink(0, bunnyMat);
+        bunnyObj.Transform.SetPosition(glm::vec3(0.0f, 1.5f, 0.0f));
+        bunnyObj.Transform.SetYaw(50.0f);
+        Scene.SceneObjects.emplace_back(bunnyObj);
 
-        RayModelHitInfo hit = Math::RaySceneObjectIntersection(ray, objBunny, BVHTraversalMethod::FrontToBack);
-        Mesh aabbMesh{};
-        aabbMesh.Indices = { 0, 1, 2 };
-        aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex0]);
-        aabbMesh.Vertices[0].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[0].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
-        aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex1]);
-        aabbMesh.Vertices[1].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[1].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
-        aabbMesh.Vertices.push_back(bunny->Meshes[0].Vertices[hit.VertexIndex2]);
-        aabbMesh.Vertices[2].Position = glm::vec3(objBunny.Transform.GetModelMatrix() * glm::vec4(aabbMesh.Vertices[2].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
-        EditorRenderer.LoadMesh(aabbMesh);
+        SceneObject planeObj{ plane };
+        planeObj.SetMeshMaterialLink(0, planeMat);
+        planeObj.Transform.SetScale(glm::vec3(5.0f, 1.0f, 5.0f));
+        //Scene.SceneObjects.emplace_back(planeObj);
 
-        EditorRenderer.LoadModel(*bunny);
-        EditorRenderer.CompileShaders(EditorScene);
-        EditorRenderer.LoadTexture(*texAlbedo);
-        EditorRenderer.LoadTexture(*texNormal);
-        EditorRenderer.LoadTexture(*texRoughness);
+        RayModelHitInfo hit = Math::RayModelIntersection(ray, *bunny, bunny->BVH, bunnyObj.Transform, BVHTraversalMethod::FrontToBack);
+        std::vector<unsigned int> indices = { 0, 1, 2 };
+        std::vector<MeshVertexData> vertices;
+        vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex0]);
+        vertices[0].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[0].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+        vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex1]);
+        vertices[1].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[1].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+        vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex2]);
+        vertices[2].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[2].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+        Mesh aabbMesh{ vertices, indices, MeshPrimitive::Triangle };
+        std::shared_ptr<Model> aabb = std::shared_ptr<Model>{ new Model { std::vector<Mesh>{ aabbMesh } } };
+        
+        SceneObject aabbObj{ aabb };
+        aabbObj.SetMeshMaterialLink(0, aabbMat);
+        Scene.SceneObjects.emplace_back(aabbObj);
     }
 
     void Editor::AddDefaultGizmosToScene()
     {
-        Model* storedGizmo = nullptr;
         // Gizmos
-        {
-            Mesh gizmos{};
-            gizmos.PrimitiveType = Primitive::Line;
-            VertexData v{};
-            v.Position = glm::vec3(0.0f);
-            v.Color = Color::Red;
-            gizmos.Vertices.push_back(v);
-            v.Position = glm::vec3(1.0f, 0.0f, 0.0f);
-            gizmos.Vertices.push_back(v);
-            v.Color = Color::Green;
-            v.Position = glm::vec3(0.0f);
-            gizmos.Vertices.push_back(v);
-            v.Position = glm::vec3(0.0f, 1.0f, 0.0f);
-            gizmos.Vertices.push_back(v);
-            v.Color = Color::Blue;
-            v.Position = glm::vec3(0.0f);
-            gizmos.Vertices.push_back(v);
-            v.Position = glm::vec3(0.0f, 0.0f, 1.0f);
-            gizmos.Vertices.push_back(v);
-            gizmos.Indices = std::vector<unsigned int>{ 0, 1, 2, 3, 4, 5 };
-            Model gizmo{};
-            gizmo.Meshes.push_back(gizmos);
-            storedGizmo = AssetsManager::StoreModel(gizmo, "Gizmo");
-        }
+        std::vector<unsigned int> indices = { 0, 1, 2, 3, 4, 5 };
+        std::vector<MeshVertexData> vertices;
+        MeshVertexData v{};
+        v.Position = glm::vec3(0.0f);
+        v.Color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+        vertices.push_back(v);
+        v.Position = glm::vec3(1.0f, 0.0f, 0.0f);
+        vertices.push_back(v);
+        v.Color = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+        v.Position = glm::vec3(0.0f);
+        vertices.push_back(v);
+        v.Position = glm::vec3(0.0f, 1.0f, 0.0f);
+        vertices.push_back(v);
+        v.Color = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+        v.Position = glm::vec3(0.0f);
+        vertices.push_back(v);
+        v.Position = glm::vec3(0.0f, 0.0f, 1.0f);
+        vertices.push_back(v);
+        Mesh gizmosMesh{ vertices, indices, MeshPrimitive::Line };
+        std::shared_ptr<Model> gizmo{ new Model{ std::vector<Mesh>{ gizmosMesh } } };
 
         // shaders and materials
-        ShaderPipeline* unlit = AssetsManager::GetPipelineUnlit();
-        Material aabbMat{ unlit, ShadingMode::SmoothShading };
-        UnlitMaterialData aabbMatData{};
-        aabbMatData.DiffuseColor = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-        aabbMat.Data = &aabbMatData;
-        EditorRenderer.CompileShaderPipeline(*unlit);
+        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("../Shaders/Unlit/Unlit.vert", "", "", "", "../Shaders/Unlit/Unlit.frag", "", "Unlit");
+        std::shared_ptr<Material> aabbMat{ new Material{ unlit } };
+        aabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        aabbMat->FunctionsData.emplace_back("DiffuseConstant");
 
-        Material gizmosMat{ unlit, ShadingMode::SmoothShading };
-        UnlitMaterialData* gizmosMatData = new UnlitMaterialData();
-        gizmosMatData->UseVertexColor = true;
-        gizmosMat.Data = gizmosMatData;
+        std::shared_ptr<Material> gizmosMat{ new Material{ unlit } };
+        gizmosMat->FunctionsData.emplace_back("VertexColorConstant");
 
-        SceneObject objGizmo{ storedGizmo, std::vector<Material>{ gizmosMat } };
+        SceneObject gizmoObj{ gizmo };
+        gizmoObj.SetMeshMaterialLink(0, gizmosMat);
 
-        EditorScene.SceneObjects.push_back(objGizmo);
-
-        EditorRenderer.LoadModel(*storedGizmo);
+        Scene.SceneObjects.emplace_back(gizmoObj);
     }
 
 	void Editor::Run()
 	{
-        while (!EditorWindow.IsCloseWindowRequested())
+        while (!Window.IsCloseWindowRequested())
         {
-            EditorWindow.BeginFrame();
+            Window.BeginFrame();
 
             glm::vec3 cameraMov = glm::vec3(0.0f);
-            if (EditorWindow.IsKeyPressed(KeyboardKey::W))
+            if (Window.IsKeyPressed(Input::KeyboardKey::W))
             {
                 cameraMov.z += 1.0f;
             }
-            if (EditorWindow.IsKeyPressed(KeyboardKey::S))
+            if (Window.IsKeyPressed(Input::KeyboardKey::S))
             {
                 cameraMov.z += -1.0f;
             }
-            if (EditorWindow.IsKeyPressed(KeyboardKey::D))
+            if (Window.IsKeyPressed(Input::KeyboardKey::D))
             {
                 cameraMov.x += 1.0f;
             }
-            if (EditorWindow.IsKeyPressed(KeyboardKey::A))
+            if (Window.IsKeyPressed(Input::KeyboardKey::A))
             {
                 cameraMov.x += -1.0f;
             }
-            if (EditorWindow.IsKeyPressed(KeyboardKey::E))
+            if (Window.IsKeyPressed(Input::KeyboardKey::E))
             {
                 cameraMov.y += 1.0f;
             }
-            if (EditorWindow.IsKeyPressed(KeyboardKey::Q))
+            if (Window.IsKeyPressed(Input::KeyboardKey::Q))
             {
                 cameraMov.y += -1.0f;
             }
             glm::vec2 cameraRot = glm::vec2(0.0f);
-            if (EditorWindow.IsKeyPressed(MouseKey::Right))
+            if (Window.IsKeyPressed(Input::MouseKey::Right))
             {
-                EditorWindow.GetMousePositionDelta(cameraRot.x, cameraRot.y);
+                Window.GetMousePositionDelta(cameraRot.x, cameraRot.y);
             }
-            EditorScene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
-            EditorRenderer.UpdateCameraData(EditorScene.MainCamera);
+            //Scene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
+            //Renderer.UpdateCameraData(EditorScene.MainCamera);
             //renderer.Draw(aabbMesh, aabbMat);
             //CurrentRenderer.Draw(gizmos, gizmosMat);
 
-            EditorRenderer.BeginDraw();
-            EditorRenderer.Draw(EditorScene);
-            EditorRenderer.EndDraw();
+            Renderer::Draw(Scene);
 
-            EditorUIPage->NewFrame();
+            /*EditorUIPage->NewFrame();
             EditorUIPage->BuildPage();
-            EditorUIPage->Draw();
+            EditorUIPage->Draw();*/
 
-            EditorWindow.EndFrame();
+            Window.EndFrame();
         }
 
-        EditorWindow.CloseWindow();
+        Window.CloseWindow();
 	}
-
-    const Renderer& Editor::GetEditorRenderer()
-    {
-        return EditorRenderer;
-    }
 }

@@ -67,15 +67,9 @@ namespace GaladHen
 
         // OPENGL -------------------------------------------------------------------------------------------------------------------------
 
-        virtual void ClearFrontBuffers(bool colorBuffer, bool depthBuffer, bool stencilBuffer) override;
+        virtual void CloseWindow() override;
 
         virtual void SwapBuffers() override;
-
-        virtual void SetColorBufferClearColor(glm::vec4 color) override;
-
-        virtual void EnableDephtTest(bool enable) override;
-
-        virtual void CloseWindow() override;
 
         virtual ~WindowGL() override;
 
