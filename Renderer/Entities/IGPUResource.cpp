@@ -5,11 +5,16 @@ namespace GaladHen
 {
 	IGPUResource::IGPUResource()
 		: ResourceID(0)
+		, ResourceInvalidated(false)
 	{}
 
 	void IGPUResource::InvalidateResource()
 	{
-		// ID is canceled -> we lost linkage to gpu resource
-		ResourceID = 0;
+		ResourceInvalidated = true;
+	}
+
+	bool IGPUResource::IsResourceValid()
+	{
+		return !ResourceInvalidated;
 	}
 }

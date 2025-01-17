@@ -26,7 +26,7 @@ namespace GaladHen
 		// unsigned int InstanceCount; TODO: instanced rendering
 		unsigned int ShaderSourceID;
 		std::shared_ptr<Material> Material;
-		std::unordered_map<std::string, std::shared_ptr<Buffer>> AdditionalBufferData; // Like buffers managed by renderer (camera data, transform data, ...)
+		std::unordered_map<std::string, std::shared_ptr<IBuffer>> AdditionalBufferData; // Like buffers managed by renderer (camera data, transform data, ...)
 	};
 
 	enum class MemoryTargetType

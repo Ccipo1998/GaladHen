@@ -19,6 +19,9 @@
 #include "LayerAPI/IRendererAPI.h"
 #include "CommandBuffer.h"
 
+#include <Renderer/Entities/BufferData/CameraBufferData.h>
+#include <Renderer/Entities/BufferData/TransformBufferData.h>
+
 #include <Utils/Log.h>
 #include <Utils/FileLoader.h>
 
@@ -58,14 +61,13 @@ namespace GaladHen
                     , BackBuffer(std::shared_ptr<RenderBuffer>{})
                     , RenderContextType(renderContextType)
                 {
-                    // Create render buffer at api level
-                    GPUResourceInspector::SetResourceID(FrontBuffer.get(), RendererAPI->CreateRenderBuffer(width, height));
-
                     if (RenderContextType == RenderContextType::DoubleBuffering)
                     {
                         BackBuffer = CreateRenderBuffer(width, height);
-                        // Create render buffer at api level
-                        GPUResourceInspector::SetResourceID(BackBuffer.get(), RendererAPI->CreateRenderBuffer(width, height));
+                    }
+                    else
+                    {
+                        BackBuffer = FrontBuffer;
                     }
                 }
 
@@ -108,9 +110,9 @@ namespace GaladHen
             std::unordered_set<unsigned int> LoadedBuffersCache; // cache of already loaded buffers -> for reloading, it requires that a buffer knows when it has been modified
             std::unordered_set<unsigned int> CompiledShadersCache; // cache of already compiled shaders -> for reloading, it requires that a shader knows when it has been modified
             // Buffers
-            std::shared_ptr<Buffer> CameraDataBuffer;
-            std::shared_ptr<Buffer> TransformDataBuffer;
-            std::shared_ptr<Buffer> LightingDataBuffer;
+            std::shared_ptr<FixedBuffer<CameraBufferData, 1>> CameraBuffer;
+            std::shared_ptr<FixedBuffer<TransformBufferData, 1>> TransformBuffer;
+            //std::shared_ptr<Buffer> LightingDataBuffer;
 
             // RENDERER FUNCTIONALITIES ------------------------------------------------------------------------------------------------------------------------------
 
@@ -130,14 +132,17 @@ namespace GaladHen
             void CacheBuffer(unsigned int bufferID);
             void UncacheBuffer(unsigned int bufferID);
             void LoadModels(Scene& scene, std::unordered_set<unsigned int>& outLoadedMeshesIDs);
-            void LoadMesh(Mesh& mesh);
+            void LoadMeshAndCache(Mesh& mesh);
+            unsigned int LoadMesh(Mesh& mesh);
             void FreeUnusedMeshes(const std::unordered_set<unsigned int>& usedMeshesIDs);
             void FreeMeshes(const std::unordered_set<unsigned int>& meshesToFree);
             void FreeMesh(unsigned int meshID);
             void LoadMaterialsData(Scene& scene, std::unordered_set<unsigned int>& outLoadedTexturesIDs, std::unordered_set<unsigned int>& outLoadedBuffersIDs);
             void LoadMaterialData(std::shared_ptr<Material> material, std::unordered_set<unsigned int>& outLoadedTextures, std::unordered_set<unsigned int>& outLoadedBuffers);
-            void LoadTexture(std::shared_ptr<Texture> texture);
-            void LoadBuffer(Buffer& buffer);
+            void LoadTextureAndCache(std::shared_ptr<Texture> texture);
+            unsigned int LoadTexture(std::shared_ptr<Texture> texture);
+            void LoadBufferAndCache(IBuffer* buffer);
+            unsigned int LoadBuffer(IBuffer* buffer);
             void FreeUnusedTextures(const std::unordered_set<unsigned int>& usedTexturesIDs);
             void FreeTextures(const std::unordered_set<unsigned int>& texturesToFree);
             void FreeTexture(unsigned int textureID);
@@ -148,6 +153,8 @@ namespace GaladHen
             void InitTransformDataBuffer();
             void LoadCameraData(const Camera& camera);
             void LoadTransformData(const Transform& transform);
+            void SetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer);
+            void UnsetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer);
 
             RenderContext& GetDefaultRenderContext()
             {
@@ -160,14 +167,20 @@ namespace GaladHen
 
                 // Clear back render buffer
                 ClearRenderBuffer(renderContext.GetBackBuffer());
+
+                // Set render context's back buffer as target for next draw calls
+                SetRenderBufferTarget(renderContext.GetBackBuffer());
             }
 
             void AfterDraw(RenderContext& renderContext)
             {
                 // Operations needed after drawing
 
+                // Unbind render context's back buffer as target
+                UnsetRenderBufferTarget(renderContext.GetBackBuffer());
+
                 // Swap buffers
-                //renderContext.SwapBuffers();
+                renderContext.SwapBuffers();
             }
 
             bool IsMeshCached(unsigned int meshID)
@@ -258,7 +271,7 @@ namespace GaladHen
 
                     for (Mesh& mesh : model->GetMeshes())
                     {
-                        LoadMesh(mesh);
+                        LoadMeshAndCache(mesh);
 
                         unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
                         outLoadedMeshesIDs.insert(meshID);
@@ -266,15 +279,21 @@ namespace GaladHen
                 }
             }
 
-            void LoadMesh(Mesh& mesh)
+            void LoadMeshAndCache(Mesh& mesh)
             {
                 unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
 
-                if (IsMeshCached(meshID))
+                if (IsMeshCached(meshID) && mesh.IsResourceValid())
                 {
                     return;
                 }
+                
+                unsigned int newId = LoadMesh(mesh);
+                CacheMesh(newId);
+            }
 
+            unsigned int LoadMesh(Mesh& mesh)
+            {
                 CommandBuffer<MemoryTransferCommand> memoryCommands;
                 memoryCommands.emplace_back(MemoryTransferCommand{});
 
@@ -284,11 +303,12 @@ namespace GaladHen
                 command.TargetType = MemoryTargetType::Mesh;
                 command.TransferType = MemoryTransferType::Load;
 
-                // Load, assign id and cache
+                // Load and assign id
 
                 RendererAPI->TransferData(memoryCommands);
                 GPUResourceInspector::SetResourceID(&mesh, command.MemoryTargetID);
-                CacheMesh(command.MemoryTargetID);
+
+                return command.MemoryTargetID;
             }
 
             void FreeUnusedMeshes(const std::unordered_set<unsigned int>& usedMeshesIDs)
@@ -351,27 +371,33 @@ namespace GaladHen
                 // Load textures
                 for (std::pair<const std::string, std::shared_ptr<Texture>>& textureData : material->TextureData)
                 {
-                    LoadTexture(textureData.second);
+                    LoadTextureAndCache(textureData.second);
                     outLoadedTextures.insert(GPUResourceInspector::GetResourceID(textureData.second.get()));
                 }
 
                 // Load buffers
-                for (std::pair<const std::string, std::shared_ptr<Buffer>>& bufferData : material->BufferData)
+                for (std::pair<const std::string, std::shared_ptr<IBuffer>>& bufferData : material->BufferData)
                 {
-                    LoadBuffer(*bufferData.second);
+                    LoadBufferAndCache(bufferData.second.get());
                     outLoadedBuffers.insert(GPUResourceInspector::GetResourceID(bufferData.second.get()));
                 }
             }
 
-            void LoadTexture(std::shared_ptr<Texture> texture)
+            void LoadTextureAndCache(std::shared_ptr<Texture> texture)
             {
                 unsigned int textureID = GPUResourceInspector::GetResourceID(texture.get());
 
-                if (IsTextureCached(textureID))
+                if (IsTextureCached(textureID) && texture->IsResourceValid())
                 {
                     return;
                 }
 
+                unsigned int newId = LoadTexture(texture);
+                CacheTexture(newId);
+            }
+
+            unsigned int LoadTexture(std::shared_ptr<Texture> texture)
+            {
                 CommandBuffer<MemoryTransferCommand> commandBuffer;
                 commandBuffer.emplace_back(MemoryTransferCommand{});
 
@@ -385,32 +411,40 @@ namespace GaladHen
 
                 RendererAPI->TransferData(commandBuffer);
                 GPUResourceInspector::SetResourceID(texture.get(), command.MemoryTargetID);
-                CacheTexture(command.MemoryTargetID);
+
+                return command.MemoryTargetID;
             }
 
-            void LoadBuffer(Buffer& buffer)
+            void LoadBufferAndCache(IBuffer* buffer)
             {
-                unsigned int bufferID = GPUResourceInspector::GetResourceID(&buffer);
+                unsigned int bufferID = GPUResourceInspector::GetResourceID(buffer);
 
-                if (IsBufferCached(bufferID))
+                if (IsBufferCached(bufferID) && buffer->IsResourceValid())
                 {
                     return;
                 }
 
+                unsigned int newId = LoadBuffer(buffer);
+                CacheBuffer(newId);
+            }
+
+            unsigned int LoadBuffer(IBuffer* buffer)
+            {
                 CommandBuffer<MemoryTransferCommand> commandBuffer;
                 commandBuffer.emplace_back(MemoryTransferCommand{});
 
                 MemoryTransferCommand& command = commandBuffer[0];
-                command.Data = &buffer;
+                command.Data = buffer;
                 command.MemoryTargetID = 0;
                 command.TargetType = MemoryTargetType::Buffer;
                 command.TransferType = MemoryTransferType::Load;
 
-                // Load, assign id and cache
+                // Load and assign id
 
                 RendererAPI->TransferData(commandBuffer);
-                GPUResourceInspector::SetResourceID(&buffer, command.MemoryTargetID);
-                CacheBuffer(command.MemoryTargetID);
+                GPUResourceInspector::SetResourceID(buffer, command.MemoryTargetID);
+
+                return command.MemoryTargetID;
             }
 
             void FreeUnusedTextures(const std::unordered_set<unsigned int>& usedTexturesIDs)
@@ -493,43 +527,51 @@ namespace GaladHen
 
             void InitCameraDataBuffer()
             {
-                Buffer* data = new Buffer();
-                data->AddData<glm::mat4>(glm::mat4{});
-                data->AddData<glm::mat4>(glm::mat4{});
-                data->AddData<glm::vec3>(glm::vec3{});
+                FixedBuffer<CameraBufferData, 1>* data = new FixedBuffer<CameraBufferData, 1>();
 
-                CameraDataBuffer = std::shared_ptr<Buffer>(data);
+                CameraBuffer = std::shared_ptr<FixedBuffer<CameraBufferData, 1>>(data);
                 
                 // TODO: populate buffer basing on API (to match shader data structure)
             }
 
             void InitTransformDataBuffer()
             {
-                Buffer* data = new Buffer();
+                FixedBuffer<TransformBufferData, 1>* data = new FixedBuffer<TransformBufferData, 1>();
 
-                data->AddData<glm::mat4>(glm::mat4{});
-                data->AddData<glm::mat4>(glm::mat4{});
-
-                TransformDataBuffer = std::shared_ptr<Buffer>(data);
+                TransformBuffer = std::shared_ptr<FixedBuffer<TransformBufferData, 1>>(data);
 
                 // TODO: populate buffer basing on API (to match shader data structure)
             }
 
             void LoadCameraData(const Camera& camera)
             {
-                CameraDataBuffer->SetDataAt<glm::mat4>(camera.GetViewMatrix(), 0);
-                CameraDataBuffer->SetDataAt<glm::mat4>(camera.GetProjectionMatrix(), 1);
-                CameraDataBuffer->SetDataAt<glm::vec3>(camera.Transform.GetPosition(), 2);
+                CameraBufferData data{};
+                data.ViewMatrix = camera.GetViewMatrix();
+                data.ProjectionMatrix = camera.GetProjectionMatrix();
+                data.CameraPosition = camera.Transform.GetPosition();
+                CameraBuffer->SetData(data, 0);
 
-                LoadBuffer(*CameraDataBuffer);
+                LoadBuffer(CameraBuffer.get());
             }
 
             void LoadTransformData(const Transform& transform)
             {
-                TransformDataBuffer->SetDataAt<glm::mat4>(transform.ToMatrix(), 0);
-                TransformDataBuffer->SetDataAt<glm::mat4>(glm::inverse(glm::transpose(transform.ToMatrix())), 1);
+                TransformBufferData data{};
+                data.ModelMatrix = transform.ToMatrix();
+                data.NormalMatrix = glm::inverse(glm::transpose(data.ModelMatrix));
+                TransformBuffer->SetData(data, 0);
 
-                LoadBuffer(*TransformDataBuffer);
+                LoadBuffer(TransformBuffer.get());
+            }
+
+            void SetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer)
+            {
+                RendererAPI->BindRenderBuffer(GPUResourceInspector::GetResourceID(renderBuffer.get()));
+            }
+
+            void UnsetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer)
+            {
+                RendererAPI->UnbindActiveRenderBuffer();
             }
         }
 
@@ -576,7 +618,14 @@ namespace GaladHen
 
         std::shared_ptr<RenderBuffer> CreateRenderBuffer(unsigned int width, unsigned int height)
         {
-            return std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height } };
+            // Create object
+            std::shared_ptr<RenderBuffer> renderBuffer = std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height } };
+
+            // Create render buffer at api level and assing id
+            unsigned int id = RendererAPI->CreateRenderBuffer(width, height);
+            GPUResourceInspector::SetResourceID(renderBuffer.get(), id);
+
+            return renderBuffer;
         }
 
         std::shared_ptr<RenderBuffer> GetFrontRenderBuffer()
@@ -584,9 +633,9 @@ namespace GaladHen
             return GetDefaultRenderContext().GetFrontBuffer();
         }
 
-        unsigned int GetRenderBufferApiID(std::shared_ptr<RenderBuffer> renderBuffer)
+        GLuint GetRenderBufferColorApiID(std::shared_ptr<RenderBuffer> renderBuffer)
         {
-            return RendererAPI->GetTextureApiID(GPUResourceInspector::GetResourceID(renderBuffer.get()));
+            return RendererAPI->GetRenderBufferColorApiID(GPUResourceInspector::GetResourceID(renderBuffer.get()));
         }
 
         void ClearRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer)
@@ -604,7 +653,6 @@ namespace GaladHen
             std::unordered_set<unsigned int> loadedTexturesIDs, loadedBuffersIDs;
             LoadMaterialsData(scene, loadedTexturesIDs, loadedBuffersIDs);
             LoadCameraData(scene.MainCamera);
-            loadedBuffersIDs.emplace(GPUResourceInspector::GetResourceID(CameraDataBuffer.get()));
 
             // TODO: load lights
 
@@ -625,10 +673,9 @@ namespace GaladHen
                     command.ShaderSourceID = GPUResourceInspector::GetResourceID(command.Material->GetPipeline().get());
 
                     // Add common rendering data
-                    command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, CameraDataBuffer);
+                    command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, CameraBuffer);
                     LoadTransformData(sceneObject.Transform);
-                    loadedBuffersIDs.emplace(GPUResourceInspector::GetResourceID(TransformDataBuffer.get()));
-                    command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, TransformDataBuffer);
+                    command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, TransformBuffer);
 
                     renderBuffer.emplace_back(command);
                 }
@@ -703,7 +750,7 @@ namespace GaladHen
         {
             unsigned int shaderID = GPUResourceInspector::GetResourceID(&program);
 
-            if (IsShaderCached(shaderID))
+            if (IsShaderCached(shaderID) && program.IsResourceValid())
                 return true;
 
             CommandBuffer<CompileCommand> compileBuffer;

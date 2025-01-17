@@ -18,7 +18,7 @@ namespace GaladHen
 {
 	class Texture;
 	class Mesh;
-	class Buffer;
+	class IBuffer;
 
 	class RendererGL : public IRendererAPI
 	{
@@ -32,6 +32,10 @@ namespace GaladHen
 
 		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) override;
 
+		virtual void BindRenderBuffer(unsigned int renderBufferID) override;
+
+		virtual void UnbindActiveRenderBuffer() override;
+
 		virtual void Draw(CommandBuffer<RenderCommand>& renderCommandBuffer) override;
 
 		virtual void TransferData(CommandBuffer<MemoryTransferCommand>& memoryCommandBuffer) override;
@@ -40,7 +44,7 @@ namespace GaladHen
 
 		virtual void EnableDepthTest(bool enable) override;
 
-		virtual unsigned int GetTextureApiID(unsigned int resourceID) override;
+		virtual unsigned int GetRenderBufferColorApiID(unsigned int renderBufferID) override;
 
 		~RendererGL();
 
@@ -51,7 +55,7 @@ namespace GaladHen
 	protected:
 
 		static GLenum RendererGL::PrimitiveTypes[3];
-		struct MeshGLTest
+		struct MeshGL
 		{
 			GLuint VAO, VBO, EBO;
 			unsigned int NumberOfIndices;
@@ -77,7 +81,7 @@ namespace GaladHen
 			Mutable,
 			Immutable
 		};
-		struct TextureGLTest // TODO: This struct should contain only opengl-specific data. All other data exists on high level classes
+		struct TextureGL // TODO: This struct should contain only opengl-specific data. All other data exists on high level classes
 		{
 			GLuint TextureID;
 			TextureAllocationType AllocationType;
@@ -90,22 +94,25 @@ namespace GaladHen
 			unsigned int NumberOfMipMaps;
 		};
 
-		struct RenderBufferGLTest
+		struct RenderBufferGL
 		{
 			GLuint FrameBufferID;
-			unsigned int ColorTextureID;
-			unsigned int DepthStencilTextureID;
+			GLuint ColorTextureID;
+			GLuint DepthStencilTextureID;
 		};
 
 		// https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml
 		static GLenum BufferTypesAssociations[14];
 		static GLenum BufferUsageAssociations[9];
 
-		struct BufferGLTest
+		struct BufferGL
 		{
 			GLuint BufferID;
 			GLenum Target;
 			GLenum ResourceProgramInterface;
+
+			// Cache of previous allocation size, to know whether to reallocate a dynamic buffer or not
+			size_t BytesSize;
 		};
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
@@ -119,8 +126,8 @@ namespace GaladHen
 		void LoadMesh(unsigned int meshID, const Mesh& mesh);
 		void FreeMesh(unsigned int meshID);
 
-		unsigned int CreateBuffer(const Buffer& buffer);
-		void LoadBuffer(unsigned int bufferID, const Buffer& buffer);
+		unsigned int CreateBuffer(const IBuffer* buffer);
+		void LoadBuffer(unsigned int bufferID, const IBuffer* buffer);
 		void FreeBuffer(unsigned int bufferID);
 
 		unsigned int CreateShaderPipeline(CompileCommand& compileCommand);
@@ -129,11 +136,11 @@ namespace GaladHen
 		bool CheckShaderPipelineLinking(GLuint shaderProgram, char* outLog, unsigned int outLogLength);
 		void FreeShaderPipeline(unsigned int shaderID);
 
-		IdList<MeshGLTest> Meshes;
-		IdList<BufferGLTest> Buffers;
+		IdList<MeshGL> Meshes;
+		IdList<BufferGL> Buffers;
 		IdList<GLuint> Shaders;
-		IdList<TextureGLTest> Textures;
-		IdList<RenderBufferGLTest> RenderBuffers;
+		IdList<TextureGL> Textures;
+		IdList<RenderBufferGL> RenderBuffers;
 
 	};
 }

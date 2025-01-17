@@ -12,6 +12,7 @@ namespace GaladHen
 	public:
 
 		IGPUResource();
+		bool IsResourceValid();
 
 	protected:
 
@@ -20,5 +21,6 @@ namespace GaladHen
 		void InvalidateResource();
 
 		unsigned int ResourceID; // ID = 0 -> no linkage to gpu resource
+		bool ResourceInvalidated;
 	};
 }

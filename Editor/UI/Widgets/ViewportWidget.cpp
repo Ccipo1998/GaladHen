@@ -36,7 +36,7 @@ namespace GaladHen
 		ImVec2 size = ImGui::GetWindowPos();
 		size.x += ImGui::GetWindowSize().x - 10.0f;
 		size.y += ImGui::GetWindowSize().y - 10.0f;
-		ImGui::GetWindowDrawList()->AddImage(Renderer::GetRenderBufferApiID(Renderer::GetFrontRenderBuffer()), pos, size, ImVec2{0, 1}, ImVec2{1, 0});
+		ImGui::GetWindowDrawList()->AddImage(Renderer::GetRenderBufferColorApiID(Renderer::GetFrontRenderBuffer()), pos, size, ImVec2{0, 1}, ImVec2{1, 0});
 
 		ImGui::End();
 	}

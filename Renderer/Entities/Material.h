@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <glm/glm.hpp>
 
-#include "Buffer.h"
+#include "Buffer.hpp"
 
 namespace GaladHen
 {
@@ -33,7 +33,7 @@ namespace GaladHen
 		std::unordered_map<std::string, glm::mat3> Mat3Data;
 		std::unordered_map<std::string, glm::mat4> Mat4Data;
 		std::unordered_map<std::string, std::shared_ptr<Texture>> TextureData;
-		std::unordered_map<std::string, std::shared_ptr<Buffer>> BufferData;
+		std::unordered_map<std::string, std::shared_ptr<IBuffer>> BufferData;
 		std::vector<std::string> FunctionsData;
 
 	protected:

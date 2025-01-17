@@ -29,11 +29,15 @@ target_include_directories(Editor PRIVATE
     ${CMAKE_SOURCE_DIR}/Renderer/
     ${CMAKE_SOURCE_DIR}/Libs/
     ${CMAKE_SOURCE_DIR}/Libs/assimp/include/
+    ${CMAKE_SOURCE_DIR}/Libs/gl3w/include/
+    ${CMAKE_SOURCE_DIR}/Libs/glfw/include/
     ${CMAKE_SOURCE_DIR}/Libs/imgui)
 
 target_link_libraries(Editor
     PRIVATE
     Renderer
+    glfw
+    gl3w
     imgui
     glm
     assimp

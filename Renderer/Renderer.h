@@ -43,8 +43,8 @@ namespace GaladHen
         std::shared_ptr<RenderBuffer> GetFrontRenderBuffer();
 
         // @brief
-        // Get the low-level api id for a render buffer
-        unsigned int GetRenderBufferApiID(std::shared_ptr<RenderBuffer> renderBuffer);
+        // Get the low-level api id for a render buffer's texture
+        unsigned int GetRenderBufferColorApiID(std::shared_ptr<RenderBuffer> renderBuffer);
 
         // @brief
         // Clear a render buffer with a specific color

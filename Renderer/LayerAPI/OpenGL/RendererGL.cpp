@@ -14,7 +14,7 @@
 #include <Renderer/GPUResourceInspector.h>
 #include <Renderer/Entities/Texture.h>
 #include <Renderer/Entities/Mesh.h>
-#include <Renderer/Entities/Buffer.h>
+#include <Renderer/Entities/Buffer.hpp>
 
 namespace GaladHen
 {
@@ -146,7 +146,7 @@ namespace GaladHen
 	unsigned int RendererGL::CreateRenderBuffer(unsigned int width, unsigned int height)
 	{
 		unsigned int id = RenderBuffers.AddWithId();
-		RenderBufferGLTest& rb = RenderBuffers.GetObjectWithId(id);
+		RenderBufferGL& rb = RenderBuffers.GetObjectWithId(id);
 
 		glGenFramebuffers(1, &rb.FrameBufferID);
 		glBindFramebuffer(GL_FRAMEBUFFER, rb.FrameBufferID);
@@ -159,8 +159,8 @@ namespace GaladHen
 		rb.ColorTextureID = CreateTexture(texture);
 		rb.DepthStencilTextureID = CreateDepthStencilTexture(width, height);
 
-		TextureGLTest& colorTexture = Textures.GetObjectWithId(rb.ColorTextureID);
-		TextureGLTest& depthStencilTexture = Textures.GetObjectWithId(rb.DepthStencilTextureID);
+		TextureGL& colorTexture = Textures.GetObjectWithId(rb.ColorTextureID);
+		TextureGL& depthStencilTexture = Textures.GetObjectWithId(rb.DepthStencilTextureID);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.TextureID, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthStencilTexture.TextureID, 0);
@@ -181,8 +181,8 @@ namespace GaladHen
 
 	void RendererGL::ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor)
 	{
-		RenderBufferGLTest& rb = RenderBuffers.GetObjectWithId(renderBufferID);
-		TextureGLTest& colorTexture = Textures.GetObjectWithId(rb.ColorTextureID);
+		RenderBufferGL& rb = RenderBuffers.GetObjectWithId(renderBufferID);
+		TextureGL& colorTexture = Textures.GetObjectWithId(rb.ColorTextureID);
 
 		glBindTexture(GL_TEXTURE_2D, colorTexture.TextureID);
 		glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.w);
@@ -194,13 +194,24 @@ namespace GaladHen
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
+	void RendererGL::BindRenderBuffer(unsigned int renderBufferID)
+	{
+		RenderBufferGL& rb = RenderBuffers.GetObjectWithId(renderBufferID);
+		glBindFramebuffer(GL_FRAMEBUFFER, rb.FrameBufferID);
+	}
+
+	void RendererGL::UnbindActiveRenderBuffer()
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
 	void RendererGL::Draw(CommandBuffer<RenderCommand>& renderCommandBuffer)
 	{
 		// Material's parameters shouldn't be loaded here but in a MemoryTransferCommand send by higher level renderer. While we are not using bindless textures, however, we should do it here
 
 		for (RenderCommand& rc : renderCommandBuffer)
 		{
-			MeshGLTest& mesh = Meshes.GetObjectWithId(rc.DataSourceID);
+			MeshGL& mesh = Meshes.GetObjectWithId(rc.DataSourceID);
 
 			GLuint program = Shaders.GetObjectWithId(rc.ShaderSourceID);
 			glUseProgram(program);
@@ -258,13 +269,13 @@ namespace GaladHen
 			// Bind buffer data to shader pipeline
 			for (auto& buffer : material->BufferData)
 			{
-				BufferGLTest& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
+				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
 				GLuint ssbIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
 				glBindBufferBase(bufferGL.Target, ssbIndex, bufferGL.BufferID);
 			}
 			for (auto& buffer : rc.AdditionalBufferData)
 			{
-				BufferGLTest& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
+				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
 				GLuint ssbIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
 				glBindBufferBase(bufferGL.Target, ssbIndex, bufferGL.BufferID);
 			}
@@ -317,7 +328,7 @@ namespace GaladHen
 			}
 			case MemoryTargetType::Buffer:
 			{
-				Buffer* buffer = static_cast<Buffer*>(mtc.Data);
+				IBuffer* buffer = static_cast<IBuffer*>(mtc.Data);
 				unsigned int& bufferID = mtc.MemoryTargetID; // update memory target id
 
 				switch (mtc.TransferType)
@@ -327,11 +338,11 @@ namespace GaladHen
 					if (bufferID == 0)
 					{
 						// New OpenGL resource
-						bufferID = CreateBuffer(*buffer);
+						bufferID = CreateBuffer(buffer);
 					}
 					else
 					{
-						LoadBuffer(bufferID, *buffer);
+						LoadBuffer(bufferID, buffer);
 					}
 
 					break;
@@ -404,11 +415,11 @@ namespace GaladHen
 			glDisable(GL_DEPTH_TEST);
 	}
 
-	unsigned int RendererGL::GetTextureApiID(unsigned int resourceID)
+	unsigned int RendererGL::GetRenderBufferColorApiID(unsigned int renderBufferID)
 	{
-		TextureGLTest& texture = Textures.GetObjectWithId(resourceID);
-
-		return texture.TextureID;
+		RenderBufferGL& renderBuffer = RenderBuffers.GetObjectWithId(renderBufferID);
+		TextureGL& colorTexture = Textures.GetObjectWithId(renderBuffer.ColorTextureID);
+		return colorTexture.TextureID;
 	}
 
 	RendererGL::~RendererGL()
@@ -419,10 +430,17 @@ namespace GaladHen
 	unsigned int RendererGL::CreateTexture(const Texture& texture)
 	{
 		unsigned int id = Textures.AddWithId();
-		TextureGLTest& textureGL = Textures.GetObjectWithId(id);
+		TextureGL& textureGL = Textures.GetObjectWithId(id);
 
 		// create new texture object
+		static bool first = true;
 		glGenTextures(1, &textureGL.TextureID);
+		if (first)
+		{
+			glGenTextures(1, &textureGL.TextureID);
+
+			first = false;
+		}
 
 		LoadTexture(id, texture);
 
@@ -432,7 +450,7 @@ namespace GaladHen
 	unsigned int RendererGL::CreateDepthStencilTexture(unsigned int width, unsigned int height)
 	{
 		unsigned int id = Textures.AddWithId();
-		TextureGLTest& texture = Textures.GetObjectWithId(id);
+		TextureGL& texture = Textures.GetObjectWithId(id);
 
 		glGenTextures(1, &texture.TextureID);
 		glBindTexture(GL_TEXTURE_2D, texture.TextureID);
@@ -445,7 +463,7 @@ namespace GaladHen
 
 	void RendererGL::FreeTexture(unsigned int textureID)
 	{
-		TextureGLTest& texture = Textures.GetObjectWithId(textureID);
+		TextureGL& texture = Textures.GetObjectWithId(textureID);
 
 		glDeleteTextures(1, &texture.TextureID);
 
@@ -454,7 +472,7 @@ namespace GaladHen
 
 	void RendererGL::LoadTexture(unsigned int textureID, const Texture& texture)
 	{
-		TextureGLTest& textureGL = Textures.GetObjectWithId(textureID);
+		TextureGL& textureGL = Textures.GetObjectWithId(textureID);
 
 		// Copy texture data in opengl texture data
 		textureGL.AllocationType = TextureAllocationType::Mutable; // TODO: allocation basing on texture access type
@@ -508,7 +526,7 @@ namespace GaladHen
 	unsigned int RendererGL::CreateMesh(const Mesh& mesh)
 	{
 		unsigned int id = Meshes.AddWithId();
-		MeshGLTest& meshGL = Meshes.GetObjectWithId(id);
+		MeshGL& meshGL = Meshes.GetObjectWithId(id);
 
 		// we create the buffers
 		glGenVertexArrays(1, &meshGL.VAO);
@@ -522,7 +540,7 @@ namespace GaladHen
 
 	void RendererGL::LoadMesh(unsigned int meshID, const Mesh& mesh)
 	{
-		MeshGLTest& meshGL = Meshes.GetObjectWithId(meshID);
+		MeshGL& meshGL = Meshes.GetObjectWithId(meshID);
 		
 		// Copy mesh data to opengl mesh data
 		meshGL.NumberOfIndices = mesh.GetIndices().size();
@@ -563,7 +581,7 @@ namespace GaladHen
 
 	void RendererGL::FreeMesh(unsigned int meshID)
 	{
-		MeshGLTest& mesh = Meshes.GetObjectWithId(meshID);
+		MeshGL& mesh = Meshes.GetObjectWithId(meshID);
 
 		glDeleteVertexArrays(1, &mesh.VAO);
 		glDeleteBuffers(1, &mesh.VBO);
@@ -778,28 +796,26 @@ namespace GaladHen
 		Shaders.RemoveWithId(shaderID);
 	}
 
-	unsigned int RendererGL::CreateBuffer(const Buffer& buffer)
+	unsigned int RendererGL::CreateBuffer(const IBuffer* buffer)
 	{
 		unsigned int id = Buffers.AddWithId();
-		BufferGLTest& bufferGL = Buffers.GetObjectWithId(id);
+		BufferGL& bufferGL = Buffers.GetObjectWithId(id);
+		bufferGL.BytesSize = 0;
 		glCreateBuffers(1, &bufferGL.BufferID);
 		LoadBuffer(id, buffer);
 
 		return id;
 	}
 
-	void RendererGL::LoadBuffer(unsigned int bufferID, const Buffer& buffer)
+	void RendererGL::LoadBuffer(unsigned int bufferID, const IBuffer* buffer)
 	{
-		// We assume data arrays are created correctly
-		assert(buffer.GetSizes().size() == buffer.GetDatas().size());
-
 		// init
 		//glBindBufferBase(bufferType, binding, Buffers.GetObjectWithId(id));
-		BufferGLTest& bufferGL = Buffers.GetObjectWithId(bufferID);
+		BufferGL& bufferGL = Buffers.GetObjectWithId(bufferID);
 
 		// Copy buffer data to opengl buffer data
-		bufferGL.Target = BufferTypesAssociations[(int)buffer.GetType()];
-		switch (buffer.GetType())
+		bufferGL.Target = BufferTypesAssociations[(int)buffer->GetType()];
+		switch (buffer->GetType())
 		{
 		case BufferType::Uniform:
 			bufferGL.ResourceProgramInterface = GL_UNIFORM_BLOCK;
@@ -817,28 +833,25 @@ namespace GaladHen
 
 		// We need to calculate for each data its gpu occupancy (using std430 OpenGL buffer layout: https://www.oreilly.com/library/view/opengl-programming-guide/9780132748445/app09lev1sec3.html)
 		// Assuming the order of the data inside Datas array matches gpu buffer data order
-		const std::vector<std::shared_ptr<void>>& datas = buffer.GetDatas();
-		const std::vector<size_t>& sizes = buffer.GetSizes();
-		
-		size_t totalSizeBytes = 0;
-		for (unsigned int i = 0; i < datas.size(); ++i)
-		{	
-			totalSizeBytes += sizes[i];
-		}
-		glBufferData(bufferGL.Target, totalSizeBytes, nullptr, BufferUsageAssociations[(int)buffer.GetAccessType()]); // reallocation of memory
+		const void* data = buffer->GetData();
+		const size_t size = buffer->GetBytesSize();
 
-		// fill
-		size_t offset = 0;
-		for (unsigned int i = 0; i < sizes.size(); ++i)
+		if (bufferGL.BytesSize != size)
 		{
-			glBufferSubData(bufferGL.Target, offset, sizes[i], datas[i].get());
-			offset += sizes[i];
+			// Size is changed, we need to reallocate buffer
+			glBufferData(bufferGL.Target, size, data, BufferUsageAssociations[(int)buffer->GetAccessType()]); // reallocation of memory
 		}
+		else
+		{
+			glBufferSubData(bufferGL.Target, 0, size, data); // writing only
+		}
+
+		bufferGL.BytesSize = size;
 	}
 
 	void RendererGL::FreeBuffer(unsigned int bufferID)
 	{
-		BufferGLTest& buffer = Buffers.GetObjectWithId(bufferID);
+		BufferGL& buffer = Buffers.GetObjectWithId(bufferID);
 		glDeleteBuffers(1, &buffer.BufferID);
 
 		Buffers.RemoveWithId(bufferID);

@@ -30,36 +30,11 @@ vec3 GammaCorrection(vec3 shading)
     return newShading;
 }
 
-// subroutines
-
-subroutine vec3 DiffuseMode();
-layout (location = 1) subroutine uniform DiffuseMode GetDiffuse;
-
-layout (index = 2)
-subroutine(DiffuseMode)
-vec3 DiffuseConstant()
-{
-    return Diffuse.rgb;
-}
-
-layout (index = 3)
-subroutine(DiffuseMode)
-vec3 DiffuseSampling()
-{
-    return texture(DiffuseTexture, vs_out.TexCoord).rgb;
-}
-
-layout (index = 4)
-subroutine(DiffuseMode)
-vec3 VertexColorConstant()
-{
-    return vs_out.VertexColor.xyz;
-}
 
 void main()
 {
     // gamma correction
-    vec3 solidColor = GetDiffuse();
+    vec3 solidColor = vs_out.VertexColor.xyz;
     solidColor = GammaCorrection(solidColor);
 
     color = vec4(solidColor, 1.0);

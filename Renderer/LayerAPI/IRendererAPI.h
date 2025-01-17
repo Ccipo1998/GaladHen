@@ -33,6 +33,10 @@ namespace GaladHen
 
 		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) = 0;
 
+		virtual void BindRenderBuffer(unsigned int renderBufferID) = 0;
+
+		virtual void UnbindActiveRenderBuffer() = 0;
+
 		virtual void Draw(CommandBuffer<RenderCommand>& renderCommandBuffer) = 0;
 
 		// This function should write on each MemoryTransferCommand the new id of eventually created resource, in MemoryTargetID field
@@ -42,7 +46,7 @@ namespace GaladHen
 
 		virtual void EnableDepthTest(bool enable) = 0;
 
-		virtual unsigned int GetTextureApiID(unsigned int resourceID) = 0; // Probably it shouldn't exist, but for now i need it for ImGui usage
+		virtual unsigned int GetRenderBufferColorApiID(unsigned int renderBufferID) = 0; // Probably it shouldn't exist, but for now i need it for ImGui usage
 
 		virtual ~IRendererAPI() {};
 	};

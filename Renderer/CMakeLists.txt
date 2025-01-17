@@ -21,10 +21,9 @@ add_library(Renderer STATIC
     Entities/Material.h
     Entities/Texture.h
     Entities/Texture.cpp
-    Entities/Buffer.h
+    Entities/Buffer.hpp
     Entities/IGPUResource.h
     Entities/IGPUResource.cpp
-    Entities/Buffer.cpp
     Entities/Material.cpp
     Entities/ShaderPipeline.h
     Entities/ShaderPipeline.cpp
@@ -46,7 +45,9 @@ add_library(Renderer STATIC
     Entities/SpotLight.h
     Entities/SpotLight.cpp
     Entities/Scene.cpp
-    Entities/Model.cpp)
+    Entities/Model.cpp
+    Entities/BufferData/CameraBufferData.h
+    Entities/BufferData/TransformBufferData.h)
 
 target_include_directories(Renderer PRIVATE
     ${CMAKE_SOURCE_DIR}/
