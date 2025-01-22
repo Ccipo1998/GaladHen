@@ -18,9 +18,12 @@ to:
 >[!NOTE]
 >These steps are needed because the original *imgui* repository uses local path to include *imgui.h* inside backend files, and i'm lazy so i don't want to include the entire *imgui* repo to **GaladHen** for just a change nor to create an imgui lib folder with only needed files (i like submodules)
 
+>[!NOTE]
+>All file paths in GaladHen code are relative to repo directory, so be sure that your working directory is set to repo folder (cmake does not provide a method to set the working directory on all platforms and with any IDE)
+
 ## Build commands
 GaladHen uses CMake as building toolchain.
 Via command line:
-  1. Navigate to project folder;
+  1. Navigate to project folder
   2. ```cmake -S . -B build```
   3. ```cmake --build build```
