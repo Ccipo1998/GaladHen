@@ -6,7 +6,10 @@ add_library(Utils STATIC
     Log.cpp
     stb_image.cpp
     Singleton.hpp
-    IdList.hpp "FileLoader.h" "FileLoader.cpp")
+    IdList.hpp
+    FileLoader.h
+    FileLoader.cpp)
 
 target_include_directories(Utils PRIVATE
-    ${CMAKE_SOURCE_DIR}/)
+    ${CMAKE_SOURCE_DIR}/
+    ${CMAKE_SOURCE_DIR}/GaladHen/)

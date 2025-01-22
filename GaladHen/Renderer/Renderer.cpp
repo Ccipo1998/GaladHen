@@ -27,6 +27,8 @@
 
 #include <unordered_set>
 
+#include "ShaderPreprocessor/ShaderPreprocessor.h"
+
 #define GH_DEFAULT_RENDER_BUFFER_SIZE glm::uvec2{ 1920, 1080 }
 #define GH_CAMERA_DATA_BUFFER_NAME "CameraData"
 #define GH_TRANSFORM_DATA_BUFFER_NAME "TransformData"
@@ -759,11 +761,12 @@ namespace GaladHen
 
             if (program.GetType() == ShaderPipelineType::ShaderPipeline)
             {
-                command.VertexCode = FileLoader::ReadTextFile(program.GetVertexShaderPath().data());
-                command.TessContCode = FileLoader::ReadTextFile(program.GetTessContShaderPath().data());
-                command.TessEvalCode = FileLoader::ReadTextFile(program.GetTessEvalShaderPath().data());
-                command.GeometryCode = FileLoader::ReadTextFile(program.GetGeometryShaderPath().data());
-                command.FragmentCode = FileLoader::ReadTextFile(program.GetFragmentShaderPath().data());
+                //command.VertexCode = FileLoader::ReadTextFile(program.GetVertexShaderPath().data());
+                command.VertexCode = ShaderPreprocessor::PreprocessShader(program.GetVertexShaderPath().data(), CurrentAPI);
+                command.TessContCode = ShaderPreprocessor::PreprocessShader(program.GetTessContShaderPath().data(), CurrentAPI);
+                command.TessEvalCode = ShaderPreprocessor::PreprocessShader(program.GetTessEvalShaderPath().data(), CurrentAPI);
+                command.GeometryCode = ShaderPreprocessor::PreprocessShader(program.GetGeometryShaderPath().data(), CurrentAPI);
+                command.FragmentCode = ShaderPreprocessor::PreprocessShader(program.GetFragmentShaderPath().data(), CurrentAPI);
             }
             else
             {

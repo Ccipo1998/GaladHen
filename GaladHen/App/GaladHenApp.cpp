@@ -1,5 +1,5 @@
 
-#include <Editor/Editor.h>
+#include <GaladHen/Editor/Editor.h>
 
 using namespace GaladHen;
 

@@ -47,10 +47,11 @@ add_library(Renderer STATIC
     Entities/Scene.cpp
     Entities/Model.cpp
     Entities/BufferData/CameraBufferData.h
-    Entities/BufferData/TransformBufferData.h)
+    Entities/BufferData/TransformBufferData.h "ShaderPreprocessor/ShaderPreprocessor.h" "ShaderPreprocessor/ShaderPreprocessor.cpp")
 
 target_include_directories(Renderer PRIVATE
     ${CMAKE_SOURCE_DIR}/
+    ${CMAKE_SOURCE_DIR}/GaladHen/
     ${CMAKE_SOURCE_DIR}/Libs/
     ${CMAKE_SOURCE_DIR}/Libs/gl3w/include/
     ${CMAKE_SOURCE_DIR}/Libs/glfw/include/
@@ -61,5 +62,5 @@ target_link_libraries(Renderer
     glfw
     gl3w
     glm
-    GaladHenMath
+    Math
     Utils)

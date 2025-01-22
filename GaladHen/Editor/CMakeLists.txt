@@ -26,7 +26,7 @@ add_library(Editor STATIC
 
 target_include_directories(Editor PRIVATE
     ${CMAKE_SOURCE_DIR}/
-    ${CMAKE_SOURCE_DIR}/Renderer/
+    ${CMAKE_SOURCE_DIR}/GaladHen/
     ${CMAKE_SOURCE_DIR}/Libs/
     ${CMAKE_SOURCE_DIR}/Libs/assimp/include/
     ${CMAKE_SOURCE_DIR}/Libs/gl3w/include/
