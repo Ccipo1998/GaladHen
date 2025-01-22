@@ -53,7 +53,7 @@ namespace GaladHen
         EditorUIPage = new UIMainPage{ "MainPage", &Window };
 
         // Load and save pbr shader pipeline
-        AssetsManager::LoadAndStoreShaderPipeline("../GaladHen/Shaders/pbr/Pbr.vert", "", "", "", "../GaladHen/Shaders/pbr/Pbr.frag", "", "PBR");
+        AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/pbr/Pbr.vert", "", "", "", "GaladHen/Shaders/pbr/Pbr.frag", "", "PBR");
 
         AddDefaultGizmosToScene();
 
@@ -231,17 +231,17 @@ namespace GaladHen
     {
         // load textures
         std::shared_ptr<Texture> texAlbedo = AssetsManager::LoadAndStoreTexture(
-            "../GaladHen/Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png",
+            "GaladHen/Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png",
             "StuccoAlbedo",
             TextureFormat::SRGB8);
         texAlbedo->SetNumberOfMipMaps(4);
         std::shared_ptr<Texture> texNormal = AssetsManager::LoadAndStoreTexture(
-            "../GaladHen/Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png",
+            "GaladHen/Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png",
             "StuccoNormal",
             TextureFormat::RGB8);
         texNormal->SetNumberOfMipMaps(4);
         std::shared_ptr<Texture> texRoughness = AssetsManager::LoadAndStoreTexture(
-            "../GaladHen/Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png",
+            "GaladHen/Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png",
             "StuccoRoughness",
             TextureFormat::RGB);
         texRoughness->SetNumberOfMipMaps(4);
@@ -270,15 +270,15 @@ namespace GaladHen
         bunnyMat->FunctionsData.emplace_back("RoughnessConstant");
 
         // load models
-        std::shared_ptr<Model> bunny = AssetsManager::LoadAndStoreModel("../GaladHen/Assets/Models/bunny.glb", "Bunny");
-        std::shared_ptr<Model> plane = AssetsManager::LoadAndStoreModel("../GaladHen/Assets/Models/plane.glb", "Plane");
+        std::shared_ptr<Model> bunny = AssetsManager::LoadAndStoreModel("GaladHen/Assets/Models/bunny.glb", "Bunny");
+        std::shared_ptr<Model> plane = AssetsManager::LoadAndStoreModel("GaladHen/Assets/Models/plane.glb", "Plane");
 
         // bvh
         bunny->GetMeshes()[0].BVH.BuildBVH(bunny->GetMeshes()[0], AABBSplitMethod::PlaneCandidates);
         bunny->BVH.BuildBVH(*bunny, AABBSplitMethod::PlaneCandidates);
 
         // shaders and materials
-        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("../GaladHen/Shaders/Unlit/Unlit.vert", "", "", "", "../GaladHen/Shaders/Unlit/Unlit.frag", "", "Unlit");
+        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Unlit/Unlit.frag", "", "Unlit");
         std::shared_ptr<Material> aabbMat = std::shared_ptr<Material>{ new Material { unlit } };
         aabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
         aabbMat->FunctionsData.emplace_back("DiffuseConstant");
@@ -345,7 +345,7 @@ namespace GaladHen
         std::shared_ptr<Model> gizmo{ new Model{ std::vector<Mesh>{ gizmosMesh } } };
 
         // shaders and materials
-        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("../GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "../GaladHen/Shaders/Materials/VertexUnlitColor/VertexUnlitColor.frag", "", "Unlit");
+        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/VertexUnlitColor/VertexUnlitColor.frag", "", "Unlit");
         std::shared_ptr<Material> aabbMat{ new Material{ unlit } };
         aabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
         aabbMat->FunctionsData.emplace_back("DiffuseConstant");

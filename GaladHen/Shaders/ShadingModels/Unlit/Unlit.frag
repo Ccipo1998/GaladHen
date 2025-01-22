@@ -12,7 +12,7 @@ in VS_OUT
 } vs_out;
 
 // Gamma correction
-#include "../GaladHen/Shaders/Common/GammaCorrection.glsl"
+#include "GaladHen/Shaders/Common/GammaCorrection.glsl"
 
 // functions
 

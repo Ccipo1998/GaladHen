@@ -1,5 +1,5 @@
 
-#include "../GaladHen/Shaders/ShadingModels/Unlit/Unlit.frag"
+#include "GaladHen/Shaders/ShadingModels/Unlit/Unlit.frag"
 
 vec3 ComputeUnlitColor()
 {
