@@ -185,9 +185,18 @@ namespace GaladHen
     void Transform::LookAt(const glm::vec3& position)
     {
         glm::vec3 direction = glm::normalize(position - Position);
-        glm::quat rot = glm::quatLookAt(direction, Transform::GlobalUp);
+
+        glm::quat rot = glm::angleAxis(glm::radians(90.0f), GlobalUp); // because of the difference between glm and GaladHen reference system orientation
+        if (glm::dot(direction, GlobalUp) > 0.9999f)
+        {
+            rot = glm::quatLookAt(direction, -GlobalFront) * rot; // order matters!
+        }
+        else
+        {
+            rot = glm::quatLookAt(direction, GlobalUp) * rot; // order matters!
+        }
+
         SetOrientation(rot);
-        RotateYaw(90.0f); // because of the difference between glm and GaladHen reference system orientation
     }
 
     // privates
