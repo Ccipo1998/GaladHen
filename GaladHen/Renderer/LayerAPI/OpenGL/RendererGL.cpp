@@ -263,17 +263,25 @@ namespace GaladHen
 			{
 				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
 				GLuint resourceIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
-				GLint bufferIndex;
-				glGetProgramResourceiv(program, bufferGL.ResourceProgramInterface, resourceIndex, 1, props, 1, NULL, &bufferIndex);
-				glBindBufferBase(bufferGL.Target, bufferIndex, bufferGL.BufferID);
+
+				if (resourceIndex != GL_INVALID_INDEX)
+				{
+					GLint bufferIndex;
+					glGetProgramResourceiv(program, bufferGL.ResourceProgramInterface, resourceIndex, 1, props, 1, NULL, &bufferIndex);
+					glBindBufferBase(bufferGL.Target, bufferIndex, bufferGL.BufferID);
+				}
 			}
 			for (auto& buffer : rc.AdditionalBufferData)
 			{
 				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
 				GLuint resourceIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
-				GLint bufferIndex;
-				glGetProgramResourceiv(program, bufferGL.ResourceProgramInterface, resourceIndex, 1, props, 1, NULL, &bufferIndex);
-				glBindBufferBase(bufferGL.Target, bufferIndex, bufferGL.BufferID);
+
+				if (resourceIndex != GL_INVALID_INDEX)
+				{
+					GLint bufferIndex;
+					glGetProgramResourceiv(program, bufferGL.ResourceProgramInterface, resourceIndex, 1, props, 1, NULL, &bufferIndex);
+					glBindBufferBase(bufferGL.Target, bufferIndex, bufferGL.BufferID);
+				}
 			}
 
 			// draw
