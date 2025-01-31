@@ -11,7 +11,7 @@ namespace GaladHen
 
         SpotLight();
 
-        SpotLight(const glm::vec3& color, float intensity, float bulbSize, float radius, float penumbraAngle, float falloffAngle);
+        SpotLight(const glm::vec4& color, float intensity, float bulbSize, float radius, float penumbraAngle, float falloffAngle);
 
         float PenumbraAngle;
         float FallOffAngle; // this is the angle from the penumbra angle and the complete shadow (UmbraAngle = PenumbraAngle + FallOffAngle)

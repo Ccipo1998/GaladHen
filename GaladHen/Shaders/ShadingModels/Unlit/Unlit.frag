@@ -14,17 +14,17 @@ in VS_OUT
 // Gamma correction
 #include "GaladHen/Shaders/Common/GammaCorrection.glsl"
 
-// functions
+// Functions to define
 
-vec3 ComputeUnlitColor();
+vec4 ComputeUnlitColor();
 
 void main()
 {
     // gamma correction
-    vec3 solidColor = ComputeUnlitColor();
+    vec4 solidColor = ComputeUnlitColor();
 
     if (IsGammaCorrectionActive())
         solidColor = GammaCorrection(solidColor);
 
-    color = vec4(solidColor, 1.0);
+    color = vec4(solidColor);
 }

@@ -52,10 +52,8 @@ namespace GaladHen
         // create main ui page
         EditorUIPage = new UIMainPage{ "MainPage", &Window };
 
-        // Load and save pbr shader pipeline
-        AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/pbr/Pbr.vert", "", "", "", "GaladHen/Shaders/pbr/Pbr.frag", "", "PBR");
-
-        AddDefaultGizmosToScene();
+        //AddDefaultGizmosToScene();
+        AddDefaultBunnyToScene();
 
         //if (!glfwInit())
         //{
@@ -229,67 +227,61 @@ namespace GaladHen
 
     void Editor::AddDefaultBunnyToScene()
     {
+        std::shared_ptr<ShaderPipeline> pbrBunny = AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Pbr/Pbr.vert", "", "", "", "GaladHen/Shaders/Materials/Bunny.frag", "", "Bunny");
+
         // load textures
         std::shared_ptr<Texture> texAlbedo = AssetsManager::LoadAndStoreTexture(
-            "GaladHen/Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png",
+            "Assets/Textures/StuccoRoughCast001_COL_2K_METALNESS.png",
             "StuccoAlbedo",
             TextureFormat::SRGB8);
         texAlbedo->SetNumberOfMipMaps(4);
         std::shared_ptr<Texture> texNormal = AssetsManager::LoadAndStoreTexture(
-            "GaladHen/Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png",
+            "Assets/Textures/StuccoRoughCast001_NRM_2K_METALNESS.png",
             "StuccoNormal",
             TextureFormat::RGB8);
         texNormal->SetNumberOfMipMaps(4);
         std::shared_ptr<Texture> texRoughness = AssetsManager::LoadAndStoreTexture(
-            "GaladHen/Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png",
+            "Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png",
             "StuccoRoughness",
             TextureFormat::RGB);
         texRoughness->SetNumberOfMipMaps(4);
 
-        // get pbr shader pipeline
-        std::shared_ptr<ShaderPipeline> pbr = AssetsManager::GetShaderPipelineByName("PBR");
+        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/VertexUnlitColor.frag", "", "VertexUnlitColor");
+        std::shared_ptr<Material> aabbMat{ new Material{ unlit } };
+        aabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
         // materials
-        std::shared_ptr<Material> bunnyMat = std::shared_ptr<Material>{ new Material{ pbr } };
+        std::shared_ptr<Material> bunnyMat = std::shared_ptr<Material>{ new Material{ pbrBunny } };
         bunnyMat->TextureData.emplace("DiffuseTexture", texAlbedo);
-        bunnyMat->TextureData.emplace("NormalTexture", texNormal);
+        bunnyMat->TextureData.emplace("NormalMap", texNormal);
         bunnyMat->ScalarData.emplace("Metallic", 0.0f);
         bunnyMat->ScalarData.emplace("Roughness", 0.5f);
-        bunnyMat->FunctionsData.emplace_back("DiffuseSampling");
-        bunnyMat->FunctionsData.emplace_back("NormalSampling");
-        bunnyMat->FunctionsData.emplace_back("MetallicConstant");
-        bunnyMat->FunctionsData.emplace_back("RoughnessConstant");
 
-        std::shared_ptr<Material> planeMat = std::shared_ptr<Material>{ new Material { pbr } };
+        /*std::shared_ptr<Material> planeMat = std::shared_ptr<Material>{ new Material { pbr } };
         planeMat->Vec4Data.emplace("Diffuse", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
-        bunnyMat->ScalarData.emplace("Metallic", 0.0f);
-        bunnyMat->ScalarData.emplace("Roughness", 0.1f);
-        bunnyMat->FunctionsData.emplace_back("DiffuseConstant");
-        bunnyMat->FunctionsData.emplace_back("NormalInterpolated");
-        bunnyMat->FunctionsData.emplace_back("MetallicConstant");
-        bunnyMat->FunctionsData.emplace_back("RoughnessConstant");
+        planeMat->ScalarData.emplace("Metallic", 0.0f);
+        planeMat->ScalarData.emplace("Roughness", 0.1f);*/
 
         // load models
-        std::shared_ptr<Model> bunny = AssetsManager::LoadAndStoreModel("GaladHen/Assets/Models/bunny.glb", "Bunny");
-        std::shared_ptr<Model> plane = AssetsManager::LoadAndStoreModel("GaladHen/Assets/Models/plane.glb", "Plane");
+        std::shared_ptr<Model> bunny = AssetsManager::LoadAndStoreModel("Assets/Models/bunny.glb", "Bunny");
+        //std::shared_ptr<Model> plane = AssetsManager::LoadAndStoreModel("GaladHen/Assets/Models/plane.glb", "Plane");
 
         // bvh
-        bunny->GetMeshes()[0].BVH.BuildBVH(bunny->GetMeshes()[0], AABBSplitMethod::PlaneCandidates);
-        bunny->BVH.BuildBVH(*bunny, AABBSplitMethod::PlaneCandidates);
+        /*bunny->GetMeshes()[0].BVH.BuildBVH(bunny->GetMeshes()[0], AABBSplitMethod::PlaneCandidates);
+        bunny->BVH.BuildBVH(*bunny, AABBSplitMethod::PlaneCandidates);*/
 
         // shaders and materials
-        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Unlit/Unlit.frag", "", "Unlit");
-        std::shared_ptr<Material> aabbMat = std::shared_ptr<Material>{ new Material { unlit } };
-        aabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-        aabbMat->FunctionsData.emplace_back("DiffuseConstant");
+        //std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/UnlitColor.frag", "", "UnlitColor");
+        //std::shared_ptr<Material> aabbMat = std::shared_ptr<Material>{ new Material { unlit } };
+        //aabbMat->Vec4Data.emplace("ConstantColor", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
-        // ray
-        Ray ray
-        {
-            Scene.MainCamera.Transform.GetPosition(),
-            glm::vec3(0.0f, 0.0f, -1.0f),
-            1000.0f
-        };
+        //// ray
+        //Ray ray
+        //{
+        //    Scene.MainCamera.Transform.GetPosition(),
+        //    glm::vec3(0.0f, 0.0f, -1.0f),
+        //    1000.0f
+        //};
 
         // load into scene
         SceneObject bunnyObj{ bunny };
@@ -298,26 +290,26 @@ namespace GaladHen
         bunnyObj.Transform.SetYaw(50.0f);
         Scene.SceneObjects.emplace_back(bunnyObj);
 
-        SceneObject planeObj{ plane };
-        planeObj.SetMeshMaterialLink(0, planeMat);
-        planeObj.Transform.SetScale(glm::vec3(5.0f, 1.0f, 5.0f));
-        //Scene.SceneObjects.emplace_back(planeObj);
+        //SceneObject planeObj{ plane };
+        //planeObj.SetMeshMaterialLink(0, planeMat);
+        //planeObj.Transform.SetScale(glm::vec3(5.0f, 1.0f, 5.0f));
+        ////Scene.SceneObjects.emplace_back(planeObj);
 
-        RayModelHitInfo hit = Math::RayModelIntersection(ray, *bunny, bunny->BVH, bunnyObj.Transform, BVHTraversalMethod::FrontToBack);
-        std::vector<unsigned int> indices = { 0, 1, 2 };
-        std::vector<MeshVertexData> vertices;
-        vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex0]);
-        vertices[0].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[0].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
-        vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex1]);
-        vertices[1].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[1].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
-        vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex2]);
-        vertices[2].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[2].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
-        Mesh aabbMesh{ vertices, indices, MeshPrimitive::Triangle };
-        std::shared_ptr<Model> aabb = std::shared_ptr<Model>{ new Model { std::vector<Mesh>{ aabbMesh } } };
-        
-        SceneObject aabbObj{ aabb };
-        aabbObj.SetMeshMaterialLink(0, aabbMat);
-        Scene.SceneObjects.emplace_back(aabbObj);
+        //RayModelHitInfo hit = Math::RayModelIntersection(ray, *bunny, bunny->BVH, bunnyObj.Transform, BVHTraversalMethod::FrontToBack);
+        //std::vector<unsigned int> indices = { 0, 1, 2 };
+        //std::vector<MeshVertexData> vertices;
+        //vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex0]);
+        //vertices[0].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[0].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+        //vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex1]);
+        //vertices[1].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[1].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+        //vertices.push_back(bunny->GetMeshes()[0].GetVertices()[hit.VertexIndex2]);
+        //vertices[2].Position = glm::vec3(bunnyObj.Transform.ToMatrix() * glm::vec4(vertices[2].Position, 1.0f)) + glm::vec3(0.0f, 0.0f, 0.1f);
+        //Mesh aabbMesh{ vertices, indices, MeshPrimitive::Triangle };
+        //std::shared_ptr<Model> aabb = std::shared_ptr<Model>{ new Model { std::vector<Mesh>{ aabbMesh } } };
+        //
+        //SceneObject aabbObj{ aabb };
+        //aabbObj.SetMeshMaterialLink(0, aabbMat);
+        //Scene.SceneObjects.emplace_back(aabbObj);
     }
 
     void Editor::AddDefaultGizmosToScene()
@@ -345,13 +337,11 @@ namespace GaladHen
         std::shared_ptr<Model> gizmo{ new Model{ std::vector<Mesh>{ gizmosMesh } } };
 
         // shaders and materials
-        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/VertexUnlitColor/VertexUnlitColor.frag", "", "Unlit");
+        std::shared_ptr<ShaderPipeline> unlit = AssetsManager::LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/VertexUnlitColor.frag", "", "VertexUnlitColor");
         std::shared_ptr<Material> aabbMat{ new Material{ unlit } };
         aabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-        aabbMat->FunctionsData.emplace_back("DiffuseConstant");
 
         std::shared_ptr<Material> gizmosMat{ new Material{ unlit } };
-        gizmosMat->FunctionsData.emplace_back("VertexColorConstant");
 
         SceneObject gizmoObj{ gizmo };
         gizmoObj.SetMeshMaterialLink(0, gizmosMat);

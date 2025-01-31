@@ -10,7 +10,6 @@ namespace GaladHen
 		, NumberOfChannels(numberOfChannels)
 		, NumberOfMipMaps(numberOfMipMaps)
 		, Format(format)
-		, TextureID(0)
 		, Filtering(TextureFiltering::Linear)
 		, Wrapping(TextureWrapping::Repeat)
 	{

@@ -34,7 +34,6 @@ namespace GaladHen
 		std::unordered_map<std::string, glm::mat4> Mat4Data;
 		std::unordered_map<std::string, std::shared_ptr<Texture>> TextureData;
 		std::unordered_map<std::string, std::shared_ptr<IBuffer>> BufferData;
-		std::vector<std::string> FunctionsData;
 
 	protected:
 

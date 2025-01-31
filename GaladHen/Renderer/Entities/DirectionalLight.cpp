@@ -6,7 +6,7 @@ namespace GaladHen
 	DirectionalLight::DirectionalLight()
 	{}
 
-	DirectionalLight::DirectionalLight(const glm::vec3& color, float intensity, const glm::vec3& direction)
+	DirectionalLight::DirectionalLight(const glm::vec4& color, float intensity, const glm::vec3& direction)
 		: Light(color, intensity)
 	{
 		SetLightDirection(direction);
@@ -19,6 +19,6 @@ namespace GaladHen
 
 	void DirectionalLight::SetLightDirection(const glm::vec3& direction)
 	{
-		Transform.LookAt(Transform.GetPosition() + Transform.GetFront());
+		Transform.LookAt(Transform.GetPosition() + direction);
 	}
 }

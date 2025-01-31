@@ -11,10 +11,10 @@ namespace GaladHen
 
         Light();
 
-        Light(const glm::vec3& color, float intensity);
+        Light(const glm::vec4& color, float intensity);
 
         Transform Transform;
-        glm::vec3 Color;
+        glm::vec4 Color;
         float Intensity;
 
     };

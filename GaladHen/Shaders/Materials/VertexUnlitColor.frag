@@ -1,7 +1,7 @@
 
 #include "GaladHen/Shaders/ShadingModels/Unlit/Unlit.frag"
 
-vec3 ComputeUnlitColor()
+vec4 ComputeUnlitColor()
 {
-	return vs_out.VertexColor.rgb;
+	return vs_out.VertexColor;
 }

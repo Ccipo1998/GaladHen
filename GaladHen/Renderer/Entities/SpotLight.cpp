@@ -8,7 +8,7 @@ namespace GaladHen
 		, FallOffAngle(45.0f)
 	{}
 
-	SpotLight::SpotLight(const glm::vec3& color, float intensity, float bulbSize, float radius, float penumbraAngle, float falloffAngle)
+	SpotLight::SpotLight(const glm::vec4& color, float intensity, float bulbSize, float radius, float penumbraAngle, float falloffAngle)
 		: PointLight(color, intensity, bulbSize, radius)
 		, PenumbraAngle(penumbraAngle)
 		, FallOffAngle(falloffAngle)

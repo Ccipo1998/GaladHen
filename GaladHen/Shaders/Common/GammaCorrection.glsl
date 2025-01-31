@@ -9,10 +9,10 @@ bool IsGammaCorrectionActive()
 	return GammaCorrectionEnabled;
 }
 
-vec3 GammaCorrection(vec3 shading)
+vec4 GammaCorrection(vec4 shading)
 {
-    vec3 newShading = shading / (shading + vec3(1.0));
-    newShading = pow(newShading, vec3(1.0/gamma));
+    vec4 newShading = shading / (shading + vec4(1.0));
+    newShading = pow(newShading, vec4(1.0/gamma));
 
     return newShading;
 }

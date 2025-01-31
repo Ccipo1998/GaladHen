@@ -156,7 +156,7 @@ namespace GaladHen
 
 		//assert(textureData.AccessType == TextureAccessType::ReadWrite); // For a render target we want to be able to read and write from it
 
-		rb.ColorTextureID = CreateTexture(texture);
+		rb.ColorTextureID = CreateTexture(texture, TextureAllocationType::Dynamic); // dynamic allocation for render buffers
 		rb.DepthStencilTextureID = CreateDepthStencilTexture(width, height);
 
 		TextureGL& colorTexture = Textures.GetObjectWithId(rb.ColorTextureID);
@@ -247,8 +247,9 @@ namespace GaladHen
 			for (auto& texture : material->TextureData)
 			{
 				// select texture unit for the binded texture
+				TextureGL& textureGL = Textures.GetObjectWithId(GPUResourceInspector::GetResourceID(texture.second.get()));
 				glActiveTexture(TextureUnits[unit]);
-				glBindTexture(GL_TEXTURE_2D, GPUResourceInspector::GetResourceID(texture.second.get()));
+				glBindTexture(GL_TEXTURE_2D, textureGL.TextureID);
 				// create uniform sampler
 				int loc = glGetUniformLocation(program, texture.first.data());
 				glUniform1i(loc, unit);
@@ -256,28 +257,23 @@ namespace GaladHen
 				++unit;
 			}
 
-			std::vector<GLuint> locations;
-			locations.reserve(material->FunctionsData.size() + 1);
-			//locations.emplace_back((GLuint)shadingMode);
-			for (std::string& function : material->FunctionsData)
-			{
-				locations.emplace_back(glGetSubroutineIndex(program, GL_FRAGMENT_SHADER, function.data()));
-			}
-			// subroutine selection
-			glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, locations.size(), locations.data());
-
 			// Bind buffer data to shader pipeline
+			const GLenum props[] = { GL_BUFFER_BINDING };
 			for (auto& buffer : material->BufferData)
 			{
 				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
-				GLuint ssbIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
-				glBindBufferBase(bufferGL.Target, ssbIndex, bufferGL.BufferID);
+				GLuint resourceIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
+				GLint bufferIndex;
+				glGetProgramResourceiv(program, bufferGL.ResourceProgramInterface, resourceIndex, 1, props, 1, NULL, &bufferIndex);
+				glBindBufferBase(bufferGL.Target, bufferIndex, bufferGL.BufferID);
 			}
 			for (auto& buffer : rc.AdditionalBufferData)
 			{
 				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
-				GLuint ssbIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
-				glBindBufferBase(bufferGL.Target, ssbIndex, bufferGL.BufferID);
+				GLuint resourceIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
+				GLint bufferIndex;
+				glGetProgramResourceiv(program, bufferGL.ResourceProgramInterface, resourceIndex, 1, props, 1, NULL, &bufferIndex);
+				glBindBufferBase(bufferGL.Target, bufferIndex, bufferGL.BufferID);
 			}
 
 			// draw
@@ -427,22 +423,15 @@ namespace GaladHen
 
 	}
 
-	unsigned int RendererGL::CreateTexture(const Texture& texture)
+	unsigned int RendererGL::CreateTexture(const Texture& texture, TextureAllocationType allocationType)
 	{
 		unsigned int id = Textures.AddWithId();
 		TextureGL& textureGL = Textures.GetObjectWithId(id);
 
 		// create new texture object
-		static bool first = true;
 		glGenTextures(1, &textureGL.TextureID);
-		if (first)
-		{
-			glGenTextures(1, &textureGL.TextureID);
 
-			first = false;
-		}
-
-		LoadTexture(id, texture);
+		LoadTexture(id, texture, allocationType);
 
 		return id;
 	}
@@ -470,18 +459,17 @@ namespace GaladHen
 		Textures.RemoveWithId(textureID);
 	}
 
-	void RendererGL::LoadTexture(unsigned int textureID, const Texture& texture)
+	void RendererGL::LoadTexture(unsigned int textureID, const Texture& texture, TextureAllocationType allocationType)
 	{
 		TextureGL& textureGL = Textures.GetObjectWithId(textureID);
 
 		// Copy texture data in opengl texture data
-		textureGL.AllocationType = TextureAllocationType::Mutable; // TODO: allocation basing on texture access type
+		textureGL.AllocationType = allocationType;
 		textureGL.Filtering = FilteringAssociations[(int)texture.GetFiltering()];
 		textureGL.Wrapping = WrappingAssociations[(int)texture.GetWrapping()];
 		textureGL.TextureFormat = TextureFormatAssociations[(int)texture.GetFormat()];
 		textureGL.PixelChannels = PixelChannelsAssociations[texture.GetNumberOfChannels() - 1];
 		textureGL.PixelChannelDepth = PixelChannelDepthAssociations[0];
-		textureGL.NumberOfMipMaps = texture.GetNumberOfMipMaps();
 
 		// bind new texture object to texture target
 		glBindTexture(GL_TEXTURE_2D, textureGL.TextureID);
@@ -491,35 +479,53 @@ namespace GaladHen
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureGL.Filtering);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureGL.Filtering);
 
-		switch (textureGL.AllocationType)
+		switch (allocationType)
 		{
-		case TextureAllocationType::Mutable:
+		case TextureAllocationType::Dynamic:
 		{
+			textureGL.Levels = texture.GetNumberOfMipMaps();
+
 			glm::uvec2 textureSize;
 			texture.GetSize(textureSize);
 			std::shared_ptr<unsigned char> data = texture.GetData().lock(); // need to convert to shared ptr to use a weak ptr
-			glTexImage2D(GL_TEXTURE_2D, textureGL.NumberOfMipMaps, textureGL.TextureFormat, textureSize.x, textureSize.y, 0, textureGL.PixelChannels, textureGL.PixelChannelDepth, data.get());
+			glTexImage2D(GL_TEXTURE_2D, textureGL.Levels, textureGL.TextureFormat, textureSize.x, textureSize.y, 0, textureGL.PixelChannels, textureGL.PixelChannelDepth, data.get());
+			
+			if (glGetError() != GL_NO_ERROR)
+			{
+				Log::Error("RendererGL", "Error while creating a new texture");
+
+				return;
+			}
+
 			break;
 		}
-		case TextureAllocationType::Immutable:
+		case TextureAllocationType::Constant:
 		{
+			textureGL.Levels = texture.GetNumberOfMipMaps() + 1;
+
 			// allocate immutable storage basing on number of channels and on bit depth
 			// IMPORTANT: internal format is an external variable because not all the textures need to be interpreted as SRGB (example: normal maps are already stored in linear values)
 			// levels are the number of mipmaps
 			glm::uvec2 textureSize;
 			texture.GetSize(textureSize);
-			glTexStorage2D(GL_TEXTURE_2D, textureGL.NumberOfMipMaps, textureGL.TextureFormat, textureSize.x, textureSize.y);
+			glTexStorage2D(GL_TEXTURE_2D, textureGL.Levels, textureGL.TextureFormat, textureSize.x, textureSize.y);
+
+			if (glGetError() != GL_NO_ERROR)
+			{
+				Log::Error("RendererGL", "Error while creating a new texture");
+
+				return;
+			}
 
 			// copy texture data to texture object
 			std::shared_ptr<unsigned char> data = texture.GetData().lock();
-			assert(data.get() != nullptr); // always valid texture arrives here
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureSize.x, textureSize.y, textureGL.PixelChannels, textureGL.PixelChannelDepth, data.get());
 		}
 		default:
 			break;
 		}
 
-		if (textureGL.NumberOfMipMaps > 0)
+		if (textureGL.Levels > 1)
 			glGenerateTextureMipmap(textureGL.TextureID);
 	}
 

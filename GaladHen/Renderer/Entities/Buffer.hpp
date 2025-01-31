@@ -30,9 +30,9 @@ namespace GaladHen
 	{
 	public:
 
-		IBuffer()
-		: Type(BufferType::Uniform)
-		, AccessType(BufferAccessType::StaticRead)
+		IBuffer(BufferType type, BufferAccessType accessType)
+		: Type(type)
+		, AccessType(accessType)
 		{}
 ;
 		BufferType GetType() const
@@ -75,7 +75,8 @@ namespace GaladHen
 	{
 	public:
 
-		FixedBuffer()
+		FixedBuffer(BufferType type, BufferAccessType accessType)
+			: IBuffer(type, accessType)
 		{
 			AllocationType = BufferAllocationType::Fixed;
 		}
@@ -136,7 +137,8 @@ namespace GaladHen
 	{
 	public:
 
-		DynamicBuffer()
+		DynamicBuffer(BufferType type, BufferAccessType accessType)
+			: IBuffer(type, accessType)
 		{
 			AllocationType = BufferAllocationType::Dynamic;
 		}
@@ -190,11 +192,22 @@ namespace GaladHen
 		void AddData(T data)
 		{
 			Data.push_back(data);
+
+			InvalidateResource();
 		}
 
 		void InsertData(T data, unsigned int index)
 		{
 			Data.insert(Data.begin() + index, data);
+
+			InvalidateResource();
+		}
+
+		void ClearData()
+		{
+			Data.clear();
+
+			InvalidateResource();
 		}
 
 	protected:

@@ -11,7 +11,7 @@ namespace GaladHen
 
 		DirectionalLight();
 
-		DirectionalLight(const glm::vec3& color, float intensity, const glm::vec3& direction); // Dir light direction is front of Transform
+		DirectionalLight(const glm::vec4& color, float intensity, const glm::vec3& direction); // Dir light direction is front of Transform
 
 		glm::vec3 GetLightDirection() const;
 

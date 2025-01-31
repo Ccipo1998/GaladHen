@@ -1,12 +1,6 @@
 
 // PBR fragment shader
 
-#version 450 core
-
-// standard subroutine
-subroutine vec3 ShadingMode();
-layout (location = 0) subroutine uniform ShadingMode GetShadingMode;
-
 // outputs
 out vec4 color;
 
@@ -42,12 +36,10 @@ struct DirectionalLight
 // buffers
 layout(std140, binding = 0) buffer PointLightBuffer
 {
-    int PointLightNumber;
     PointLight PointLights[];
 };
 layout(std140, binding = 1) buffer DirectionalLightBuffer
 {
-    int DirLightNumber;
     DirectionalLight DirectionalLights[];
 };
 
@@ -58,37 +50,22 @@ layout (std140, binding = 0) uniform CameraData
     uniform mat4 ProjectionMatrix;
     uniform vec3 WCameraPosition;
 };
-
-// material data
-uniform vec4 Diffuse;
-uniform vec4 Specular;
-uniform float Metallic;
-uniform float Roughness;
-uniform sampler2D DiffuseTexture;
-uniform sampler2D NormalTexture;
-uniform sampler2D MetallicTexture;
-uniform sampler2D RoughnessTexture;
+layout (std140, binding = 2) uniform LightingData
+{
+    int PointLightNumber;
+    int DirLightNumber;
+};
 
 // const
 const float pi = 3.141592653589793;
 const float epsilon = 0.0001; // tiny value to avoid dividing per zero
-const vec3 dielectricsF0 = vec3(0.04);
-const float gamma = 2.2;
+const vec4 dielectricsF0 = vec4(0.04, 0.04, 0.04, 1.0);
 
-// functions
+// Gamma correction
+#include "GaladHen/Shaders/Common/GammaCorrection.glsl"
 
-vec3 GammaCorrection(vec3 shading)
-{
-    vec3 newShading = shading / (shading + vec3(1.0));
-    newShading = pow(newShading, vec3(1.0/gamma));
-
-    return newShading;
-}
-
-vec3 ColorToLinearSpace(vec3 srgbColor)
-{
-    return pow(srgbColor, vec3(gamma));
-}
+// Color space operations
+#include "GaladHen/Shaders/Common/ColorSpace.glsl"
 
 float WindowedInverseSquareFalloff(float intensity, float lightRadius, float falloffDistance, float distanceFromLightSource)
 {
@@ -99,14 +76,14 @@ float WindowedInverseSquareFalloff(float intensity, float lightRadius, float fal
 }
 
 // Lambertian Reflectance
-vec3 DiffuseBRDF(vec3 diffuseColor, float metallic)
+vec4 DiffuseBRDF(vec4 diffuseColor, float metallic)
 {
     return diffuseColor / pi * (1.0 - metallic);
 }
 
-vec3 FresnelSchlickApprox(vec3 lightDir, vec3 halfDir, float metallic, vec3 diffuseColor)
+vec4 FresnelSchlickApprox(vec3 lightDir, vec3 halfDir, float metallic, vec4 diffuseColor)
 {
-    vec3 F0 = dielectricsF0 * (1.0 - metallic) + diffuseColor * metallic;
+    vec4 F0 = dielectricsF0 * (1.0 - metallic) + diffuseColor * metallic;
     return F0 + (1.0 - F0) * pow((1.0 - (max(dot(lightDir, halfDir), 0.0))), 5.0);
 }
 
@@ -129,9 +106,9 @@ float GGXGeometryMasking(vec3 viewNormal, vec3 lightDir, vec3 viewDir, float rou
     return GGXSmithMasking(viewNormal, lightDir, roughness) * GGXSmithMasking(viewNormal, viewDir, roughness);
 }
 
-vec3 SpecularBRDF(vec3 viewNormal, vec3 lightDir, vec3 viewDir, vec3 halfDir, vec3 diffuseColor, float metallic, float roughness)
+vec4 SpecularBRDF(vec3 viewNormal, vec3 lightDir, vec3 viewDir, vec3 halfDir, vec4 diffuseColor, float metallic, float roughness)
 {
-    vec3 fresnel = FresnelSchlickApprox(lightDir, halfDir, metallic, diffuseColor);
+    vec4 fresnel = FresnelSchlickApprox(lightDir, halfDir, metallic, diffuseColor);
     float ggxDistribution = GGXNormalDistribution(viewNormal, halfDir, roughness);
     float ggxGeometry = GGXGeometryMasking(viewNormal, lightDir, viewDir, roughness);
 
@@ -140,101 +117,18 @@ vec3 SpecularBRDF(vec3 viewNormal, vec3 lightDir, vec3 viewDir, vec3 halfDir, ve
     return (fresnel * ggxGeometry * ggxDistribution) / (4.0 * NdotL * NdotV + epsilon);
 }
 
-// functions
+// Functions to define
+vec4 ComputeDiffuseColor();
+vec3 ComputeNormal();
+float ComputeMetallic();
+float ComputeRoughness();
 
-// subroutines
-
-subroutine vec3 DiffuseMode();
-layout (location = 1) subroutine uniform DiffuseMode GetDiffuse;
-
-subroutine vec3 NormalMode();
-layout (location = 2) subroutine uniform NormalMode GetNormal;
-
-subroutine float MetallicMode();
-layout (location = 3) subroutine uniform MetallicMode GetMetallic;
-
-subroutine float RoughnessMode();
-layout (location = 4) subroutine uniform RoughnessMode GetRoughness;
-
-layout (index = 0)
-subroutine(ShadingMode)
-vec3 SmoothShading()
+vec4 PhysicallyBasedShadingModel(vec3 wNormal, vec4 diffuseColor, float metallic, float roughness)
 {
-    return normalize(vs_out.SmoothWNormal);
-}
+    vec4 outgoing = vec4(0.0);
 
-layout (index = 1)
-subroutine(ShadingMode)
-vec3 FlatShading()
-{
-    return normalize(vs_out.FlatWNormal);
-}
-
-layout (index = 2)
-subroutine(DiffuseMode)
-vec3 DiffuseConstant()
-{
-    return Diffuse.rgb;
-}
-
-layout (index = 3)
-subroutine(DiffuseMode)
-vec3 DiffuseSampling()
-{
-    return texture(DiffuseTexture, vs_out.TexCoord).rgb;
-}
-
-layout (index = 4)
-subroutine(NormalMode)
-vec3 NormalInterpolated()
-{
-    return GetShadingMode();
-}
-
-layout (index = 5)
-subroutine(NormalMode)
-vec3 NormalSampling()
-{
-    vec3 normalSample = texture(NormalTexture, vs_out.TexCoord).rgb;
-    normalSample = normalSample * 2.0 - 1.0;
-    normalSample = normalize(vs_out.TBN * normalSample);
-    return normalSample;
-}
-
-layout (index = 6)
-subroutine(MetallicMode)
-float MetallicConstant()
-{
-    return Metallic;
-}
-
-layout (index = 7)
-subroutine(MetallicMode)
-float MetallicSampling()
-{
-    return texture(MetallicTexture, vs_out.TexCoord).r;
-}
-
-layout (index = 8)
-subroutine(RoughnessMode)
-float RoughnessConstant()
-{
-    return Roughness;
-}
-
-layout (index = 9)
-subroutine(RoughnessMode)
-float RoughnessSampling()
-{
-    return texture(RoughnessTexture, vs_out.TexCoord).r;
-}
-
-vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic, float roughness)
-{
-    vec3 outgoing = vec3(0.0);
-
-    vec3 diffuse = vec3(0.0);
-    vec3 specular = vec3(0.0);
+    vec4 diffuse = vec4(0.0);
+    vec4 specular = vec4(0.0);
 
     vec3 wLightPos = vec3(0.0);
     vec3 wLightDir = vec3(0.0);
@@ -274,16 +168,16 @@ vec3 PhysicallyBasedShadingModel(vec3 wNormal, vec3 diffuseColor, float metallic
 void main()
 {
     // take PBR parameters
-    vec3 diffuse = GetDiffuse();
-    vec3 normal = GetNormal();
-    float metallic = GetMetallic();
-    float roughness = GetRoughness();
+    vec4 diffuse = ComputeDiffuseColor();
+    vec3 normal = ComputeNormal();
+    float metallic = ComputeMetallic();
+    float roughness = ComputeRoughness();
 
     // shading
-    vec3 shading = PhysicallyBasedShadingModel(normal, diffuse, metallic, roughness);
+    vec4 shading = PhysicallyBasedShadingModel(normal, diffuse, metallic, roughness);
 
     // gamma correction
     shading = GammaCorrection(shading);
 
-    color = vec4(shading, 1.0);
+    color = vec4(shading);
 }

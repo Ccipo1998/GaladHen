@@ -11,7 +11,7 @@ namespace GaladHen
 
 		PointLight();
 
-		PointLight(const glm::vec3& color, float intensity, float bulbSize, float radius);
+		PointLight(const glm::vec4& color, float intensity, float bulbSize, float radius);
 
 		float BulbSize; // The (fake) "physical" size of the light bulb
 		float Radius; // Of the illuminated area (sphere)

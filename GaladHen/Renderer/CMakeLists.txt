@@ -47,7 +47,7 @@ add_library(Renderer STATIC
     Entities/Scene.cpp
     Entities/Model.cpp
     Entities/BufferData/CameraBufferData.h
-    Entities/BufferData/TransformBufferData.h "ShaderPreprocessor/ShaderPreprocessor.h" "ShaderPreprocessor/ShaderPreprocessor.cpp")
+    Entities/BufferData/TransformBufferData.h "ShaderPreprocessor/ShaderPreprocessor.h" "ShaderPreprocessor/ShaderPreprocessor.cpp" "Entities/BufferData/PointLightBufferData.h" "Entities/BufferData/DirLightBufferData.h" "Entities/BufferData/LightingBufferData.h")
 
 target_include_directories(Renderer PRIVATE
     ${CMAKE_SOURCE_DIR}/

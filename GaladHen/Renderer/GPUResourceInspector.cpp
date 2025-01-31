@@ -8,8 +8,14 @@ namespace GaladHen
 	{
 		return resource->ResourceID;
 	}
+
 	void GPUResourceInspector::SetResourceID(IGPUResource* resource, unsigned int id)
 	{
 		resource->ResourceID = id;
+	}
+
+	void GPUResourceInspector::ValidateResource(IGPUResource* resource)
+	{
+		resource->ResourceInvalidated = false;
 	}
 }

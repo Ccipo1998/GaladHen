@@ -21,6 +21,9 @@
 
 #include <Renderer/Entities/BufferData/CameraBufferData.h>
 #include <Renderer/Entities/BufferData/TransformBufferData.h>
+#include <Renderer/Entities/BufferData/PointLightBufferData.h>
+#include <Renderer/Entities/BufferData/DirLightBufferData.h>
+#include <Renderer/Entities/BufferData/LightingBufferData.h>
 
 #include <Utils/Log.h>
 #include <Utils/FileLoader.h>
@@ -32,6 +35,9 @@
 #define GH_DEFAULT_RENDER_BUFFER_SIZE glm::uvec2{ 1920, 1080 }
 #define GH_CAMERA_DATA_BUFFER_NAME "CameraData"
 #define GH_TRANSFORM_DATA_BUFFER_NAME "TransformData"
+#define GH_LIGHTING_DATA_BUFFER_NAME "LightingData"
+#define GH_POINTLIGHT_DATA_BUFFER_NAME "PointLightBuffer"
+#define GH_DIRLIGHT_DATA_BUFFER_NAME "DirectionalLightBuffer"
 
 namespace GaladHen
 {
@@ -114,7 +120,9 @@ namespace GaladHen
             // Buffers
             std::shared_ptr<FixedBuffer<CameraBufferData, 1>> CameraBuffer;
             std::shared_ptr<FixedBuffer<TransformBufferData, 1>> TransformBuffer;
-            //std::shared_ptr<Buffer> LightingDataBuffer;
+            std::shared_ptr<FixedBuffer<LightingBufferData, 1>> LightingBuffer;
+            std::shared_ptr<DynamicBuffer<PointLightBufferData>> PointLightBuffer;
+            std::shared_ptr<DynamicBuffer<DirLightBufferData>> DirLightBuffer;
 
             // RENDERER FUNCTIONALITIES ------------------------------------------------------------------------------------------------------------------------------
 
@@ -155,6 +163,12 @@ namespace GaladHen
             void InitTransformDataBuffer();
             void LoadCameraData(const Camera& camera);
             void LoadTransformData(const Transform& transform);
+            void InitLightingDataBuffer();
+            void LoadLightingData(const Scene& scene);
+            void InitPointLightDataBuffer();
+            void LoadPointLightData(const std::vector<PointLight>& pointLights);
+            void InitDirLightDataBuffer();
+            void LoadDirLightData(const std::vector<DirectionalLight>& dirLights);
             void SetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer);
             void UnsetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer);
 
@@ -301,7 +315,7 @@ namespace GaladHen
 
                 MemoryTransferCommand& command = memoryCommands[0];
                 command.Data = &mesh;
-                command.MemoryTargetID = 0;
+                command.MemoryTargetID = GPUResourceInspector::GetResourceID(&mesh);
                 command.TargetType = MemoryTargetType::Mesh;
                 command.TransferType = MemoryTransferType::Load;
 
@@ -309,6 +323,7 @@ namespace GaladHen
 
                 RendererAPI->TransferData(memoryCommands);
                 GPUResourceInspector::SetResourceID(&mesh, command.MemoryTargetID);
+                GPUResourceInspector::ValidateResource(&mesh);
 
                 return command.MemoryTargetID;
             }
@@ -405,7 +420,7 @@ namespace GaladHen
 
                 MemoryTransferCommand& command = commandBuffer[0];
                 command.Data = texture.get();
-                command.MemoryTargetID = 0;
+                command.MemoryTargetID = GPUResourceInspector::GetResourceID(texture.get());
                 command.TargetType = MemoryTargetType::Texture;
                 command.TransferType = MemoryTransferType::Load;
 
@@ -413,6 +428,7 @@ namespace GaladHen
 
                 RendererAPI->TransferData(commandBuffer);
                 GPUResourceInspector::SetResourceID(texture.get(), command.MemoryTargetID);
+                GPUResourceInspector::ValidateResource(texture.get());
 
                 return command.MemoryTargetID;
             }
@@ -437,7 +453,7 @@ namespace GaladHen
 
                 MemoryTransferCommand& command = commandBuffer[0];
                 command.Data = buffer;
-                command.MemoryTargetID = 0;
+                command.MemoryTargetID = GPUResourceInspector::GetResourceID(buffer);
                 command.TargetType = MemoryTargetType::Buffer;
                 command.TransferType = MemoryTransferType::Load;
 
@@ -445,6 +461,7 @@ namespace GaladHen
 
                 RendererAPI->TransferData(commandBuffer);
                 GPUResourceInspector::SetResourceID(buffer, command.MemoryTargetID);
+                GPUResourceInspector::ValidateResource(buffer);
 
                 return command.MemoryTargetID;
             }
@@ -529,7 +546,7 @@ namespace GaladHen
 
             void InitCameraDataBuffer()
             {
-                FixedBuffer<CameraBufferData, 1>* data = new FixedBuffer<CameraBufferData, 1>();
+                FixedBuffer<CameraBufferData, 1>* data = new FixedBuffer<CameraBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead };
 
                 CameraBuffer = std::shared_ptr<FixedBuffer<CameraBufferData, 1>>(data);
                 
@@ -538,7 +555,7 @@ namespace GaladHen
 
             void InitTransformDataBuffer()
             {
-                FixedBuffer<TransformBufferData, 1>* data = new FixedBuffer<TransformBufferData, 1>();
+                FixedBuffer<TransformBufferData, 1>* data = new FixedBuffer<TransformBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead };
 
                 TransformBuffer = std::shared_ptr<FixedBuffer<TransformBufferData, 1>>(data);
 
@@ -564,6 +581,80 @@ namespace GaladHen
                 TransformBuffer->SetData(data, 0);
 
                 LoadBuffer(TransformBuffer.get());
+            }
+
+            void InitLightingDataBuffer()
+            {
+                FixedBuffer<LightingBufferData, 1>* data = new FixedBuffer<LightingBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead };
+
+                LightingBuffer = std::shared_ptr<FixedBuffer<LightingBufferData, 1>>(data);
+
+                // TODO: populate buffer basing on API (to match shader data structure)
+            }
+
+            void LoadLightingData(const Scene& scene)
+            {
+                LightingBufferData data{};
+                data.PointLightNumber = scene.PointLights.size();
+                data.DirLightNumber = scene.DirectionalLights.size();
+                LightingBuffer->SetData(data, 0);
+
+                LoadBuffer(LightingBuffer.get());
+            }
+
+            void InitPointLightDataBuffer()
+            {
+                DynamicBuffer<PointLightBufferData>* data = new DynamicBuffer<PointLightBufferData>{ BufferType::ShaderStorage, BufferAccessType::StaticRead };
+
+                PointLightBuffer = std::shared_ptr<DynamicBuffer<PointLightBufferData>>(data);
+
+                // TODO: populate buffer basing on API (to match shader data structure)
+            }
+
+            void LoadPointLightData(const std::vector<PointLight>& pointLights)
+            {
+                PointLightBuffer->ClearData();
+
+                for (const PointLight& light : pointLights)
+                {
+                    PointLightBufferData data{};
+                    data.Color = light.Color;
+                    data.Position = light.Transform.GetPosition();
+                    data.Intensity = light.Intensity;
+                    data.BulbSize = light.BulbSize;
+                    data.Radius = light.Radius;
+
+                    PointLightBuffer->AddData(data);
+                }
+
+                LoadBuffer(PointLightBuffer.get());
+            }
+
+            void InitDirLightDataBuffer()
+            {
+                DynamicBuffer<DirLightBufferData>* data = new DynamicBuffer<DirLightBufferData>{ BufferType::ShaderStorage, BufferAccessType::StaticRead };
+
+                DirLightBuffer = std::shared_ptr<DynamicBuffer<DirLightBufferData>>(data);
+
+                // TODO: populate buffer basing on API (to match shader data structure)
+            }
+
+            void LoadDirLightData(const std::vector<DirectionalLight>& dirLights)
+            {
+                DirLightBuffer->ClearData();
+
+                for (const DirectionalLight& light : dirLights)
+                {
+                    DirLightBufferData data{};
+                    data.Color = light.Color;
+                    data.Position = light.Transform.GetPosition();
+                    data.Intensity = light.Intensity;
+                    data.Direction = light.GetLightDirection();
+
+                    DirLightBuffer->AddData(data);
+                }
+
+                LoadBuffer(DirLightBuffer.get());
             }
 
             void SetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer)
@@ -614,6 +705,9 @@ namespace GaladHen
             LoadCameraData(Camera{});
             InitTransformDataBuffer();
             LoadTransformData(Transform{});
+            InitLightingDataBuffer();
+            InitPointLightDataBuffer();
+            InitDirLightDataBuffer();
 
             Initialized = true;
         }
@@ -626,6 +720,7 @@ namespace GaladHen
             // Create render buffer at api level and assing id
             unsigned int id = RendererAPI->CreateRenderBuffer(width, height);
             GPUResourceInspector::SetResourceID(renderBuffer.get(), id);
+            GPUResourceInspector::ValidateResource(renderBuffer.get());
 
             return renderBuffer;
         }
@@ -656,7 +751,9 @@ namespace GaladHen
             LoadMaterialsData(scene, loadedTexturesIDs, loadedBuffersIDs);
             LoadCameraData(scene.MainCamera);
 
-            // TODO: load lights
+            LoadLightingData(scene);
+            LoadPointLightData(scene.PointLights);
+            LoadDirLightData(scene.DirectionalLights);
 
             // TODO: instanced draw
 
@@ -678,6 +775,9 @@ namespace GaladHen
                     command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, CameraBuffer);
                     LoadTransformData(sceneObject.Transform);
                     command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, TransformBuffer);
+                    command.AdditionalBufferData.emplace(GH_LIGHTING_DATA_BUFFER_NAME, LightingBuffer);
+                    command.AdditionalBufferData.emplace(GH_POINTLIGHT_DATA_BUFFER_NAME, PointLightBuffer);
+                    command.AdditionalBufferData.emplace(GH_DIRLIGHT_DATA_BUFFER_NAME, DirLightBuffer);
 
                     renderBuffer.emplace_back(command);
                 }
@@ -695,35 +795,6 @@ namespace GaladHen
 
             AfterDraw(GetDefaultRenderContext());
         }
-
-        //void UpdateModel(const Model& model)
-        //{
-        //    for (const Mesh& mesh : model.GetMeshes())
-        //    {
-        //        UpdateMesh(mesh);
-        //    }
-        //}
-
-        //void UpdateMesh(const Mesh& mesh)
-        //{
-        //    unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
-
-        //    if (IsMeshCached(meshID))
-        //        return;
-
-        //    CommandBuffer<MemoryTransferCommand> memoryBuffer;
-        //    memoryBuffer.push_back(MemoryTransferCommand{});
-        //    MemoryTransferCommand& command = memoryBuffer[0];
-
-        //    command.Data = (void*)&mesh;
-        //    command.MemoryTargetID = 0;
-        //    command.TargetType = MemoryTargetType::Mesh;
-        //    command.TransferType = MemoryTransferType::Load;
-
-        //    RendererAPI->TransferData(memoryBuffer);
-
-        //    // No need to retrieve mesh id, already in cache
-        //}
 
         bool CompileShaders(const Scene& scene)
         {
@@ -761,7 +832,6 @@ namespace GaladHen
 
             if (program.GetType() == ShaderPipelineType::ShaderPipeline)
             {
-                //command.VertexCode = FileLoader::ReadTextFile(program.GetVertexShaderPath().data());
                 command.VertexCode = ShaderPreprocessor::PreprocessShader(program.GetVertexShaderPath().data(), CurrentAPI);
                 command.TessContCode = ShaderPreprocessor::PreprocessShader(program.GetTessContShaderPath().data(), CurrentAPI);
                 command.TessEvalCode = ShaderPreprocessor::PreprocessShader(program.GetTessEvalShaderPath().data(), CurrentAPI);
@@ -788,6 +858,7 @@ namespace GaladHen
 
                 // Assign id and cache
                 GPUResourceInspector::SetResourceID(&program, command.ShaderPipelineID);
+                GPUResourceInspector::ValidateResource(&program);
                 CacheShader(command.ShaderPipelineID);
 
                 return true;

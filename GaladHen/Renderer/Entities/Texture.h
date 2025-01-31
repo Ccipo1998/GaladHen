@@ -73,7 +73,5 @@ namespace GaladHen
 		TextureFormat Format;
 		TextureWrapping Wrapping;
 		TextureFiltering Filtering;
-
-		unsigned int TextureID;
 	};
 }

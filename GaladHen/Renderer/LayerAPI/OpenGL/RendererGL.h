@@ -78,8 +78,8 @@ namespace GaladHen
 		static GLenum TextureUnits[32];
 		enum class TextureAllocationType
 		{
-			Mutable,
-			Immutable
+			Dynamic,
+			Constant
 		};
 		struct TextureGL // TODO: This struct should contain only opengl-specific data. All other data exists on high level classes
 		{
@@ -91,7 +91,7 @@ namespace GaladHen
 			GLint Wrapping;
 			GLint Filtering;
 			GLenum TextureUnit;
-			unsigned int NumberOfMipMaps;
+			unsigned int Levels; // Number of mipmaps, with 1 = no mipmaps (only base level texture)
 		};
 
 		struct RenderBufferGL
@@ -117,10 +117,10 @@ namespace GaladHen
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
 
-		unsigned int CreateTexture(const Texture& texture);
+		unsigned int CreateTexture(const Texture& texture, TextureAllocationType allocationType = TextureAllocationType::Constant);
 		unsigned int CreateDepthStencilTexture(unsigned int width, unsigned int height);
 		void FreeTexture(unsigned int textureID);
-		void LoadTexture(unsigned int textureID, const Texture& texture);
+		void LoadTexture(unsigned int textureID, const Texture& texture, TextureAllocationType allocationType = TextureAllocationType::Constant);
 
 		unsigned int CreateMesh(const Mesh& mesh);
 		void LoadMesh(unsigned int meshID, const Mesh& mesh);

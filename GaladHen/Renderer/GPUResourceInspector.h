@@ -12,5 +12,7 @@ namespace GaladHen
         static unsigned int GetResourceID(const IGPUResource* resource);
 
         static void SetResourceID(IGPUResource* resource, unsigned int id);
+
+        static void ValidateResource(IGPUResource* resource);
     };
 }
