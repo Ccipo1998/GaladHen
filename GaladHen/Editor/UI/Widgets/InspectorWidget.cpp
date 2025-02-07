@@ -1,18 +1,17 @@
 
 #include "InspectorWidget.h"
 
-#include <Editor/UI/Page.h>
 #include <imgui/imgui.h>
 
-#include <Renderer/Entities/SceneObject.h>
+#include <Systems/RenderingSystem/Entities/SceneObject.h>
 
 namespace GaladHen
 {
-	UIInspectorWidget::UIInspectorWidget(const char* widgetName, UIPage* ownerPage)
-		: UIWidget(widgetName, ownerPage)
+	UIInspectorWidget::UIInspectorWidget(const char* widgetName)
+		: UIWidget(widgetName)
 		{}
 
-	void UIInspectorWidget::BuildWidget()
+	void UIInspectorWidget::Build()
 	{
 		ImGui::Begin(WidgetName.data());
 

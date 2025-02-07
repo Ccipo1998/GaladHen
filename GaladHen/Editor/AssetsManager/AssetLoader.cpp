@@ -5,8 +5,8 @@
 #include <sstream>
 #include <iostream>
 
-#include <Renderer/Entities/Model.h>
-#include <Renderer/Entities/Texture.h>
+#include <Systems/RenderingSystem/Entities/Model.h>
+#include <Systems/RenderingSystem/Entities/Texture.h>
 
 // assimp
 #include <assimp/Importer.hpp>      // C++ importer interface

@@ -1,6 +1,6 @@
 
 #include "RendererGL.h"
-#include <Renderer/Common.h>
+#include <Systems/RenderingSystem/Common.h>
 
 // glfw
 #include <GLFW/glfw3.h>
@@ -11,10 +11,15 @@
 
 #include <Utils/Log.h>
 
-#include <Renderer/GPUResourceInspector.h>
-#include <Renderer/Entities/Texture.h>
-#include <Renderer/Entities/Mesh.h>
-#include <Renderer/Entities/Buffer.hpp>
+#include <Systems/RenderingSystem/GPUResourceInspector.h>
+#include <Systems/RenderingSystem/Entities/Texture.h>
+#include <Systems/RenderingSystem/Entities/Mesh.h>
+#include <Systems/RenderingSystem/Entities/Buffer.hpp>
+
+#include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
 
 namespace GaladHen
 {
@@ -131,15 +136,59 @@ namespace GaladHen
 	};
 
 	RendererGL::RendererGL()
+		: Window(nullptr)
 	{}
 
 	void RendererGL::Init()
 	{
+		if (!glfwInit())
+		{
+			Log::Error("RendererGL", "GLFW failed to initialize the context");
+
+			return;
+		}
+
+		// setting the minimum required version of OpenGL
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GH_GLSL_VERSION_MAJOR);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GH_GLSL_VERSION_MINOR);
+		// core profile is a subset of OpenGL features (without the backward-compatible features)
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		// for MacOS:
+		//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+		CreateRenderingWindow(GH_DEFAULT_WINDOW_NAME, glm::uvec2(GH_DEFAULT_WINDOW_WIDTH, GH_DEFAULT_WINDOW_HEIGHT));
+
 		if (gl3wInit() != GL3W_OK)
 		{
 			Log::Error("RendererGL", "Error: GL3W failed to initialize the context");
 
 			return;
+		}
+	}
+
+	void RendererGL::InitUI()
+	{
+		// Setup Dear ImGui context
+		IMGUI_CHECKVERSION();
+		ImGuiContext = ImGui::CreateContext();
+		ImGui::SetCurrentContext(ImGuiContext);
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;	// Enable Keyboard Controls
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;	// Enable Gamepad Controls
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		// Enable docking
+
+		// Setup Dear ImGui style
+		ImGui::StyleColorsDark();
+		//ImGui::StyleColorsLight();
+
+		GLFWwindow* win = glfwGetCurrentContext();
+		// Setup Platform/Renderer backends
+		bool success = ImGui_ImplGlfw_InitForOpenGL(win, true);
+		success &= ImGui_ImplOpenGL3_Init(GH_GLSL_VERSION);
+
+		if (!success)
+		{
+			Log::Error("RendererGL", "ImGui failed to setup backends for OpenGL and GLFW");
 		}
 	}
 
@@ -426,9 +475,60 @@ namespace GaladHen
 		return colorTexture.TextureID;
 	}
 
+	void RendererGL::SetViewport(const glm::uvec2& position, const glm::uvec2& size)
+	{
+		glViewport(position.x, position.y, size.x, size.y);
+	}
+
+	void RendererGL::CreateRenderingWindow(const char* name, glm::uvec2 size)
+	{
+		if (Window)
+			return;
+
+		Window = glfwCreateWindow(size.x, size.y, name, nullptr, nullptr);
+		if (Window == nullptr)
+		{
+			Log::Error("RendererGL", "GLFW failed to create the window");
+
+			return;
+		}
+
+		glfwMakeContextCurrent(Window);
+	}
+
+	void RendererGL::SwapWindowBuffers()
+	{
+		glfwSwapBuffers(Window);
+	}
+
+	void RendererGL::CloseRenderingWindow()
+	{
+		glfwDestroyWindow(Window);
+		glfwTerminate();
+
+		Window = nullptr;
+	}
+
+	void RendererGL::BeforeDrawUI()
+	{
+		ImGui::SetCurrentContext(ImGuiContext);
+
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	void RendererGL::DrawUI()
+	{
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
+
 	RendererGL::~RendererGL()
 	{
+		// TODO
 
+		QuitUI();
 	}
 
 	unsigned int RendererGL::CreateTexture(const Texture& texture, TextureAllocationType allocationType)
@@ -808,6 +908,15 @@ namespace GaladHen
 		glDeleteProgram(Shaders.GetObjectWithId(shaderID));
 
 		Shaders.RemoveWithId(shaderID);
+	}
+
+	void RendererGL::QuitUI()
+	{
+		ImGui::SetCurrentContext(ImGuiContext);
+
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
 	}
 
 	unsigned int RendererGL::CreateBuffer(const IBuffer* buffer)

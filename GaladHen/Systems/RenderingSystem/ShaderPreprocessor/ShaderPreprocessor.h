@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include <Renderer/Common.h>
+#include <Systems/RenderingSystem/Common.h>
 
 namespace GaladHen
 {

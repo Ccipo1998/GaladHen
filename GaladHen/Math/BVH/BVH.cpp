@@ -1,8 +1,8 @@
 
 #include "BVH.h"
 
-#include <Renderer/Entities/Mesh.h>
-#include <Renderer/Entities/Model.h>
+#include <Systems/RenderingSystem/Entities/Mesh.h>
+#include <Systems/RenderingSystem//Entities/Model.h>
 
 #include <Math/Math.h>
 #include <Math/Ray.h>

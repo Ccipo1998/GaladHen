@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Editor/UI/Page.h>
+#include <Systems/RenderingSystem/UI/Page.h>
 
 namespace GaladHen
 {
@@ -11,8 +11,8 @@ namespace GaladHen
 	{
 	public:
 
-		UIMainPage(const char* pageName, Window* ownerWindow);
+		UIMainPage(const char* pageName);
 
-		void BuildPage() override;
+		void Build() override;
 	};
 }

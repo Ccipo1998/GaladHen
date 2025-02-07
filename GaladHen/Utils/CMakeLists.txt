@@ -8,7 +8,8 @@ add_library(Utils STATIC
     Singleton.hpp
     IdList.hpp
     FileLoader.h
-    FileLoader.cpp)
+    FileLoader.cpp
+    WeakSingleton.hpp)
 
 target_include_directories(Utils PRIVATE
     ${CMAKE_SOURCE_DIR}/

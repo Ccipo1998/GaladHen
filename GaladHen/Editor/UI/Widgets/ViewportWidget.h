@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <Editor/UI/Widget.h>
+#include <Systems/RenderingSystem/UI/Widget.h>
 
 #include <glm/glm.hpp>
 
@@ -11,9 +11,9 @@ namespace GaladHen
 	{
 	public:
 
-		UIViewportWidget(const char* widgetName, UIPage* ownerPage);
+		UIViewportWidget(const char* widgetName);
 
-		virtual void BuildWidget() override;
+		virtual void Build() override;
 
 	};
 }

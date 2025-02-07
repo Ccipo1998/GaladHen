@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Renderer/GPUResourceInspector.h>
+#include <Systems/RenderingSystem/GPUResourceInspector.h>
 
 namespace GaladHen
 {

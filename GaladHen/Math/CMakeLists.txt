@@ -21,5 +21,5 @@ target_include_directories(Math PRIVATE
 
 target_link_libraries(Math
     PRIVATE
-    Renderer
+    Systems
     glm)

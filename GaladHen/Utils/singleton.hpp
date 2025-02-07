@@ -5,12 +5,11 @@ class Singleton
 
 public:
 
-    // Remove ctor, copy and move ctors
-    Singleton() = delete;
+    // Remove copy and move ctors
     Singleton(const Singleton<T>& Other) = delete;
-    Singleton(const Singleton<T>&& Other) = delete;
-    Singleton<T>& operator=(const Singleton<T>& Other) = delete;
-    Singleton<T>& operator=(const Singleton<T>&& Other) = delete;
+    Singleton(Singleton<T>&& Other) = delete;
+    Singleton<T>& operator=(Singleton<T>& Other) = delete;
+    Singleton<T>& operator=(Singleton<T>&& Other) = delete;
 
     friend T;
     static T* GetInstance()
@@ -19,4 +18,8 @@ public:
 
         return &Instance;
     }
+
+protected:
+
+    Singleton() {}
 };

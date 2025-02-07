@@ -1,6 +1,8 @@
 
 #include "MainPage.h"
 
+#include <imgui/imgui.h>
+
 #include <Editor/UI/Widgets/NavBarWidget.h>
 #include <Editor/UI/Widgets/AssetsViewWidget.h>
 #include <Editor/UI/Widgets/ViewportWidget.h>
@@ -10,19 +12,17 @@
 
 namespace GaladHen
 {
-	UIMainPage::UIMainPage(const char* pageName, Window* ownerWindow)
-		: UIPage(pageName, ownerWindow)
+	UIMainPage::UIMainPage(const char* pageName)
+		: UIPage(pageName)
 	{
 		// Populate widgets for main page
-		Widgets.emplace_back(new UINavBarWidget{ "NavBar", this });
-		Widgets.emplace_back(new UIViewportWidget{ "Viewport", this });
-		Widgets.emplace_back(new UIInspectorWidget{ "Inspector", this });
+		Widgets.emplace_back(new UINavBarWidget{ "NavBar" });
+		Widgets.emplace_back(new UIViewportWidget{ "Viewport" });
+		Widgets.emplace_back(new UIInspectorWidget{ "Inspector" });
 	}
 
-	void UIMainPage::BuildPage()
+	void UIMainPage::Build()
 	{
-		UIPage::BuildPage();
-
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 		static ImGuiWindowFlags root_window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking |
             ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |

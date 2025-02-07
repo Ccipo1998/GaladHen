@@ -1,17 +1,16 @@
 
 #include "NavBarWidget.h"
-#include <Editor/UI/Page.h>
 
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
 
 namespace GaladHen
 {
-	UINavBarWidget::UINavBarWidget(const char* widgetName, UIPage* ownerPage)
-		: UIWidget(widgetName, ownerPage)
+	UINavBarWidget::UINavBarWidget(const char* widgetName)
+		: UIWidget(widgetName)
 		{}
 
-	void UINavBarWidget::BuildWidget()
+	void UINavBarWidget::Build()
 	{
 		if (ImGui::BeginMenuBar())
 		{

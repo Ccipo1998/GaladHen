@@ -1,18 +1,16 @@
 
 #include "AssetsViewWidget.h"
-#include <Editor/UI/Page.h>
-#include <Renderer/Window.h>
 #include <Editor/UI/Widgets/NavBarWidget.h>
 
 #include <imgui/imgui.h>
 
 namespace GaladHen
 {
-	UIAssetsViewWidget::UIAssetsViewWidget(const char* widgetName, UIPage* ownerPage)
-		: UIWidget(widgetName, ownerPage)
+	UIAssetsViewWidget::UIAssetsViewWidget(const char* widgetName)
+		: UIWidget(widgetName)
 	{}
 
-	void UIAssetsViewWidget::BuildWidget()
+	void UIAssetsViewWidget::Build()
 	{	
 		if (ImGui::Begin(WidgetName.data()))
 		{

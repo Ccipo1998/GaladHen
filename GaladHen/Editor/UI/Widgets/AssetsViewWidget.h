@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <Editor/UI/Widget.h>
+#include <Systems/RenderingSystem/UI/Widget.h>
 
 namespace GaladHen
 {
@@ -11,9 +11,9 @@ namespace GaladHen
 	{
 	public:
 
-		UIAssetsViewWidget(const char* widgetName, UIPage* ownerPage);
+		UIAssetsViewWidget(const char* widgetName);
 
-		virtual void BuildWidget() override;
+		virtual void Build() override;
 
 	};
 }

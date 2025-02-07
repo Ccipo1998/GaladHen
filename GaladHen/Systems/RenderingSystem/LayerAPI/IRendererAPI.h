@@ -8,7 +8,7 @@
 
 #include <glm/fwd.hpp>
 
-#include <Renderer/CommandBuffer.h>
+#include <Systems/RenderingSystem/CommandBuffer.h>
 
 namespace GaladHen
 {
@@ -29,6 +29,8 @@ namespace GaladHen
 
 		virtual void Init() = 0;
 
+		virtual void InitUI() = 0;
+
 		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height) = 0;
 
 		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) = 0;
@@ -47,6 +49,20 @@ namespace GaladHen
 		virtual void EnableDepthTest(bool enable) = 0;
 
 		virtual unsigned int GetRenderBufferColorApiID(unsigned int renderBufferID) = 0; // Probably it shouldn't exist, but for now i need it for ImGui usage
+
+		virtual void SetViewport(const glm::uvec2& position, const glm::uvec2& size) = 0;
+
+		// WINDOW FUNCTIONALITIES ------------------------------------------------------------------------------------------------------------------
+
+		virtual void CreateRenderingWindow(const char* name, glm::uvec2 size) = 0;
+
+		virtual void SwapWindowBuffers() = 0;
+
+		virtual void CloseRenderingWindow() = 0;
+
+		virtual void BeforeDrawUI() = 0;
+
+		virtual void DrawUI() = 0;
 
 		virtual ~IRendererAPI() {};
 	};

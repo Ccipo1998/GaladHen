@@ -13,17 +13,13 @@ namespace GaladHen
 	{
 	public:
 
-		UIWidget(const char* widgetName, UIPage* ownerPage);
+		UIWidget(const char* widgetName);
 
-		virtual void BuildWidget();
+		virtual void Build();
 
-		~UIWidget();
+		virtual ~UIWidget();
 
 		std::string WidgetName;
-
-	protected:
-
-		UIPage* OwnerPage;
 
 	};
 }

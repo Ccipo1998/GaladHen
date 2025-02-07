@@ -7,9 +7,9 @@
 #include <Utils/Log.h>
 #include <memory>
 
-#include <Renderer/Entities/Model.h>
-#include <Renderer/Entities/Texture.h>
-#include <Renderer/Entities/ShaderPipeline.h>
+#include <Systems/RenderingSystem/Entities/Model.h>
+#include <Systems/RenderingSystem/Entities/Texture.h>
+#include <Systems/RenderingSystem/Entities/ShaderPipeline.h>
 #include "AssetLoader.h"
 
 namespace GaladHen

@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-#include <Renderer/Entities/Material.h>
+#include <Systems/RenderingSystem/Entities/Material.h>
 
 namespace GaladHen
 {

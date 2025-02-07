@@ -1,6 +1,6 @@
 
 #include "GPUResourceInspector.h"
-#include <Renderer/Entities/IGPUResource.h>
+#include <Systems/RenderingSystem/Entities/IGPUResource.h>
 
 namespace GaladHen
 {

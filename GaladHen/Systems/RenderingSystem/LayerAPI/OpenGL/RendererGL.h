@@ -3,16 +3,15 @@
 
 #pragma once
 
-#include <Renderer/LayerAPI/IRendererAPI.h>
-//#include <Renderer/LayerAPI/OpenGL/MeshGL.h>
-//#include <Renderer/LayerAPI/OpenGL/ShaderProgramGL.h>
-//#include <Renderer/LayerAPI/OpenGL/TextureGL.h>
-//#include <Renderer/LayerAPI/OpenGL/RenderBufferGL.h>
+#include <Systems/RenderingSystem/LayerAPI/IRendererAPI.h>
 
 #include <Utils/IdList.hpp>
 
 // gl3w MUST be included before any other OpenGL-related header
 #include <GL/gl3w.h>
+
+struct GLFWwindow;
+class ImGuiContext;
 
 namespace GaladHen
 {
@@ -27,6 +26,8 @@ namespace GaladHen
 		RendererGL();
 
 		virtual void Init() override;
+
+		virtual void InitUI() override;
 
 		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height) override;
 
@@ -45,6 +46,18 @@ namespace GaladHen
 		virtual void EnableDepthTest(bool enable) override;
 
 		virtual unsigned int GetRenderBufferColorApiID(unsigned int renderBufferID) override;
+
+		virtual void SetViewport(const glm::uvec2& position, const glm::uvec2& size) override;
+
+		virtual void CreateRenderingWindow(const char* name, glm::uvec2 size) override;
+
+		virtual void SwapWindowBuffers() override;
+
+		virtual void CloseRenderingWindow() override;
+
+		virtual void BeforeDrawUI() override;
+
+		virtual void DrawUI() override;
 
 		~RendererGL();
 
@@ -97,8 +110,8 @@ namespace GaladHen
 		struct RenderBufferGL
 		{
 			GLuint FrameBufferID;
-			GLuint ColorTextureID;
-			GLuint DepthStencilTextureID;
+			unsigned int ColorTextureID;
+			unsigned int DepthStencilTextureID;
 		};
 
 		// https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml
@@ -136,11 +149,19 @@ namespace GaladHen
 		bool CheckShaderPipelineLinking(GLuint shaderProgram, char* outLog, unsigned int outLogLength);
 		void FreeShaderPipeline(unsigned int shaderID);
 
+		// UI
+		void QuitUI();
+
 		IdList<MeshGL> Meshes;
 		IdList<BufferGL> Buffers;
 		IdList<GLuint> Shaders;
 		IdList<TextureGL> Textures;
 		IdList<RenderBufferGL> RenderBuffers;
+
+		GLFWwindow* Window;
+
+		// UI
+		ImGuiContext* ImGuiContext;
 
 	};
 }

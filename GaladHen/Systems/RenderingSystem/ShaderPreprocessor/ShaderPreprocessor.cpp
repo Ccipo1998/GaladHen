@@ -24,7 +24,7 @@ namespace GaladHen
 		case API::OpenGL:
 
 			outCode = shaderCode;
-			shaderVersion = GLSL_VERSION;
+			shaderVersion = GH_GLSL_VERSION;
 			shaderVersion += "\n\n";
 			outCode.insert(0, shaderVersion);
 

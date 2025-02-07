@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#pragma once
+
 template <class T>
 class IdList : public std::vector<T>
 {

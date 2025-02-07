@@ -3,7 +3,7 @@
 
 #include <limits>
 
-#include <Renderer/Entities/Mesh.h>
+#include <Systems/RenderingSystem/Entities/Mesh.h>
 #include <Math/Transform.h>
 
 namespace GaladHen

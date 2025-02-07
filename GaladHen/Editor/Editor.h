@@ -3,10 +3,9 @@
 
 #pragma once
 
-#include <Renderer/Entities/Scene.h>
-#include <Renderer/Common.h>
-#include <Renderer/Renderer.h>
-#include <Renderer/Window.h>
+#include <Systems/RenderingSystem/Entities/Scene.h>
+#include <Systems/RenderingSystem/Common.h>
+#include <Systems/RenderingSystem/RenderingSystem.h>
 
 #include <vector>
 
@@ -35,11 +34,7 @@ namespace GaladHen
 
 	private:
 
-		static API API;
 		static Scene Scene;
-		static Window Window;
-
-		static UIPage* EditorUIPage;
 
 	};
 }

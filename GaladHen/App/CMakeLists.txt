@@ -17,4 +17,6 @@ set_target_properties(GaladHenApp
 
 target_link_libraries(GaladHenApp
     PRIVATE
-    Editor)
+    Editor
+    Systems
+    imgui)
