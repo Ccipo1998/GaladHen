@@ -6,24 +6,26 @@
 
 namespace GaladHen
 {
-    SceneObject::SceneObject(std::shared_ptr<Model> model)
+    SceneObject::SceneObject(std::weak_ptr<Model> model)
         : Transform(GaladHen::Transform{})
         , SceneObjectModel(model)
     {
         // Number of materials = number of meshes
-        if (model.get() == nullptr)
+        if (model.expired())
         {
             SceneObjectMaterials.resize(0);
         }
         else
         {
-            SceneObjectMaterials.resize(model->GetMeshes().size());
+            Model* rawModel = model.lock().get();
+            SceneObjectMaterials.resize(rawModel->Meshes.size());
         }
     }
 
-    void SceneObject::SetMeshMaterialLink(unsigned int meshIndex, std::shared_ptr<Material> material)
+    void SceneObject::SetMeshMaterialLink(unsigned int meshIndex, std::weak_ptr<Material> material)
     {
-        if (SceneObjectModel->GetMeshes().size() <= meshIndex)
+        Model* model = SceneObjectModel.lock().get();
+        if (model && model->Meshes.size() <= meshIndex)
         {
             return;
         }
@@ -32,28 +34,29 @@ namespace GaladHen
         SceneObjectMaterials[meshIndex] = material;
     }
 
-    std::shared_ptr<Material> SceneObject::GetMaterial(unsigned int meshIndex) const
+    std::weak_ptr<Material> SceneObject::GetMaterial(unsigned int meshIndex) const
     {
-        if (SceneObjectModel->GetMeshes().size() <= meshIndex)
+        Model* model = SceneObjectModel.lock().get();
+        if (model && model->Meshes.size() <= meshIndex)
         {
-            return nullptr;
+            return std::weak_ptr<Material>{};
         }
 
         return SceneObjectMaterials[meshIndex];
     }
 
-    std::vector<std::shared_ptr<Material>> SceneObject::GetSceneObjectMaterials() const
+    std::vector<std::weak_ptr<Material>> SceneObject::GetSceneObjectMaterials() const
     {
         return SceneObjectMaterials;
     }
 
-    std::shared_ptr<Model> SceneObject::GetSceneObjectModel() const
+    std::weak_ptr<Model> SceneObject::GetSceneObjectModel() const
     {
         return SceneObjectModel;
     }
 
     void SceneObject::ClearSceneObjectModel()
     {
-        SceneObjectModel = nullptr;
+        SceneObjectModel.reset();
     }
 }

@@ -15,17 +15,12 @@ add_library(Editor STATIC
     UI/Widgets/ViewportWidget.h
     UI/Widgets/ViewportWidget.cpp
     UI/Widgets/InspectorWidget.h
-    UI/Widgets/InspectorWidget.cpp
-    AssetsManager/AssetsManager.h
-    AssetsManager/AssetsManager.cpp
-    AssetsManager/AssetLoader.h
-    AssetsManager/AssetLoader.cpp)
+    UI/Widgets/InspectorWidget.cpp)
 
 target_include_directories(Editor PRIVATE
     ${CMAKE_SOURCE_DIR}/
     ${CMAKE_SOURCE_DIR}/GaladHen/
     ${CMAKE_SOURCE_DIR}/Libs/
-    ${CMAKE_SOURCE_DIR}/Libs/assimp/include/
     ${CMAKE_SOURCE_DIR}/Libs/gl3w/include/
     ${CMAKE_SOURCE_DIR}/Libs/glfw/include/
     ${CMAKE_SOURCE_DIR}/Libs/imgui)
@@ -37,5 +32,4 @@ target_link_libraries(Editor
     gl3w
     imgui
     glm
-    assimp
     Utils)

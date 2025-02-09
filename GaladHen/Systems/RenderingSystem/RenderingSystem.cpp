@@ -83,12 +83,12 @@ namespace GaladHen
             std::shared_ptr<Model> model = std::shared_ptr<Model>(sceneObject.GetSceneObjectModel());
 
             unsigned int index = 0;
-            for (Mesh& mesh : model->GetMeshes())
+            for (Mesh& mesh : model->Meshes)
             {
                 RenderCommand command;
                 command.DataSourceID = GPUResourceInspector::GetResourceID(&mesh);
-                command.Material = sceneObject.GetMaterial(index);
-                command.ShaderSourceID = GPUResourceInspector::GetResourceID(command.Material->GetPipeline().get());
+                command.Material = sceneObject.GetMaterial(index).lock();
+                command.ShaderSourceID = GPUResourceInspector::GetResourceID(command.Material->GetPipeline().lock().get());
 
                 // Add common rendering data
                 command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, CameraBuffer);
@@ -133,15 +133,25 @@ namespace GaladHen
 
         for (const SceneObject& sceneObj : scene.SceneObjects)
         {
-            std::vector<std::shared_ptr<Material>> materials = sceneObj.GetSceneObjectMaterials();
+            std::vector<std::weak_ptr<Material>> materials = sceneObj.GetSceneObjectMaterials();
 
-            for (std::shared_ptr<Material>& material : materials)
+            for (std::weak_ptr<Material>& material : materials)
             {
-                std::shared_ptr<ShaderPipeline> shader = material->GetPipeline();
-                unsigned int shaderID = GPUResourceInspector::GetResourceID(shader.get());
+                if (material.expired())
+                {
+                    // material not valid
+                    continue;
+                }
 
-                // Compile, set id and cache
-                success &= CompileShader(*shader);
+                std::weak_ptr<ShaderPipeline> shader = material.lock()->GetPipeline();
+                ShaderPipeline* pipeline = shader.lock().get();
+                unsigned int shaderID = GPUResourceInspector::GetResourceID(pipeline);
+
+                if (pipeline)
+                {
+                    // Compile, set id and cache
+                    success &= CompileShader(*pipeline);
+                }
             }
         }
 
@@ -418,7 +428,7 @@ namespace GaladHen
         {
             std::shared_ptr<Model> model = std::shared_ptr<Model>(sceneObject.GetSceneObjectModel());
 
-            for (Mesh& mesh : model->GetMeshes())
+            for (Mesh& mesh : model->Meshes)
             {
                 LoadMeshAndCache(mesh);
 
@@ -505,11 +515,11 @@ namespace GaladHen
     {
         for (SceneObject& sceneObject : scene.SceneObjects)
         {
-            std::vector<std::shared_ptr<Material>> materials = sceneObject.GetSceneObjectMaterials();
+            std::vector<std::weak_ptr<Material>> materials = sceneObject.GetSceneObjectMaterials();
 
-            for (std::shared_ptr<Material>& material : materials)
+            for (std::weak_ptr<Material>& material : materials)
             {
-                LoadMaterialData(material, outLoadedTexturesIDs, outLoadedBuffersIDs);
+                LoadMaterialData(material.lock(), outLoadedTexturesIDs, outLoadedBuffersIDs);
             }
         }
     }
@@ -519,17 +529,17 @@ namespace GaladHen
         CommandBuffer<MemoryTransferCommand> commandBuffer; // TODO: send all with one request?
 
         // Load textures
-        for (std::pair<const std::string, std::shared_ptr<Texture>>& textureData : material->TextureData)
+        for (std::pair<const std::string, std::weak_ptr<Texture>>& textureData : material->TextureData)
         {
-            LoadTextureAndCache(textureData.second);
-            outLoadedTextures.insert(GPUResourceInspector::GetResourceID(textureData.second.get()));
+            LoadTextureAndCache(textureData.second.lock());
+            outLoadedTextures.insert(GPUResourceInspector::GetResourceID(textureData.second.lock().get()));
         }
 
         // Load buffers
-        for (std::pair<const std::string, std::shared_ptr<IBuffer>>& bufferData : material->BufferData)
+        for (std::pair<const std::string, std::weak_ptr<IBuffer>>& bufferData : material->BufferData)
         {
-            LoadBufferAndCache(bufferData.second.get());
-            outLoadedBuffers.insert(GPUResourceInspector::GetResourceID(bufferData.second.get()));
+            LoadBufferAndCache(bufferData.second.lock().get());
+            outLoadedBuffers.insert(GPUResourceInspector::GetResourceID(bufferData.second.lock().get()));
         }
     }
 

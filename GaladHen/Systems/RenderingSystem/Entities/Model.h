@@ -13,6 +13,7 @@ namespace GaladHen
 
 	public:
 
+		Model();
 		Model(const std::vector<Mesh>& meshes);
 
 		Model(const Model& source);
@@ -20,12 +21,7 @@ namespace GaladHen
 		Model(Model&& source) noexcept;
 		Model& operator=(Model&& source) noexcept;
 
-		std::vector<Mesh>& GetMeshes();
-
 		BVH BVH;
-
-	protected:
-
 		std::vector<Mesh> Meshes;
 
 	};

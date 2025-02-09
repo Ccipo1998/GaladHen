@@ -295,8 +295,14 @@ namespace GaladHen
 			unsigned int unit = 0;
 			for (auto& texture : material->TextureData)
 			{
+				if (texture.second.expired())
+				{
+					// texture not valid
+					continue;
+				}
+
 				// select texture unit for the binded texture
-				TextureGL& textureGL = Textures.GetObjectWithId(GPUResourceInspector::GetResourceID(texture.second.get()));
+				TextureGL& textureGL = Textures.GetObjectWithId(GPUResourceInspector::GetResourceID(texture.second.lock().get()));
 				glActiveTexture(TextureUnits[unit]);
 				glBindTexture(GL_TEXTURE_2D, textureGL.TextureID);
 				// create uniform sampler
@@ -310,7 +316,13 @@ namespace GaladHen
 			const GLenum props[] = { GL_BUFFER_BINDING };
 			for (auto& buffer : material->BufferData)
 			{
-				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
+				if (buffer.second.expired())
+				{
+					// buffer not valid
+					continue;
+				}
+
+				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.lock().get()));
 				GLuint resourceIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
 
 				if (resourceIndex != GL_INVALID_INDEX)

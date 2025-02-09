@@ -6,16 +6,25 @@ namespace GaladHen
 {
 	unsigned int GPUResourceInspector::GetResourceID(const IGPUResource* resource)
 	{
+		if (!resource)
+			return 0;
+
 		return resource->ResourceID;
 	}
 
 	void GPUResourceInspector::SetResourceID(IGPUResource* resource, unsigned int id)
 	{
-		resource->ResourceID = id;
+		if (resource)
+		{
+			resource->ResourceID = id;
+		}
 	}
 
 	void GPUResourceInspector::ValidateResource(IGPUResource* resource)
 	{
-		resource->ResourceInvalidated = false;
+		if (resource)
+		{
+			resource->ResourceInvalidated = false;
+		}
 	}
 }

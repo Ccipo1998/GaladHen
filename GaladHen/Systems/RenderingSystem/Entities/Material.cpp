@@ -6,11 +6,20 @@
 
 namespace GaladHen
 {
-	Material::Material(std::shared_ptr<ShaderPipeline> pipeline)
+	Material::Material()
+		: Pipeline(std::weak_ptr<ShaderPipeline>{})
+	{}
+
+	Material::Material(std::weak_ptr<ShaderPipeline> pipeline)
 		: Pipeline(pipeline)
 	{}
 
-	std::shared_ptr<ShaderPipeline> Material::GetPipeline()
+	void Material::SetPipeline(std::weak_ptr<ShaderPipeline> pipeline)
+	{
+		Pipeline = pipeline;
+	}
+
+	std::weak_ptr<ShaderPipeline> Material::GetPipeline()
 	{
 		return Pipeline;
 	}

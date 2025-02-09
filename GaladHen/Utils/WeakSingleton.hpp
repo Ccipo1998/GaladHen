@@ -1,4 +1,6 @@
 
+// A weak singleton is a singleton with an external reference to templated instance -> it has no ownership of the instance
+
 #pragma once
 
 template<class T>

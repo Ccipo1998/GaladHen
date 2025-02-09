@@ -7,6 +7,7 @@ namespace GaladHen
 {
 	class RenderingSystem;
 	class InputSystem;
+	class AssetSystem;
 
 	class SystemsCoordinator : public Singleton<SystemsCoordinator>
 	{
@@ -25,6 +26,7 @@ namespace GaladHen
 		// Systems references
 		RenderingSystem* RenderingSys;
 		InputSystem* InputSys;
+		AssetSystem* AssetSys;
 
 		// Status
 		bool Initialized;

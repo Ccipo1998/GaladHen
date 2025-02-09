@@ -3,6 +3,9 @@
 
 namespace GaladHen
 {
+	Model::Model()
+	{}
+
 	Model::Model(const std::vector<Mesh>& meshes)
 		: Meshes(meshes)
 	{}
@@ -33,10 +36,5 @@ namespace GaladHen
 		BVH = std::move(source.BVH);
 
 		return *this;
-	}
-
-	std::vector<Mesh>& Model::GetMeshes()
-	{
-		return Meshes;
 	}
 }

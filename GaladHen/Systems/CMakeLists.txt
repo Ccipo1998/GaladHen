@@ -59,7 +59,7 @@ add_library(Systems STATIC
     InputSystem/LayerAPI/IInputProvider.h
     InputSystem/LayerAPI/OpenGL/InputProviderGL.h
     InputSystem/LayerAPI/OpenGL/InputProviderGL.cpp
-)
+ "AssetSystem/AssetSystem.h" "AssetSystem/AssetSystem.cpp")
 
 target_include_directories(Systems PRIVATE
     ${CMAKE_SOURCE_DIR}/
@@ -67,7 +67,8 @@ target_include_directories(Systems PRIVATE
     ${CMAKE_SOURCE_DIR}/Libs/
     ${CMAKE_SOURCE_DIR}/Libs/gl3w/include/
     ${CMAKE_SOURCE_DIR}/Libs/glfw/include/
-    ${CMAKE_SOURCE_DIR}/Libs/imgui/)
+    ${CMAKE_SOURCE_DIR}/Libs/imgui/
+    ${CMAKE_SOURCE_DIR}/Libs/assimp/include/)
 
 target_link_libraries(Systems
     PRIVATE
@@ -76,4 +77,5 @@ target_link_libraries(Systems
     glm
     Math
     imgui
+    assimp
     Utils)
