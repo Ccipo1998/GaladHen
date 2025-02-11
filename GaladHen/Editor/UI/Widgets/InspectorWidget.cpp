@@ -23,9 +23,8 @@ namespace GaladHen
 		ImGui::End();
 	}
 
-	void UIInspectorWidget::SetInspectedSceneObject(SceneObject* sceneObject)
+	void UIInspectorWidget::SetInspectedSceneObject(std::weak_ptr<SceneObject> sceneObject)
 	{
-		if (sceneObject)
-			InspectedSceneObject = std::make_shared<SceneObject>(*sceneObject);
+		InspectedSceneObject = sceneObject;
 	}
 }

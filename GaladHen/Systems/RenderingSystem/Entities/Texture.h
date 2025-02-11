@@ -52,7 +52,7 @@ namespace GaladHen
 		Texture(Texture&& sourceTexture) = delete;
 		Texture& operator=(Texture&& sourceTexture) = delete;
 
-		std::weak_ptr<unsigned char> GetData() const;
+		unsigned char* GetData() const;
 		void GetSize(glm::uvec2& outSize) const;
 		unsigned int GetNumberOfChannels() const;
 		unsigned int GetNumberOfMipMaps() const;
@@ -63,9 +63,11 @@ namespace GaladHen
 		void SetFiltering(TextureFiltering filtering);
 		void SetNumberOfMipMaps(unsigned int numberOfMipMaps);
 
+		~Texture();
+
 	protected:
 
-		std::shared_ptr<unsigned char> Data;
+		unsigned char* Data; // ownership of data
 		unsigned int Width;
 		unsigned int Height;
 		unsigned int NumberOfChannels;

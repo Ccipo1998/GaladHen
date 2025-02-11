@@ -19,7 +19,7 @@ namespace GaladHen
 
 		virtual void Build() override;
 
-		void SetInspectedSceneObject(SceneObject* sceneObject);
+		void SetInspectedSceneObject(std::weak_ptr<SceneObject> sceneObject);
 
 	protected:
 

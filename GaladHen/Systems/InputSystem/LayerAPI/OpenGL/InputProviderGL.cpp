@@ -12,8 +12,8 @@ namespace GaladHen
 	bool* InputProviderGL::KeyboardKeyStatus = nullptr;
 	bool* InputProviderGL::MouseKeyStatus = nullptr;
 
-	KeyboardKey InputProviderGL::KeyboardKeyAssociations[] = {};
-	MouseKey InputProviderGL::MouseKeyAssociations[] = {};
+	KeyboardKey InputProviderGL::KeyboardKeyAssociations[] = { KeyboardKey::Unknown };
+	MouseKey InputProviderGL::MouseKeyAssociations[] = { MouseKey::Unknown };
 	KeyAction InputProviderGL::KeyActionAssociations[] = {};
 
 	InputProviderGL::InputProviderGL()
@@ -91,10 +91,14 @@ namespace GaladHen
 	{
 		if (KeyboardKeyStatus && key < GH_KEYBOARD_KEY_ASSOCIATIONS_NUMBER && action < GH_KEY_ACTION_ASSOCIATIONS_NUMBER)
 		{
-			KeyboardKeyStatus[(int)KeyboardKeyAssociations[key]] = (int)KeyActionAssociations[action];
+			// Check if key is associated with a GaladHen KeyboardKey
+			if (KeyboardKeyAssociations[key] != KeyboardKey::Unknown)
+			{
+				KeyboardKeyStatus[(int)KeyboardKeyAssociations[key]] = (int)KeyActionAssociations[action];
 
-			// Forward callback to ImGui
-			ImGui_ImplGlfw_KeyCallback(window, key, 0, action, 0);
+				// Forward callback to ImGui
+				ImGui_ImplGlfw_KeyCallback(window, key, 0, action, 0);
+			}
 		}
 	}
 
@@ -102,10 +106,14 @@ namespace GaladHen
 	{
 		if (MouseKeyStatus && button < GH_MOUSE_KEY_ASSOCIATIONS_NUMBER && action < GH_KEY_ACTION_ASSOCIATIONS_NUMBER)
 		{
-			MouseKeyStatus[(int)MouseKeyAssociations[button]] = (int)KeyActionAssociations[action];
+			// Check if button is associated with a GaladHen MouseKey
+			if (MouseKeyAssociations[button] != MouseKey::Unknown)
+			{
+				MouseKeyStatus[(int)MouseKeyAssociations[button]] = (int)KeyActionAssociations[action];
 
-			// Forward callback to ImGui
-			ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+				// Forward callback to ImGui
+				ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+			}
 		}
 	}
 }

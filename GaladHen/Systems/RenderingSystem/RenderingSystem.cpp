@@ -29,12 +29,18 @@ namespace GaladHen
         , RendererAPI(nullptr)
         , Initialized(false)
         , CurrentUIPage(nullptr)
+        , CameraBuffer(FixedBuffer<CameraBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead }) // TODO: populate buffer basing on API (to match shader data structure)
+        , TransformBuffer(FixedBuffer<TransformBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead }) // TODO: populate buffer basing on API (to match shader data structure)
+        , LightingBuffer(FixedBuffer<LightingBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead }) // TODO: populate buffer basing on API (to match shader data structure)s
+        , PointLightBuffer(DynamicBuffer<PointLightBufferData>{ BufferType::ShaderStorage, BufferAccessType::StaticRead }) // TODO: populate buffer basing on API (to match shader data structure)
+        , DirLightBuffer(DynamicBuffer<DirLightBufferData>{ BufferType::ShaderStorage, BufferAccessType::StaticRead }) // TODO: populate buffer basing on API (to match shader data structure)
     {}
 
-    std::shared_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer(unsigned int width, unsigned int height)
+    std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer(unsigned int width, unsigned int height)
     {
         // Create object
         std::shared_ptr<RenderBuffer> renderBuffer = std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height } };
+        RenderBuffers.emplace_back(renderBuffer); // rendering system ownership
 
         // Create render buffer at api level and assing id
         unsigned int id = RendererAPI->CreateRenderBuffer(width, height);
@@ -44,22 +50,22 @@ namespace GaladHen
         return renderBuffer;
     }
 
-    std::shared_ptr<RenderBuffer> RenderingSystem::GetFrontRenderBuffer()
+    std::weak_ptr<RenderBuffer> RenderingSystem::GetFrontRenderBuffer()
     {
         return GetDefaultRenderContext().GetFrontBuffer();
     }
 
-    GLuint RenderingSystem::GetRenderBufferColorApiID(std::shared_ptr<RenderBuffer> renderBuffer)
+    unsigned int RenderingSystem::GetRenderBufferColorApiID(const RenderBuffer& renderBuffer)
     {
-        return RendererAPI->GetRenderBufferColorApiID(GPUResourceInspector::GetResourceID(renderBuffer.get()));
+        return RendererAPI->GetRenderBufferColorApiID(GPUResourceInspector::GetResourceID(&renderBuffer));
     }
 
-    void RenderingSystem::ClearRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer)
+    void RenderingSystem::ClearRenderBuffer(const RenderBuffer& renderBuffer)
     {
-        RendererAPI->ClearRenderBuffer(GPUResourceInspector::GetResourceID(renderBuffer.get()), renderBuffer->ClearColor);
+        RendererAPI->ClearRenderBuffer(GPUResourceInspector::GetResourceID(&renderBuffer), renderBuffer.ClearColor);
     }
 
-    void RenderingSystem::Draw(Scene& scene)
+    void RenderingSystem::Draw(const Scene& scene)
     {
         BeforeDraw(GetDefaultRenderContext());
 
@@ -76,27 +82,30 @@ namespace GaladHen
 
         // TODO: instanced draw
 
-        for (SceneObject& sceneObject : scene.SceneObjects)
+        for (const SceneObject& sceneObject : scene.SceneObjects)
         {
             CommandBuffer<RenderCommand> renderBuffer;
 
-            std::shared_ptr<Model> model = std::shared_ptr<Model>(sceneObject.GetSceneObjectModel());
+            std::weak_ptr<Model> model = sceneObject.GetSceneObjectModel();
+            std::shared_ptr<Model> shModel = model.lock();
+            if (!shModel)
+                continue;
 
             unsigned int index = 0;
-            for (Mesh& mesh : model->Meshes)
+            for (Mesh& mesh : shModel->Meshes)
             {
                 RenderCommand command;
                 command.DataSourceID = GPUResourceInspector::GetResourceID(&mesh);
-                command.Material = sceneObject.GetMaterial(index).lock();
+                command.Material = sceneObject.GetMaterial(index).lock().get();
                 command.ShaderSourceID = GPUResourceInspector::GetResourceID(command.Material->GetPipeline().lock().get());
 
                 // Add common rendering data
-                command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, CameraBuffer);
+                command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, &CameraBuffer);
                 LoadTransformData(sceneObject.Transform);
-                command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, TransformBuffer);
-                command.AdditionalBufferData.emplace(GH_LIGHTING_DATA_BUFFER_NAME, LightingBuffer);
-                command.AdditionalBufferData.emplace(GH_POINTLIGHT_DATA_BUFFER_NAME, PointLightBuffer);
-                command.AdditionalBufferData.emplace(GH_DIRLIGHT_DATA_BUFFER_NAME, DirLightBuffer);
+                command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, &TransformBuffer);
+                command.AdditionalBufferData.emplace(GH_LIGHTING_DATA_BUFFER_NAME, &LightingBuffer);
+                command.AdditionalBufferData.emplace(GH_POINTLIGHT_DATA_BUFFER_NAME, &PointLightBuffer);
+                command.AdditionalBufferData.emplace(GH_DIRLIGHT_DATA_BUFFER_NAME, &DirLightBuffer);
 
                 renderBuffer.emplace_back(command);
             }
@@ -137,20 +146,17 @@ namespace GaladHen
 
             for (std::weak_ptr<Material>& material : materials)
             {
-                if (material.expired())
+                if (std::shared_ptr<Material> shMaterial = material.lock())
                 {
-                    // material not valid
-                    continue;
-                }
+                    std::weak_ptr<ShaderPipeline> shader = shMaterial->GetPipeline();
+                    ShaderPipeline* pipeline = shader.lock().get();
+                    unsigned int shaderID = GPUResourceInspector::GetResourceID(pipeline);
 
-                std::weak_ptr<ShaderPipeline> shader = material.lock()->GetPipeline();
-                ShaderPipeline* pipeline = shader.lock().get();
-                unsigned int shaderID = GPUResourceInspector::GetResourceID(pipeline);
-
-                if (pipeline)
-                {
-                    // Compile, set id and cache
-                    success &= CompileShader(*pipeline);
+                    if (pipeline)
+                    {
+                        // Compile, set id and cache
+                        success &= CompileShader(*pipeline);
+                    }
                 }
             }
         }
@@ -211,7 +217,7 @@ namespace GaladHen
         return false;
     }
 
-    void RenderingSystem::CreateMainWindow(const std::string& name, glm::uvec2 size)
+    void RenderingSystem::CreateMainWindow(const std::string& name, const glm::uvec2 size)
     {
         RendererAPI->CreateRenderingWindow(name.data(), size);
     }
@@ -240,7 +246,7 @@ namespace GaladHen
         {
             // Create low level OpenGL Renderer and init static data
             //CurrentAPI = API::OpenGL;
-            RendererAPI = std::unique_ptr<RendererGL>{ new RendererGL{} };
+            RendererAPI = new RendererGL{};
 
             break;
         }
@@ -250,18 +256,13 @@ namespace GaladHen
         RendererAPI->InitUI();
 
         // Create default RenderContext
-        RenderContexts.AddWithId(RenderContext{ this, GH_DEFAULT_RENDER_BUFFER_WIDTH, GH_DEFAULT_RENDER_BUFFER_HEIGHT, RenderContextType::DoubleBuffering });
+        RenderContexts.AddWithId(RenderContext{ *this, GH_DEFAULT_RENDER_BUFFER_WIDTH, GH_DEFAULT_RENDER_BUFFER_HEIGHT, RenderContextType::DoubleBuffering });
 
         RendererAPI->EnableDepthTest(true);
 
-        // Create default buffers
-        InitCameraDataBuffer();
+        // Load default buffers
         LoadCameraData(Camera{});
-        InitTransformDataBuffer();
         LoadTransformData(Transform{});
-        InitLightingDataBuffer();
-        InitPointLightDataBuffer();
-        InitDirLightDataBuffer();
 
         Initialized = true;
     }
@@ -269,16 +270,20 @@ namespace GaladHen
     void RenderingSystem::Quit()
     {
         // TODO: Free resources
+        if (CurrentUIPage)
+            delete CurrentUIPage;
+
+        delete RendererAPI;
     }
 
-    RenderingSystem::RenderContext::RenderContext(RenderingSystem* renderingSys, unsigned int width, unsigned int height, RenderingSystem::RenderContextType renderContextType)
-        : FrontBuffer(renderingSys->CreateRenderBuffer(width, height))
+    RenderingSystem::RenderContext::RenderContext(RenderingSystem& renderingSys, unsigned int width, unsigned int height, RenderingSystem::RenderContextType renderContextType)
+        : FrontBuffer(renderingSys.CreateRenderBuffer(width, height))
         , BackBuffer(std::shared_ptr<RenderBuffer>{})
         , RenderContextType(renderContextType)
     {
         if (RenderContextType == RenderContextType::DoubleBuffering)
         {
-            BackBuffer = renderingSys->CreateRenderBuffer(width, height);
+            BackBuffer = renderingSys.CreateRenderBuffer(width, height).lock();
         }
         else
         {
@@ -291,12 +296,12 @@ namespace GaladHen
         return RenderContextType;
     }
 
-    std::shared_ptr<RenderBuffer> RenderingSystem::RenderContext::GetFrontBuffer()
+    std::weak_ptr<RenderBuffer> RenderingSystem::RenderContext::GetFrontBuffer() const
     {
         return FrontBuffer;
     }
 
-    std::shared_ptr<RenderBuffer> RenderingSystem::RenderContext::GetBackBuffer()
+    std::weak_ptr<RenderBuffer> RenderingSystem::RenderContext::GetBackBuffer() const
     {
         return BackBuffer;
     }
@@ -313,20 +318,22 @@ namespace GaladHen
         return RenderContexts.GetObjectWithId(1);
     }
 
-    void RenderingSystem::BeforeDraw(RenderContext& renderContext)
+    void RenderingSystem::BeforeDraw(const RenderContext& renderContext)
     {
         // Operations needed before drawing
 
-        std::shared_ptr<RenderBuffer> backBuffer = renderContext.GetBackBuffer();
+        std::weak_ptr<RenderBuffer> backBuffer = renderContext.GetBackBuffer();
+        if (std::shared_ptr<RenderBuffer> shBackBuffer = backBuffer.lock())
+        {
+            // Clear back render buffer
+            ClearRenderBuffer(*shBackBuffer);
 
-        // Clear back render buffer
-        ClearRenderBuffer(backBuffer);
+            // Set render context's back buffer as target for next draw calls
+            SetRenderBufferTarget(*shBackBuffer);
 
-        // Set render context's back buffer as target for next draw calls
-        SetRenderBufferTarget(backBuffer);
-
-        // Set viewport basing on render buffer resolution
-        RendererAPI->SetViewport(glm::uvec2(0, 0), backBuffer->GetSize());
+            // Set viewport basing on render buffer resolution
+            RendererAPI->SetViewport(glm::uvec2(0, 0), shBackBuffer->GetSize());
+        }
     }
 
     void RenderingSystem::AfterDraw(RenderContext& renderContext)
@@ -334,12 +341,16 @@ namespace GaladHen
         // Operations needed after drawing
 
         // Unbind render context's back buffer as target
-        UnsetRenderBufferTarget(renderContext.GetBackBuffer());
+        std::weak_ptr<RenderBuffer> backBuffer = renderContext.GetBackBuffer();
+        if (std::shared_ptr<RenderBuffer> shBackBuffer = backBuffer.lock())
+        {
+            UnsetRenderBufferTarget(*shBackBuffer);
 
-        // Swap buffers
-        renderContext.SwapBuffers();
+            // Swap buffers
+            renderContext.SwapBuffers();
 
-        SwapMainWindowBuffers();
+            SwapMainWindowBuffers();
+        }
     }
 
     bool RenderingSystem::IsMeshCached(unsigned int meshID)
@@ -422,18 +433,20 @@ namespace GaladHen
         LoadedBuffersCache.erase(bufferID);
     }
 
-    void RenderingSystem::LoadModels(Scene& scene, std::unordered_set<unsigned int>& outLoadedMeshesIDs)
+    void RenderingSystem::LoadModels(const Scene& scene, std::unordered_set<unsigned int>& outLoadedMeshesIDs)
     {
-        for (SceneObject& sceneObject : scene.SceneObjects)
+        for (const SceneObject& sceneObject : scene.SceneObjects)
         {
-            std::shared_ptr<Model> model = std::shared_ptr<Model>(sceneObject.GetSceneObjectModel());
-
-            for (Mesh& mesh : model->Meshes)
+            std::weak_ptr<Model> model = sceneObject.GetSceneObjectModel();
+            if (std::shared_ptr<Model> shModel = model.lock())
             {
-                LoadMeshAndCache(mesh);
+                for (Mesh& mesh : shModel->Meshes)
+                {
+                    LoadMeshAndCache(mesh);
 
-                unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
-                outLoadedMeshesIDs.insert(meshID);
+                    unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
+                    outLoadedMeshesIDs.insert(meshID);
+                }
             }
         }
     }
@@ -511,43 +524,50 @@ namespace GaladHen
         LoadedMeshesCache.erase(meshID);
     }
 
-    void RenderingSystem::LoadMaterialsData(Scene& scene, std::unordered_set<unsigned int>& outLoadedTexturesIDs, std::unordered_set<unsigned int>& outLoadedBuffersIDs)
+    void RenderingSystem::LoadMaterialsData(const Scene& scene, std::unordered_set<unsigned int>& outLoadedTexturesIDs, std::unordered_set<unsigned int>& outLoadedBuffersIDs)
     {
-        for (SceneObject& sceneObject : scene.SceneObjects)
+        for (const SceneObject& sceneObject : scene.SceneObjects)
         {
             std::vector<std::weak_ptr<Material>> materials = sceneObject.GetSceneObjectMaterials();
 
             for (std::weak_ptr<Material>& material : materials)
             {
-                LoadMaterialData(material.lock(), outLoadedTexturesIDs, outLoadedBuffersIDs);
+                if (std::shared_ptr<Material> shMaterial = material.lock())
+                    LoadMaterialData(*shMaterial, outLoadedTexturesIDs, outLoadedBuffersIDs);
             }
         }
     }
 
-    void RenderingSystem::LoadMaterialData(std::shared_ptr<Material> material, std::unordered_set<unsigned int>& outLoadedTextures, std::unordered_set<unsigned int>& outLoadedBuffers)
+    void RenderingSystem::LoadMaterialData(Material& material, std::unordered_set<unsigned int>& outLoadedTextures, std::unordered_set<unsigned int>& outLoadedBuffers)
     {
         CommandBuffer<MemoryTransferCommand> commandBuffer; // TODO: send all with one request?
 
         // Load textures
-        for (std::pair<const std::string, std::weak_ptr<Texture>>& textureData : material->TextureData)
+        for (std::pair<const std::string, std::weak_ptr<Texture>>& textureData : material.TextureData)
         {
-            LoadTextureAndCache(textureData.second.lock());
-            outLoadedTextures.insert(GPUResourceInspector::GetResourceID(textureData.second.lock().get()));
+            if (std::shared_ptr<Texture> shTexture = textureData.second.lock())
+            {
+                LoadTextureAndCache(*shTexture);
+                outLoadedTextures.insert(GPUResourceInspector::GetResourceID(shTexture.get()));
+            }
         }
 
         // Load buffers
-        for (std::pair<const std::string, std::weak_ptr<IBuffer>>& bufferData : material->BufferData)
+        for (std::pair<const std::string, std::weak_ptr<IBuffer>>& bufferData : material.BufferData)
         {
-            LoadBufferAndCache(bufferData.second.lock().get());
-            outLoadedBuffers.insert(GPUResourceInspector::GetResourceID(bufferData.second.lock().get()));
+            if (std::shared_ptr<IBuffer> shBuffer = bufferData.second.lock())
+            {
+                LoadBufferAndCache(shBuffer.get());
+                outLoadedBuffers.insert(GPUResourceInspector::GetResourceID(shBuffer.get()));
+            }
         }
     }
 
-    void RenderingSystem::LoadTextureAndCache(std::shared_ptr<Texture> texture)
+    void RenderingSystem::LoadTextureAndCache(Texture& texture)
     {
-        unsigned int textureID = GPUResourceInspector::GetResourceID(texture.get());
+        unsigned int textureID = GPUResourceInspector::GetResourceID(&texture);
 
-        if (IsTextureCached(textureID) && texture->IsResourceValid())
+        if (IsTextureCached(textureID) && texture.IsResourceValid())
         {
             return;
         }
@@ -556,22 +576,22 @@ namespace GaladHen
         CacheTexture(newId);
     }
 
-    unsigned int RenderingSystem::LoadTexture(std::shared_ptr<Texture> texture)
+    unsigned int RenderingSystem::LoadTexture(Texture& texture)
     {
         CommandBuffer<MemoryTransferCommand> commandBuffer;
         commandBuffer.emplace_back(MemoryTransferCommand{});
 
         MemoryTransferCommand& command = commandBuffer[0];
-        command.Data = texture.get();
-        command.MemoryTargetID = GPUResourceInspector::GetResourceID(texture.get());
+        command.Data = (void*)&texture;
+        command.MemoryTargetID = GPUResourceInspector::GetResourceID(&texture);
         command.TargetType = MemoryTargetType::Texture;
         command.TransferType = MemoryTransferType::Load;
 
         // Load, assign id and cache
 
         RendererAPI->TransferData(commandBuffer);
-        GPUResourceInspector::SetResourceID(texture.get(), command.MemoryTargetID);
-        GPUResourceInspector::ValidateResource(texture.get());
+        GPUResourceInspector::SetResourceID(&texture, command.MemoryTargetID);
+        GPUResourceInspector::ValidateResource(&texture);
 
         return command.MemoryTargetID;
     }
@@ -687,33 +707,15 @@ namespace GaladHen
         LoadedBuffersCache.erase(bufferID);
     }
 
-    void RenderingSystem::InitCameraDataBuffer()
-    {
-        FixedBuffer<CameraBufferData, 1>* data = new FixedBuffer<CameraBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead };
-
-        CameraBuffer = std::shared_ptr<FixedBuffer<CameraBufferData, 1>>(data);
-
-        // TODO: populate buffer basing on API (to match shader data structure)
-    }
-
-    void RenderingSystem::InitTransformDataBuffer()
-    {
-        FixedBuffer<TransformBufferData, 1>* data = new FixedBuffer<TransformBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead };
-
-        TransformBuffer = std::shared_ptr<FixedBuffer<TransformBufferData, 1>>(data);
-
-        // TODO: populate buffer basing on API (to match shader data structure)
-    }
-
     void RenderingSystem::LoadCameraData(const Camera& camera)
     {
         CameraBufferData data{};
         data.ViewMatrix = camera.GetViewMatrix();
         data.ProjectionMatrix = camera.GetProjectionMatrix();
         data.CameraPosition = camera.Transform.GetPosition();
-        CameraBuffer->SetData(data, 0);
+        CameraBuffer.SetData(data, 0);
 
-        LoadBuffer(CameraBuffer.get());
+        LoadBuffer(&CameraBuffer);
     }
 
     void RenderingSystem::LoadTransformData(const Transform& transform)
@@ -721,18 +723,9 @@ namespace GaladHen
         TransformBufferData data{};
         data.ModelMatrix = transform.ToMatrix();
         data.NormalMatrix = glm::inverse(glm::transpose(data.ModelMatrix));
-        TransformBuffer->SetData(data, 0);
+        TransformBuffer.SetData(data, 0);
 
-        LoadBuffer(TransformBuffer.get());
-    }
-
-    void RenderingSystem::InitLightingDataBuffer()
-    {
-        FixedBuffer<LightingBufferData, 1>* data = new FixedBuffer<LightingBufferData, 1>{ BufferType::Uniform, BufferAccessType::StaticRead };
-
-        LightingBuffer = std::shared_ptr<FixedBuffer<LightingBufferData, 1>>(data);
-
-        // TODO: populate buffer basing on API (to match shader data structure)
+        LoadBuffer(&TransformBuffer);
     }
 
     void RenderingSystem::LoadLightingData(const Scene& scene)
@@ -740,23 +733,14 @@ namespace GaladHen
         LightingBufferData data{};
         data.PointLightNumber = scene.PointLights.size();
         data.DirLightNumber = scene.DirectionalLights.size();
-        LightingBuffer->SetData(data, 0);
+        LightingBuffer.SetData(data, 0);
 
-        LoadBuffer(LightingBuffer.get());
-    }
-
-    void RenderingSystem::InitPointLightDataBuffer()
-    {
-        DynamicBuffer<PointLightBufferData>* data = new DynamicBuffer<PointLightBufferData>{ BufferType::ShaderStorage, BufferAccessType::StaticRead };
-
-        PointLightBuffer = std::shared_ptr<DynamicBuffer<PointLightBufferData>>(data);
-
-        // TODO: populate buffer basing on API (to match shader data structure)
+        LoadBuffer(&LightingBuffer);
     }
 
     void RenderingSystem::LoadPointLightData(const std::vector<PointLight>& pointLights)
     {
-        PointLightBuffer->ClearData();
+        PointLightBuffer.ClearData();
 
         for (const PointLight& light : pointLights)
         {
@@ -767,24 +751,15 @@ namespace GaladHen
             data.BulbSize = light.BulbSize;
             data.Radius = light.Radius;
 
-            PointLightBuffer->AddData(data);
+            PointLightBuffer.AddData(data);
         }
 
-        LoadBuffer(PointLightBuffer.get());
-    }
-
-    void RenderingSystem::InitDirLightDataBuffer()
-    {
-        DynamicBuffer<DirLightBufferData>* data = new DynamicBuffer<DirLightBufferData>{ BufferType::ShaderStorage, BufferAccessType::StaticRead };
-
-        DirLightBuffer = std::shared_ptr<DynamicBuffer<DirLightBufferData>>(data);
-
-        // TODO: populate buffer basing on API (to match shader data structure)
+        LoadBuffer(&PointLightBuffer);
     }
 
     void RenderingSystem::LoadDirLightData(const std::vector<DirectionalLight>& dirLights)
     {
-        DirLightBuffer->ClearData();
+        DirLightBuffer.ClearData();
 
         for (const DirectionalLight& light : dirLights)
         {
@@ -794,18 +769,18 @@ namespace GaladHen
             data.Intensity = light.Intensity;
             data.Direction = light.GetLightDirection();
 
-            DirLightBuffer->AddData(data);
+            DirLightBuffer.AddData(data);
         }
 
-        LoadBuffer(DirLightBuffer.get());
+        LoadBuffer(&DirLightBuffer);
     }
 
-    void RenderingSystem::SetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer)
+    void RenderingSystem::SetRenderBufferTarget(const RenderBuffer& renderBuffer)
     {
-        RendererAPI->BindRenderBuffer(GPUResourceInspector::GetResourceID(renderBuffer.get()));
+        RendererAPI->BindRenderBuffer(GPUResourceInspector::GetResourceID(&renderBuffer));
     }
 
-    void RenderingSystem::UnsetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer)
+    void RenderingSystem::UnsetRenderBufferTarget(const RenderBuffer& renderBuffer)
     {
         RendererAPI->UnbindActiveRenderBuffer();
     }

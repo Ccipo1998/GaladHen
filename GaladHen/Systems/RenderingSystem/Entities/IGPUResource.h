@@ -12,7 +12,7 @@ namespace GaladHen
 	public:
 
 		IGPUResource();
-		bool IsResourceValid();
+		bool IsResourceValid() const;
 
 	protected:
 

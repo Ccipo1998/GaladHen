@@ -8,7 +8,7 @@ namespace GaladHen
 		, ClearColor(GH_DEFAULT_RENDER_CLEAR_COLOR)
 	{}
 
-	glm::uvec2 RenderBuffer::GetSize()
+	glm::uvec2 RenderBuffer::GetSize() const
 	{
 		return Size;
 	}

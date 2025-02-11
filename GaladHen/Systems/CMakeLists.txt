@@ -59,7 +59,8 @@ add_library(Systems STATIC
     InputSystem/LayerAPI/IInputProvider.h
     InputSystem/LayerAPI/OpenGL/InputProviderGL.h
     InputSystem/LayerAPI/OpenGL/InputProviderGL.cpp
- "AssetSystem/AssetSystem.h" "AssetSystem/AssetSystem.cpp")
+    AssetSystem/AssetSystem.h
+    AssetSystem/AssetSystem.cpp)
 
 target_include_directories(Systems PRIVATE
     ${CMAKE_SOURCE_DIR}/

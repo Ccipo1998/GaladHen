@@ -12,13 +12,12 @@ namespace GaladHen
 		, Format(format)
 		, Filtering(TextureFiltering::Linear)
 		, Wrapping(TextureWrapping::Repeat)
-	{
-		Data = std::shared_ptr<unsigned char>(data);
-	}
+		, Data(data)
+	{}
 
-	std::weak_ptr<unsigned char> Texture::GetData() const
+	unsigned char* Texture::GetData() const
 	{
-		return std::weak_ptr<unsigned char>(Data);
+		return Data;
 	}
 
 	void Texture::GetSize(glm::uvec2& outSize) const
@@ -71,5 +70,12 @@ namespace GaladHen
 		NumberOfMipMaps = numberOfMipMaps;
 
 		InvalidateResource();
+	}
+
+	Texture::~Texture()
+	{
+		// TODO: free resources
+		if (Data)
+			delete Data;
 	}
 }

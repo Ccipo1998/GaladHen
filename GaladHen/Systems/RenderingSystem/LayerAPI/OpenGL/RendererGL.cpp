@@ -137,6 +137,7 @@ namespace GaladHen
 
 	RendererGL::RendererGL()
 		: Window(nullptr)
+		, ImGuiContext(nullptr)
 	{}
 
 	void RendererGL::Init()
@@ -262,27 +263,31 @@ namespace GaladHen
 		{
 			MeshGL& mesh = Meshes.GetObjectWithId(rc.DataSourceID);
 
+			if (!rc.ShaderSourceID)
+				continue;
+
 			GLuint program = Shaders.GetObjectWithId(rc.ShaderSourceID);
 			glUseProgram(program);
 
-			std::shared_ptr<Material> material = std::shared_ptr<Material>(rc.Material);
+			if (!rc.Material)
+				continue;
 
-			for (auto& scalar : material->ScalarData)
+			for (auto& scalar : rc.Material->ScalarData)
 			{
 				glProgramUniform1f(program, glGetUniformLocation(program, scalar.first.data()), scalar.second);
 			}
 
-			for (auto& vec2 : material->Vec2Data)
+			for (auto& vec2 : rc.Material->Vec2Data)
 			{
 				glProgramUniform2f(program, glGetUniformLocation(program, vec2.first.data()), vec2.second.x, vec2.second.y);
 			}
 
-			for (auto& vec3 : material->Vec3Data)
+			for (auto& vec3 : rc.Material->Vec3Data)
 			{
 				glProgramUniform3f(program, glGetUniformLocation(program, vec3.first.data()), vec3.second.x, vec3.second.y, vec3.second.z);
 			}
 
-			for (auto& vec4 : material->Vec4Data)
+			for (auto& vec4 : rc.Material->Vec4Data)
 			{
 				glProgramUniform4f(program, glGetUniformLocation(program, vec4.first.data()), vec4.second.x, vec4.second.y, vec4.second.z, vec4.second.w);
 			}
@@ -293,7 +298,7 @@ namespace GaladHen
 			//}
 
 			unsigned int unit = 0;
-			for (auto& texture : material->TextureData)
+			for (auto& texture : rc.Material->TextureData)
 			{
 				if (texture.second.expired())
 				{
@@ -302,7 +307,13 @@ namespace GaladHen
 				}
 
 				// select texture unit for the binded texture
-				TextureGL& textureGL = Textures.GetObjectWithId(GPUResourceInspector::GetResourceID(texture.second.lock().get()));
+				std::shared_ptr<Texture> shTexture = texture.second.lock();
+				unsigned int textureID = GPUResourceInspector::GetResourceID(shTexture.get());
+				// we need to check id here, because texture is an external resource that can arrive as invalid here
+				if (!textureID)
+					continue;
+
+				TextureGL& textureGL = Textures.GetObjectWithId(textureID);
 				glActiveTexture(TextureUnits[unit]);
 				glBindTexture(GL_TEXTURE_2D, textureGL.TextureID);
 				// create uniform sampler
@@ -314,7 +325,7 @@ namespace GaladHen
 
 			// Bind buffer data to shader pipeline
 			const GLenum props[] = { GL_BUFFER_BINDING };
-			for (auto& buffer : material->BufferData)
+			for (auto& buffer : rc.Material->BufferData)
 			{
 				if (buffer.second.expired())
 				{
@@ -322,7 +333,13 @@ namespace GaladHen
 					continue;
 				}
 
-				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.lock().get()));
+				std::shared_ptr<IBuffer> shBuffer = buffer.second.lock();
+				unsigned int bufferID = GPUResourceInspector::GetResourceID(shBuffer.get());
+				// we need to check id here, because buffer is an external resource that can arrive as invalid here
+				if (!bufferID)
+					continue;
+
+				BufferGL& bufferGL = Buffers.GetObjectWithId(bufferID);
 				GLuint resourceIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
 
 				if (resourceIndex != GL_INVALID_INDEX)
@@ -334,7 +351,12 @@ namespace GaladHen
 			}
 			for (auto& buffer : rc.AdditionalBufferData)
 			{
-				BufferGL& bufferGL = Buffers.GetObjectWithId(GPUResourceInspector::GetResourceID(buffer.second.get()));
+				unsigned int bufferID = GPUResourceInspector::GetResourceID(buffer.second);
+				// we need to check id here, because buffer is an external resource that can arrive as invalid here
+				if (!bufferID)
+					continue;
+
+				BufferGL& bufferGL = Buffers.GetObjectWithId(bufferID);
 				GLuint resourceIndex = glGetProgramResourceIndex(program, bufferGL.ResourceProgramInterface, buffer.first.data());
 
 				if (resourceIndex != GL_INVALID_INDEX)
@@ -607,8 +629,8 @@ namespace GaladHen
 
 			glm::uvec2 textureSize;
 			texture.GetSize(textureSize);
-			std::shared_ptr<unsigned char> data = texture.GetData().lock(); // need to convert to shared ptr to use a weak ptr
-			glTexImage2D(GL_TEXTURE_2D, textureGL.Levels, textureGL.TextureFormat, textureSize.x, textureSize.y, 0, textureGL.PixelChannels, textureGL.PixelChannelDepth, data.get());
+			unsigned char* data = texture.GetData();
+			glTexImage2D(GL_TEXTURE_2D, textureGL.Levels, textureGL.TextureFormat, textureSize.x, textureSize.y, 0, textureGL.PixelChannels, textureGL.PixelChannelDepth, data);
 			
 			if (glGetError() != GL_NO_ERROR)
 			{
@@ -638,8 +660,8 @@ namespace GaladHen
 			}
 
 			// copy texture data to texture object
-			std::shared_ptr<unsigned char> data = texture.GetData().lock();
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureSize.x, textureSize.y, textureGL.PixelChannels, textureGL.PixelChannelDepth, data.get());
+			unsigned char* data = texture.GetData();
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureSize.x, textureSize.y, textureGL.PixelChannels, textureGL.PixelChannelDepth, data);
 		}
 		default:
 			break;

@@ -65,6 +65,7 @@ namespace GaladHen
 
 	void InputSystem::Quit()
 	{
-
+		if (InputProviderAPI)
+			delete InputProviderAPI;
 	}
 }

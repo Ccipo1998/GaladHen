@@ -19,7 +19,7 @@ namespace GaladHen
 
 		RenderBuffer(unsigned int width, unsigned int height);
 
-		glm::uvec2 GetSize();
+		glm::uvec2 GetSize() const;
 		void SetSize(const glm::uvec2& size);
 
 		glm::vec4 ClearColor;

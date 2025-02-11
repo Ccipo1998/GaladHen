@@ -26,14 +26,14 @@ namespace GaladHen
 		ShaderPipeline(ShaderPipeline&& source) = delete;
 		ShaderPipeline& operator=(ShaderPipeline&& source) = delete;
 
-		std::string GetVertexShaderPath();
-		std::string GetTessContShaderPath();
-		std::string GetTessEvalShaderPath();
-		std::string GetGeometryShaderPath();
-		std::string GetFragmentShaderPath();
-		std::string GetComputeShaderPath();
+		std::string GetVertexShaderPath() const;
+		std::string GetTessContShaderPath() const;
+		std::string GetTessEvalShaderPath() const;
+		std::string GetGeometryShaderPath() const;
+		std::string GetFragmentShaderPath() const;
+		std::string GetComputeShaderPath() const;
 
-		ShaderPipelineType GetType();
+		ShaderPipelineType GetType() const;
 
 	protected:
 

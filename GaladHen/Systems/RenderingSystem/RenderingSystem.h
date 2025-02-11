@@ -41,27 +41,27 @@ namespace GaladHen
 
         // @brief
         // Create a gpu render buffer
-        std::shared_ptr<RenderBuffer> CreateRenderBuffer(unsigned int width, unsigned int height);
+        std::weak_ptr<RenderBuffer> CreateRenderBuffer(unsigned int width, unsigned int height);
 
         // @brief
         // Get default front render buffer
-        std::shared_ptr<RenderBuffer> GetFrontRenderBuffer();
+        std::weak_ptr<RenderBuffer> GetFrontRenderBuffer();
 
         // @brief
         // Get the low-level api id for a render buffer's texture
-        unsigned int GetRenderBufferColorApiID(std::shared_ptr<RenderBuffer> renderBuffer);
+        unsigned int GetRenderBufferColorApiID(const RenderBuffer& renderBuffer);
 
         // @brief
         // Clear a render buffer with a specific color
-        void ClearRenderBuffer(std::shared_ptr<RenderBuffer> renderBuffer);
+        void ClearRenderBuffer(const RenderBuffer& renderBuffer);
 
         // @brief
         // Draw request for a full scene. Using scene's camera, models and default render buffer
-        void Draw(Scene& scene);
+        void Draw(const Scene& scene);
 
         // @brief
         // Draw request for a full scene. Using scene's camera and models, using specific render buffer
-        void Draw(Scene& scene, std::shared_ptr<RenderBuffer> renderBuffer);
+        void Draw(const Scene& scene, RenderBuffer& renderBuffer);
 
         // @brief
         // Draw request for current UIPage
@@ -98,7 +98,7 @@ namespace GaladHen
         // @returns: compilation result
         bool CompileShader(ShaderPipeline& shader);
 
-        void CreateMainWindow(const std::string& name, glm::uvec2 size);
+        void CreateMainWindow(const std::string& name, const glm::uvec2 size);
 
         void CloseMainWindow();
 
@@ -126,13 +126,13 @@ namespace GaladHen
         public:
             // TODO: RenderScene -> collection of models and theirs Bounding Volumes + spatial partitioning structure containing all the models (for frustum culling)
 
-            RenderContext(RenderingSystem* renderingSys, unsigned int width, unsigned int height, RenderContextType renderContextType);
+            RenderContext(RenderingSystem& renderingSys, unsigned int width, unsigned int height, RenderContextType renderContextType);
 
             RenderContextType GetRenderContextType();
 
-            std::shared_ptr<RenderBuffer> GetFrontBuffer();
+            std::weak_ptr<RenderBuffer> GetFrontBuffer() const;
 
-            std::shared_ptr<RenderBuffer> GetBackBuffer();
+            std::weak_ptr<RenderBuffer> GetBackBuffer() const;
 
             void SwapBuffers();
 
@@ -150,7 +150,7 @@ namespace GaladHen
 		// RENDERER DATA --------------------------------------------------------------------
 
 		API CurrentAPI;
-		std::unique_ptr<IRendererAPI> RendererAPI; // API-specific renderer for API-specific operations
+		IRendererAPI* RendererAPI; // API-specific renderer for API-specific operations
 		bool Initialized;
 
         // Rendering data
@@ -159,13 +159,14 @@ namespace GaladHen
         std::unordered_set<unsigned int> LoadedTexturesCache; // cache of already loaded textures -> for reloading, it requires that a texture knows when it has been modified
         std::unordered_set<unsigned int> LoadedBuffersCache; // cache of already loaded buffers -> for reloading, it requires that a buffer knows when it has been modified
         std::unordered_set<unsigned int> CompiledShadersCache; // cache of already compiled shaders -> for reloading, it requires that a shader knows when it has been modified
+        std::vector<std::shared_ptr<RenderBuffer>> RenderBuffers; // list of created render buffers
 
         // Buffers
-        std::shared_ptr<FixedBuffer<CameraBufferData, 1>> CameraBuffer;
-        std::shared_ptr<FixedBuffer<TransformBufferData, 1>> TransformBuffer;
-        std::shared_ptr<FixedBuffer<LightingBufferData, 1>> LightingBuffer;
-        std::shared_ptr<DynamicBuffer<PointLightBufferData>> PointLightBuffer;
-        std::shared_ptr<DynamicBuffer<DirLightBufferData>> DirLightBuffer;
+        FixedBuffer<CameraBufferData, 1> CameraBuffer;
+        FixedBuffer<TransformBufferData, 1> TransformBuffer;
+        FixedBuffer<LightingBufferData, 1> LightingBuffer;
+        DynamicBuffer<PointLightBufferData> PointLightBuffer;
+        DynamicBuffer<DirLightBufferData> DirLightBuffer;
 
         // UI
         UIPage* CurrentUIPage;
@@ -173,7 +174,7 @@ namespace GaladHen
         // INTERNAL FUNCTIONALITIES ---------------------------------------------------------
 
         RenderContext& GetDefaultRenderContext();
-        void BeforeDraw(RenderContext& renderContext);
+        void BeforeDraw(const RenderContext& renderContext);
         void AfterDraw(RenderContext& renderContext);
         bool IsMeshCached(unsigned int meshID);
         void CacheMesh(unsigned int meshID);
@@ -187,16 +188,16 @@ namespace GaladHen
         bool IsBufferCached(unsigned int bufferID);
         void CacheBuffer(unsigned int bufferID);
         void UncacheBuffer(unsigned int bufferID);
-        void LoadModels(Scene& scene, std::unordered_set<unsigned int>& outLoadedMeshesIDs);
+        void LoadModels(const Scene& scene, std::unordered_set<unsigned int>& outLoadedMeshesIDs);
         void LoadMeshAndCache(Mesh& mesh);
         unsigned int LoadMesh(Mesh& mesh);
         void FreeUnusedMeshes(const std::unordered_set<unsigned int>& usedMeshesIDs);
         void FreeMeshes(const std::unordered_set<unsigned int>& meshesToFree);
         void FreeMesh(unsigned int meshID);
-        void LoadMaterialsData(Scene& scene, std::unordered_set<unsigned int>& outLoadedTexturesIDs, std::unordered_set<unsigned int>& outLoadedBuffersIDs);
-        void LoadMaterialData(std::shared_ptr<Material> material, std::unordered_set<unsigned int>& outLoadedTextures, std::unordered_set<unsigned int>& outLoadedBuffers);
-        void LoadTextureAndCache(std::shared_ptr<Texture> texture);
-        unsigned int LoadTexture(std::shared_ptr<Texture> texture);
+        void LoadMaterialsData(const Scene& scene, std::unordered_set<unsigned int>& outLoadedTexturesIDs, std::unordered_set<unsigned int>& outLoadedBuffersIDs);
+        void LoadMaterialData(Material& material, std::unordered_set<unsigned int>& outLoadedTextures, std::unordered_set<unsigned int>& outLoadedBuffers);
+        void LoadTextureAndCache(Texture& texture);
+        unsigned int LoadTexture(Texture& texture);
         void LoadBufferAndCache(IBuffer* buffer);
         unsigned int LoadBuffer(IBuffer* buffer);
         void FreeUnusedTextures(const std::unordered_set<unsigned int>& usedTexturesIDs);
@@ -205,18 +206,13 @@ namespace GaladHen
         void FreeUnusedBuffers(const std::unordered_set<unsigned int>& usedBuffersIDs);
         void FreeBuffers(const std::unordered_set<unsigned int>& buffersToFree);
         void FreeBuffer(unsigned int bufferID);
-        void InitCameraDataBuffer();
-        void InitTransformDataBuffer();
         void LoadCameraData(const Camera& camera);
         void LoadTransformData(const Transform& transform);
-        void InitLightingDataBuffer();
         void LoadLightingData(const Scene& scene);
-        void InitPointLightDataBuffer();
         void LoadPointLightData(const std::vector<PointLight>& pointLights);
-        void InitDirLightDataBuffer();
         void LoadDirLightData(const std::vector<DirectionalLight>& dirLights);
-        void SetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer);
-        void UnsetRenderBufferTarget(std::shared_ptr<RenderBuffer> renderBuffer);
+        void SetRenderBufferTarget(const RenderBuffer& renderBuffer);
+        void UnsetRenderBufferTarget(const RenderBuffer& renderBuffer);
         void SwapMainWindowBuffers();
         void BeforeDrawUI();
 	};

@@ -17,8 +17,10 @@ namespace GaladHen
         }
         else
         {
-            Model* rawModel = model.lock().get();
-            SceneObjectMaterials.resize(rawModel->Meshes.size());
+            if (std::shared_ptr<Model> shModel = model.lock())
+            {
+                SceneObjectMaterials.resize(shModel->Meshes.size());
+            }
         }
     }
 

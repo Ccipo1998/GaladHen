@@ -13,7 +13,7 @@ namespace GaladHen
 		ResourceInvalidated = true;
 	}
 
-	bool IGPUResource::IsResourceValid()
+	bool IGPUResource::IsResourceValid() const
 	{
 		return !ResourceInvalidated;
 	}

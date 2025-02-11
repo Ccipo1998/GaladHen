@@ -61,18 +61,19 @@ namespace GaladHen
 
         std::weak_ptr<ShaderPipeline> unlit = AssetSystem::GetInstance()->LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/VertexUnlitColor.frag", "", "VertexUnlitColor");
         std::weak_ptr<Material> aabbMat = AssetSystem::GetInstance()->CreateAndStoreMaterial("AABBMaterial");
-        Material* rawAabbMat = aabbMat.lock().get();
-        rawAabbMat->SetPipeline(unlit);
-        rawAabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        std::shared_ptr<Material> shAabbMat = aabbMat.lock();
+        // no need to check ptr validity
+        shAabbMat->SetPipeline(unlit);
+        shAabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
         // materials
         std::weak_ptr<Material> bunnyMat = AssetSystem::GetInstance()->CreateAndStoreMaterial("BunnyMaterial");
-        Material* rawBunnyMat = bunnyMat.lock().get();
-        rawBunnyMat->SetPipeline(pbrBunny);
-        rawBunnyMat->TextureData.emplace("DiffuseTexture", texAlbedo);
-        rawBunnyMat->TextureData.emplace("NormalMap", texNormal);
-        rawBunnyMat->ScalarData.emplace("Metallic", 0.0f);
-        rawBunnyMat->ScalarData.emplace("Roughness", 0.5f);
+        std::shared_ptr<Material> shBunnyMat = bunnyMat.lock();
+        shBunnyMat->SetPipeline(pbrBunny);
+        shBunnyMat->TextureData.emplace("DiffuseTexture", texAlbedo);
+        shBunnyMat->TextureData.emplace("NormalMap", texNormal);
+        shBunnyMat->ScalarData.emplace("Metallic", 0.0f);
+        shBunnyMat->ScalarData.emplace("Roughness", 0.5f);
 
         /*std::shared_ptr<Material> planeMat = std::shared_ptr<Material>{ new Material { pbr } };
         planeMat->Vec4Data.emplace("Diffuse", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));

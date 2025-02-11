@@ -7,6 +7,7 @@ namespace GaladHen
 {
 	enum class KeyboardKey
 	{
+		Unknown,
 		W,
 		A,
 		S,
@@ -17,6 +18,7 @@ namespace GaladHen
 
 	enum class MouseKey
 	{
+		Unknown,
 		Left,
 		Middle,
 		Right

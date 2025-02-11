@@ -17,37 +17,37 @@ namespace GaladHen
 		, Type(ShaderPipelineType::ComputeShader)
 	{}
 
-	std::string ShaderPipeline::GetVertexShaderPath()
+	std::string ShaderPipeline::GetVertexShaderPath() const
 	{
 		return VertexShaderPath;
 	}
 
-	std::string ShaderPipeline::GetTessContShaderPath()
+	std::string ShaderPipeline::GetTessContShaderPath() const
 	{
 		return TessContShaderPath;
 	}
 
-	std::string ShaderPipeline::GetTessEvalShaderPath()
+	std::string ShaderPipeline::GetTessEvalShaderPath() const
 	{
 		return TessEvalShaderPath;
 	}
 
-	std::string ShaderPipeline::GetGeometryShaderPath()
+	std::string ShaderPipeline::GetGeometryShaderPath() const
 	{
 		return GeometryShaderPath;
 	}
 
-	std::string ShaderPipeline::GetFragmentShaderPath()
+	std::string ShaderPipeline::GetFragmentShaderPath() const
 	{
 		return FragmentShaderPath;
 	}
 
-	std::string ShaderPipeline::GetComputeShaderPath()
+	std::string ShaderPipeline::GetComputeShaderPath() const
 	{
 		return ComputeShaderPath;
 	}
 
-	ShaderPipelineType ShaderPipeline::GetType()
+	ShaderPipelineType ShaderPipeline::GetType() const
 	{
 		return Type;
 	}

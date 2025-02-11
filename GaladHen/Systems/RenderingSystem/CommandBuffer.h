@@ -4,7 +4,6 @@
 #pragma once
 
 #include <vector>
-#include <memory>
 #include <string>
 
 #include <Systems/RenderingSystem/Entities/Material.h>
@@ -25,8 +24,8 @@ namespace GaladHen
 		unsigned int DataSourceID;
 		// unsigned int InstanceCount; TODO: instanced rendering
 		unsigned int ShaderSourceID;
-		std::shared_ptr<Material> Material;
-		std::unordered_map<std::string, std::shared_ptr<IBuffer>> AdditionalBufferData; // Like buffers managed by renderer (camera data, transform data, ...)
+		Material* Material;
+		std::unordered_map<std::string, IBuffer*> AdditionalBufferData; // Like buffers managed by renderer (camera data, transform data, ...)
 	};
 
 	enum class MemoryTargetType

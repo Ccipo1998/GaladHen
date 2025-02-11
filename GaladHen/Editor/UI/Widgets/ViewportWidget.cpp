@@ -6,6 +6,7 @@
 
 #include <Editor/Editor.h>
 #include <Systems/RenderingSystem/Entities/RenderBuffer.h>
+#include <Utils/Log.h>
 
 namespace GaladHen
 {
@@ -36,8 +37,17 @@ namespace GaladHen
 		ImVec2 size = ImGui::GetWindowPos();
 		size.x += ImGui::GetWindowSize().x - 10.0f;
 		size.y += ImGui::GetWindowSize().y - 10.0f;
-		ImGui::GetWindowDrawList()->AddImage(RenderingSystem::GetInstance()->GetRenderBufferColorApiID(RenderingSystem::GetInstance()->GetFrontRenderBuffer()), pos, size, ImVec2{0, 1}, ImVec2{1, 0});
 
-		ImGui::End();
+		std::weak_ptr<RenderBuffer> frontBuffer = RenderingSystem::GetInstance()->GetFrontRenderBuffer();
+		if (std::shared_ptr<RenderBuffer> shFrontBuffer = frontBuffer.lock())
+		{
+			ImGui::GetWindowDrawList()->AddImage(RenderingSystem::GetInstance()->GetRenderBufferColorApiID(*shFrontBuffer), pos, size, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+			ImGui::End();
+		}
+		else
+		{
+			Log::Warning("ViewportWidget", "Invalid front buffer, widget will be empty");
+		}
 	}
 }
