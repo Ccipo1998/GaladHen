@@ -22,6 +22,7 @@ namespace GaladHen
 		virtual void RegisterMouseKeyStatus(bool* mouseKeyStatus) override;
 		virtual bool IsCloseWindowRequested() override;
 		virtual void InvokePendingCallbacks() override;
+		virtual glm::vec2 GetMouseCursorPosition() override;
 
 	protected:
 

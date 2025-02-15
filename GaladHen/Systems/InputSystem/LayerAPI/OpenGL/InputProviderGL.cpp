@@ -6,6 +6,7 @@
 #include <Utils/log.h>
 
 #include <imgui/backends/imgui_impl_glfw.h>
+#include <glm/glm.hpp>
 
 namespace GaladHen
 {
@@ -71,6 +72,15 @@ namespace GaladHen
 		glfwPollEvents();
 	}
 
+	glm::vec2 InputProviderGL::GetMouseCursorPosition()
+	{
+		GLFWwindow* win = glfwGetCurrentContext();
+		double xpos, ypos;
+		glfwGetCursorPos(win, &xpos, &ypos);
+
+		return glm::vec2(xpos, ypos);
+	}
+
 	void InputProviderGL::FillKeyAssociations()
 	{
 		KeyboardKeyAssociations[GLFW_KEY_W] = KeyboardKey::W;
@@ -85,6 +95,7 @@ namespace GaladHen
 
 		KeyActionAssociations[GLFW_PRESS] = KeyAction::Press;
 		KeyActionAssociations[GLFW_RELEASE] = KeyAction::Release;
+		KeyActionAssociations[GLFW_REPEAT] = KeyAction::Press;
 	}
 
 	void InputProviderGL::KeyboardKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)

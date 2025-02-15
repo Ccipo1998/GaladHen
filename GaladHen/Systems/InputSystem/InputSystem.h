@@ -7,8 +7,8 @@
 #include <Systems/RenderingSystem/Common.h>
 #include <Systems/SystemsCoordinator.h>
 
-#define GH_KEYBOARD_KEY_NUMBER 4
-#define GH_MOUSE_KEY_NUMBER 3
+#define GH_KEYBOARD_KEY_NUMBER 7
+#define GH_MOUSE_KEY_NUMBER 4
 
 namespace GaladHen
 {
@@ -31,7 +31,9 @@ namespace GaladHen
 		void InvokePendingCallbacks();
 		bool IsKeyboardKeyPressed(KeyboardKey key);
 		bool IsMouseKeyPressed(MouseKey key);
-		glm::uvec2 GetMousePosition();
+		void UpdateMousePosition();
+		glm::vec2 GetMousePosition();
+		glm::vec2 GetDeltaMousePosition();
 
 	private:
 
@@ -41,6 +43,8 @@ namespace GaladHen
 
 		bool KeyboardKeyStatus[GH_KEYBOARD_KEY_NUMBER] = { false };
 		bool MouseKeyStatus[GH_MOUSE_KEY_NUMBER] = { false };
+		glm::vec2 LastMousePosition;
+		glm::vec2 MousePosition;
 
 		API CurrentAPI;
 		IInputProvider* InputProviderAPI;

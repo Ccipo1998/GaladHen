@@ -60,7 +60,9 @@ add_library(Systems STATIC
     InputSystem/LayerAPI/OpenGL/InputProviderGL.h
     InputSystem/LayerAPI/OpenGL/InputProviderGL.cpp
     AssetSystem/AssetSystem.h
-    AssetSystem/AssetSystem.cpp)
+    AssetSystem/AssetSystem.cpp
+    TimeSystem/TimeSystem.h
+    TimeSystem/TimeSystem.cpp)
 
 target_include_directories(Systems PRIVATE
     ${CMAKE_SOURCE_DIR}/

@@ -53,9 +53,23 @@ namespace GaladHen
 		return MouseKeyStatus[(unsigned int)key];
 	}
 
-	glm::uvec2 InputSystem::GetMousePosition()
+	void InputSystem::UpdateMousePosition()
 	{
-		return glm::uvec2();
+		if (InputProviderAPI)
+		{
+			LastMousePosition = MousePosition;
+			MousePosition = InputProviderAPI->GetMouseCursorPosition();
+		}
+	}
+
+	glm::vec2 InputSystem::GetMousePosition()
+	{
+		return MousePosition;
+	}
+
+	glm::vec2 InputSystem::GetDeltaMousePosition()
+	{
+		return MousePosition - LastMousePosition;
 	}
 
 	void InputSystem::Init()

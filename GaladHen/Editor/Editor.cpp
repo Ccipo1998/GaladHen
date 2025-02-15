@@ -13,6 +13,7 @@
 #include <Systems/RenderingSystem/Entities/Model.h>
 #include <Systems/RenderingSystem/Entities/ShaderPipeline.h>
 #include <Systems/AssetSystem/AssetSystem.h>
+#include <Systems/TimeSystem/TimeSystem.h>
 
 #include <glm/glm.hpp>
 
@@ -170,23 +171,53 @@ namespace GaladHen
 
 	void Editor::Run()
 	{
+        TimeSystem::GetInstance()->Start();
+
         while (!InputSystem::GetInstance()->IsCloseWindowRequested())
         {
-            glm::vec3 cameraMov = glm::vec3(0.0f);
+            TimeSystem::GetInstance()->NewFrame();
+            InputSystem::GetInstance()->UpdateMousePosition();
+
+            glm::vec3 cameraLinMov = glm::vec3(0.0f);
             if (InputSystem::GetInstance()->IsKeyboardKeyPressed(KeyboardKey::W))
             {
-                cameraMov.z += 1.0f;
+                cameraLinMov.x += 1.0f;
             }
-                
-            /*glm::vec2 cameraRot = glm::vec2(0.0f);
-            if (Window.IsKeyPressed(Input::MouseKey::Right))
+            if (InputSystem::GetInstance()->IsKeyboardKeyPressed(KeyboardKey::S))
             {
-                Window.GetMousePositionDelta(cameraRot.x, cameraRot.y);
-            }*/
-            //Scene.MainCamera.ApplyCameraMovements(cameraMov, cameraRot, 0.0001f);
-            //Renderer.UpdateCameraData(EditorScene.MainCamera);
-            //renderer.Draw(aabbMesh, aabbMat);
-            //CurrentRenderer.Draw(gizmos, gizmosMat);
+                cameraLinMov.x -= 1.0f;
+            }
+            if (InputSystem::GetInstance()->IsKeyboardKeyPressed(KeyboardKey::D))
+            {
+                cameraLinMov.z += 1.0f;
+            }
+            if (InputSystem::GetInstance()->IsKeyboardKeyPressed(KeyboardKey::A))
+            {
+                cameraLinMov.z -= 1.0f;
+            }
+            if (InputSystem::GetInstance()->IsKeyboardKeyPressed(KeyboardKey::E))
+            {
+                cameraLinMov.y += 1.0f;
+            }
+            if (InputSystem::GetInstance()->IsKeyboardKeyPressed(KeyboardKey::Q))
+            {
+                cameraLinMov.y -= 1.0f;
+            }
+            cameraLinMov *= TimeSystem::GetInstance()->GetDeltaTime() * 0.1f;
+            glm::vec3 cameraPos = Scene.MainCamera.Transform.GetPosition();
+            cameraPos += Scene.MainCamera.Transform.GetFront() * cameraLinMov.x;
+            cameraPos += Scene.MainCamera.Transform.GetRight() * cameraLinMov.z;
+            cameraPos += Scene.MainCamera.Transform.GetUp() * cameraLinMov.y;
+            Scene.MainCamera.Transform.SetPosition(cameraPos);
+
+            glm::vec2 cameraAngMov = glm::vec2(0.0f);
+            if (InputSystem::GetInstance()->IsMouseKeyPressed(MouseKey::Right))
+            {
+                cameraAngMov = -InputSystem::GetInstance()->GetDeltaMousePosition();
+            }
+            cameraAngMov *= TimeSystem::GetInstance()->GetDeltaTime() * 5.0f;
+            Scene.MainCamera.Transform.RotateYaw(cameraAngMov.x);
+            Scene.MainCamera.Transform.RotatePitch(cameraAngMov.y);
 
             RenderingSystem::GetInstance()->Draw(Scene);
             RenderingSystem::GetInstance()->DrawUI();
