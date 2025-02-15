@@ -502,6 +502,13 @@ namespace GaladHen
 			glDisable(GL_DEPTH_TEST);
 	}
 
+	void RendererGL::EnableBackFaceCulling(bool enable)
+	{
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glFrontFace(GL_CCW);
+	}
+
 	unsigned int RendererGL::GetRenderBufferColorApiID(unsigned int renderBufferID)
 	{
 		RenderBufferGL& renderBuffer = RenderBuffers.GetObjectWithId(renderBufferID);

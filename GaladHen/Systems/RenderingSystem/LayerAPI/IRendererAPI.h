@@ -48,6 +48,8 @@ namespace GaladHen
 
 		virtual void EnableDepthTest(bool enable) = 0;
 
+		virtual void EnableBackFaceCulling(bool enable) = 0;
+
 		virtual unsigned int GetRenderBufferColorApiID(unsigned int renderBufferID) = 0; // Probably it shouldn't exist, but for now i need it for ImGui usage
 
 		virtual void SetViewport(const glm::uvec2& position, const glm::uvec2& size) = 0;

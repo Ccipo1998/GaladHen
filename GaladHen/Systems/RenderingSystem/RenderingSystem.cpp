@@ -259,6 +259,7 @@ namespace GaladHen
         RenderContexts.AddWithId(RenderContext{ *this, GH_DEFAULT_RENDER_BUFFER_WIDTH, GH_DEFAULT_RENDER_BUFFER_HEIGHT, RenderContextType::DoubleBuffering });
 
         RendererAPI->EnableDepthTest(true);
+        RendererAPI->EnableBackFaceCulling(true);
 
         // Load default buffers
         LoadCameraData(Camera{});

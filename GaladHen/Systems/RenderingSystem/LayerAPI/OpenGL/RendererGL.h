@@ -45,6 +45,8 @@ namespace GaladHen
 
 		virtual void EnableDepthTest(bool enable) override;
 
+		virtual void EnableBackFaceCulling(bool enable) override;
+
 		virtual unsigned int GetRenderBufferColorApiID(unsigned int renderBufferID) override;
 
 		virtual void SetViewport(const glm::uvec2& position, const glm::uvec2& size) override;
