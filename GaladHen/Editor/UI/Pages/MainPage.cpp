@@ -18,7 +18,7 @@ namespace GaladHen
 		// Populate widgets for main page
 		Widgets.emplace_back(new UINavBarWidget{ "NavBar" });
 		Widgets.emplace_back(new UIViewportWidget{ "Viewport" });
-		Widgets.emplace_back(new UIInspectorWidget{ "Inspector" });
+		//Widgets.emplace_back(new UIInspectorWidget{ "Inspector" });
 	}
 
 	void UIMainPage::Build()

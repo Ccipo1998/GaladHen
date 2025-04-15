@@ -10,10 +10,12 @@ namespace GaladHen
 {
 	enum class TextureFormat
 	{
-		RGB,
+		R8,
+		RG8,
 		RGB8,
-		SRGB,
-		SRGB8
+		RGBA8,
+		SRGB8,
+		SRGBA8
 	};
 
 	enum class TextureWrapping
@@ -45,7 +47,7 @@ namespace GaladHen
 	{
 	public:
 
-		Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int numberOfChannels, unsigned int numberOfMipMaps, TextureFormat format);
+		Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int numberOfMipMaps, TextureFormat format);
 
 		Texture(const Texture& sourceTexture) = delete;
 		Texture& operator=(Texture& sourceTexture) = delete;
@@ -54,7 +56,6 @@ namespace GaladHen
 
 		unsigned char* GetData() const;
 		void GetSize(glm::uvec2& outSize) const;
-		unsigned int GetNumberOfChannels() const;
 		unsigned int GetNumberOfMipMaps() const;
 		TextureFormat GetFormat() const;
 		TextureWrapping GetWrapping() const;
@@ -70,7 +71,6 @@ namespace GaladHen
 		unsigned char* Data; // ownership of data
 		unsigned int Width;
 		unsigned int Height;
-		unsigned int NumberOfChannels;
 		unsigned int NumberOfMipMaps;
 		TextureFormat Format;
 		TextureWrapping Wrapping;

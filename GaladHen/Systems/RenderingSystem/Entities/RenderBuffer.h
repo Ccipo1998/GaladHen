@@ -13,20 +13,27 @@
 
 namespace GaladHen
 {
+	enum class TextureFormat;
+
 	class RenderBuffer : public IGPUResource
 	{
 	public:
 
-		RenderBuffer(unsigned int width, unsigned int height);
+		RenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth = true);
 
 		glm::uvec2 GetSize() const;
 		void SetSize(const glm::uvec2& size);
+
+		bool IsDepthBufferAttached() const;
+		TextureFormat GetFormat() const;
 
 		glm::vec4 ClearColor;
 
 	protected:
 
+		TextureFormat Format;
 		glm::uvec2 Size;
+		bool DepthBufferAttached;
 
 	};
 }

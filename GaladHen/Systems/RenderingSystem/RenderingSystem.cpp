@@ -36,14 +36,14 @@ namespace GaladHen
         , DirLightBuffer(DynamicBuffer<DirLightBufferData>{ BufferType::ShaderStorage, BufferAccessType::StaticRead }) // TODO: populate buffer basing on API (to match shader data structure)
     {}
 
-    std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer(unsigned int width, unsigned int height)
+    std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth)
     {
         // Create object
-        std::shared_ptr<RenderBuffer> renderBuffer = std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height } };
+        std::shared_ptr<RenderBuffer> renderBuffer = std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height, format, enableDepth } };
         RenderBuffers.emplace_back(renderBuffer); // rendering system ownership
 
         // Create render buffer at api level and assing id
-        unsigned int id = RendererAPI->CreateRenderBuffer(width, height);
+        unsigned int id = RendererAPI->CreateRenderBuffer(width, height, format, enableDepth);
         GPUResourceInspector::SetResourceID(renderBuffer.get(), id);
         GPUResourceInspector::ValidateResource(renderBuffer.get());
 
@@ -84,7 +84,7 @@ namespace GaladHen
 
         for (const SceneObject& sceneObject : scene.SceneObjects)
         {
-            CommandBuffer<RenderCommand> renderBuffer;
+            CommandBuffer<RenderCommand> renderCommandBuffer;
 
             std::weak_ptr<Model> model = sceneObject.GetSceneObjectModel();
             std::shared_ptr<Model> shModel = model.lock();
@@ -107,10 +107,10 @@ namespace GaladHen
                 command.AdditionalBufferData.emplace(GH_POINTLIGHT_DATA_BUFFER_NAME, &PointLightBuffer);
                 command.AdditionalBufferData.emplace(GH_DIRLIGHT_DATA_BUFFER_NAME, &DirLightBuffer);
 
-                renderBuffer.emplace_back(command);
+                renderCommandBuffer.emplace_back(command);
             }
 
-            RendererAPI->Draw(renderBuffer);
+            RendererAPI->Draw(renderCommandBuffer);
             // A single Render Command at time because at the moment we use a TransformDataBuffer that invalidates itself when changing data ->
             // passing the same TransformDataBuffer inside the AdditionalBufferData means using the same buffer but also the latest same data stored inside it
             // (we should have instead a different buffer for each Render Command)
@@ -278,19 +278,25 @@ namespace GaladHen
     }
 
     RenderingSystem::RenderContext::RenderContext(RenderingSystem& renderingSys, unsigned int width, unsigned int height, RenderingSystem::RenderContextType renderContextType)
-        : FrontBuffer(renderingSys.CreateRenderBuffer(width, height))
+        : FrontBuffer(renderingSys.CreateRenderBuffer(width, height, TextureFormat::RGB8))
         , BackBuffer(std::shared_ptr<RenderBuffer>{})
         , RenderContextType(renderContextType)
     {
         if (RenderContextType == RenderContextType::DoubleBuffering)
         {
-            BackBuffer = renderingSys.CreateRenderBuffer(width, height).lock();
+            BackBuffer = renderingSys.CreateRenderBuffer(width, height, TextureFormat::RGB8).lock();
         }
         else
         {
             BackBuffer = FrontBuffer;
         }
     }
+
+    RenderingSystem::RenderContext::RenderContext(std::weak_ptr<RenderBuffer> renderBuffer)
+        : FrontBuffer(renderBuffer)
+        , BackBuffer(std::shared_ptr<RenderBuffer>{})
+        , RenderContextType(RenderContextType::SingleBuffering)
+    {}
 
     RenderingSystem::RenderContextType RenderingSystem::RenderContext::GetRenderContextType()
     {

@@ -18,6 +18,7 @@ namespace GaladHen
 	class Texture;
 	class Mesh;
 	class IBuffer;
+	enum class TextureFormat;
 
 	class RendererGL : public IRendererAPI
 	{
@@ -29,7 +30,7 @@ namespace GaladHen
 
 		virtual void InitUI() override;
 
-		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height) override;
+		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth) override;
 
 		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) override;
 
@@ -84,10 +85,10 @@ namespace GaladHen
 		// OpenGL pixel formats are called Base Internal Formats
 		// https://www.khronos.org/opengl/wiki/Image_Format
 		// https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexStorage2D.xhtml
-		static GLenum PixelChannelsAssociations[4];
+		static GLenum TextureChannelsAssociations[61];
 		// OpenGL pixel data type
 		// https://registry.khronos.org/OpenGL-Refpages/gl4/html/glTexSubImage2D.xhtml (type parameter)
-		static GLenum PixelChannelDepthAssociations[19];
+		static GLenum PixelDataTypeAssociations[19];
 		static GLint WrappingAssociations[4];
 		static GLint FilteringAssociations[6];
 		static GLenum TextureUnits[32];
@@ -101,8 +102,8 @@ namespace GaladHen
 			GLuint TextureID;
 			TextureAllocationType AllocationType;
 			GLenum TextureFormat;
-			GLenum PixelChannels;
-			GLenum PixelChannelDepth;
+			GLenum TextureChannels;
+			GLenum PixelDataType;
 			GLint Wrapping;
 			GLint Filtering;
 			GLenum TextureUnit;
@@ -113,7 +114,7 @@ namespace GaladHen
 		{
 			GLuint FrameBufferID;
 			unsigned int ColorTextureID;
-			unsigned int DepthStencilTextureID;
+			unsigned int DepthStencilTextureID; // zero if it is not attached
 		};
 
 		// https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml

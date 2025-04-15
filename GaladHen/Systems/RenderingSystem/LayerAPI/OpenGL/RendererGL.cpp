@@ -32,21 +32,25 @@ namespace GaladHen
 
 	GLenum RendererGL::TextureFormatAssociations[61] =
 	{
-		GL_RGB, // (int)TextureFormat::RGB
+		GL_R8, // (int)TextureFormat::R8
+		GL_RG8, // (int)TextureFormat::RG8
 		GL_RGB8, // (int)TextureFormat::RGB8
-		GL_SRGB, // (int)TextureFormat::SRGB
-		GL_SRGB8 // (int)TextureFormat::SRGB8
+		GL_RGBA8, // (int)TextureFormat::RGBA8
+		GL_SRGB8, // (int)TextureFormat::SRGB8
+		GL_SRGB8_ALPHA8, // (int)TextureFormat::SRGBA8
 	};
 
-	GLenum RendererGL::PixelChannelsAssociations[4] =
+	GLenum RendererGL::TextureChannelsAssociations[61] =
 	{
-		GL_RED,
-		GL_RG,
-		GL_RGB,
-		GL_RGBA
+		GL_RED, // (int)TextureFormat::R8
+		GL_RG, // (int)TextureFormat::RG8
+		GL_RGB, // (int)TextureFormat::RGB8
+		GL_RGBA, // (int)TextureFormat::RGBA8
+		GL_RGB, // (int)TextureFormat::SRGB8
+		GL_RGBA // (int)TextureFormat::SRGBA8
 	};
 
-	GLenum RendererGL::PixelChannelDepthAssociations[19] =
+	GLenum RendererGL::PixelDataTypeAssociations[19] =
 	{
 		GL_UNSIGNED_BYTE
 	};
@@ -193,7 +197,7 @@ namespace GaladHen
 		}
 	}
 
-	unsigned int RendererGL::CreateRenderBuffer(unsigned int width, unsigned int height)
+	unsigned int RendererGL::CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth)
 	{
 		unsigned int id = RenderBuffers.AddWithId();
 		RenderBufferGL& rb = RenderBuffers.GetObjectWithId(id);
@@ -201,19 +205,23 @@ namespace GaladHen
 		glGenFramebuffers(1, &rb.FrameBufferID);
 		glBindFramebuffer(GL_FRAMEBUFFER, rb.FrameBufferID);
 
-		Texture texture{ nullptr, width, height, 4, 0, TextureFormat::RGB8 };
-		texture.SetFiltering(TextureFiltering::Linear);
-
-		//assert(textureData.AccessType == TextureAccessType::ReadWrite); // For a render target we want to be able to read and write from it
+		Texture texture{ nullptr, width, height, 0, format };
 
 		rb.ColorTextureID = CreateTexture(texture, TextureAllocationType::Dynamic); // dynamic allocation for render buffers
-		rb.DepthStencilTextureID = CreateDepthStencilTexture(width, height);
-
 		TextureGL& colorTexture = Textures.GetObjectWithId(rb.ColorTextureID);
-		TextureGL& depthStencilTexture = Textures.GetObjectWithId(rb.DepthStencilTextureID);
-
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture.TextureID, 0);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthStencilTexture.TextureID, 0);
+
+		// Create and attach depth buffer, if requested
+		if (enableDepth)
+		{
+			rb.DepthStencilTextureID = CreateDepthStencilTexture(width, height);
+			TextureGL& depthStencilTexture = Textures.GetObjectWithId(rb.DepthStencilTextureID);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthStencilTexture.TextureID, 0);
+		}
+		else
+		{
+			rb.DepthStencilTextureID = 0;
+		}
 
 		// Check status
 		glBindFramebuffer(GL_FRAMEBUFFER, rb.FrameBufferID);
@@ -617,8 +625,8 @@ namespace GaladHen
 		textureGL.Filtering = FilteringAssociations[(int)texture.GetFiltering()];
 		textureGL.Wrapping = WrappingAssociations[(int)texture.GetWrapping()];
 		textureGL.TextureFormat = TextureFormatAssociations[(int)texture.GetFormat()];
-		textureGL.PixelChannels = PixelChannelsAssociations[texture.GetNumberOfChannels() - 1];
-		textureGL.PixelChannelDepth = PixelChannelDepthAssociations[0];
+		textureGL.TextureChannels = TextureChannelsAssociations[(int)texture.GetFormat()];
+		textureGL.PixelDataType = PixelDataTypeAssociations[0];
 
 		// bind new texture object to texture target
 		glBindTexture(GL_TEXTURE_2D, textureGL.TextureID);
@@ -637,7 +645,7 @@ namespace GaladHen
 			glm::uvec2 textureSize;
 			texture.GetSize(textureSize);
 			unsigned char* data = texture.GetData();
-			glTexImage2D(GL_TEXTURE_2D, textureGL.Levels, textureGL.TextureFormat, textureSize.x, textureSize.y, 0, textureGL.PixelChannels, textureGL.PixelChannelDepth, data);
+			glTexImage2D(GL_TEXTURE_2D, textureGL.Levels, textureGL.TextureFormat, textureSize.x, textureSize.y, 0, textureGL.TextureChannels, textureGL.PixelDataType, data);
 			
 			if (glGetError() != GL_NO_ERROR)
 			{
@@ -668,7 +676,7 @@ namespace GaladHen
 
 			// copy texture data to texture object
 			unsigned char* data = texture.GetData();
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureSize.x, textureSize.y, textureGL.PixelChannels, textureGL.PixelChannelDepth, data);
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureSize.x, textureSize.y, textureGL.TextureChannels, textureGL.PixelDataType, data);
 		}
 		default:
 			break;

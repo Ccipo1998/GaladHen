@@ -169,6 +169,8 @@ namespace GaladHen
 
     Texture* AssetSystem::LoadTextureFromFile(const char* filePath, TextureFormat textureFormat)
     {
+        // TODO: trovare modo di poter leggere il formato della texture e/o fare check su numero canali trovati dalla stbi_load e il parametro texture format
+
         int width, height, channels;
         unsigned char* bytes = stbi_load(filePath, &width, &height, &channels, 0);
 
@@ -182,7 +184,7 @@ namespace GaladHen
             return nullptr;
         }
 
-        return new Texture{ bytes, (unsigned int)width, (unsigned int)height, (unsigned int)channels, 0, textureFormat };
+        return new Texture{ bytes, (unsigned int)width, (unsigned int)height, 0, textureFormat };
     }
 
     void AssetSystem::ProcessMesh(aiMesh* mesh, std::vector<Mesh>& outMeshes)

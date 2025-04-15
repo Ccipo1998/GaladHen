@@ -57,15 +57,15 @@ namespace GaladHen
         std::weak_ptr<Texture> texRoughness = AssetSystem::GetInstance()->LoadAndStoreTexture(
             "Assets/Textures/StuccoRoughCast001_ROUGHNESS_2K_METALNESS.png",
             "StuccoRoughness",
-            TextureFormat::RGB);
+            TextureFormat::RG8);
         texRoughness.lock()->SetNumberOfMipMaps(4);
 
-        std::weak_ptr<ShaderPipeline> unlit = AssetSystem::GetInstance()->LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/VertexUnlitColor.frag", "", "VertexUnlitColor");
-        std::weak_ptr<Material> aabbMat = AssetSystem::GetInstance()->CreateAndStoreMaterial("AABBMaterial");
-        std::shared_ptr<Material> shAabbMat = aabbMat.lock();
-        // no need to check ptr validity
-        shAabbMat->SetPipeline(unlit);
-        shAabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+        std::weak_ptr<ShaderPipeline> unlit = AssetSystem::GetInstance()->LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/UnlitColor.frag", "", "UnlitColor");
+        //std::weak_ptr<Material> aabbMat = AssetSystem::GetInstance()->CreateAndStoreMaterial("AABBMaterial");
+        //std::shared_ptr<Material> shAabbMat = aabbMat.lock();
+        //// no need to check ptr validity
+        //shAabbMat->SetPipeline(unlit);
+        //shAabbMat->Vec4Data.emplace("Diffuse", glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
         // materials
         std::weak_ptr<Material> bunnyMat = AssetSystem::GetInstance()->CreateAndStoreMaterial("BunnyMaterial");
@@ -76,14 +76,16 @@ namespace GaladHen
         shBunnyMat->ScalarData.emplace("Metallic", 0.0f);
         shBunnyMat->ScalarData.emplace("Roughness", 0.5f);
 
-        /*std::shared_ptr<Material> planeMat = std::shared_ptr<Material>{ new Material { pbr } };
-        planeMat->Vec4Data.emplace("Diffuse", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
-        planeMat->ScalarData.emplace("Metallic", 0.0f);
-        planeMat->ScalarData.emplace("Roughness", 0.1f);*/
+        std::weak_ptr<Material> planeMat = AssetSystem::GetInstance()->CreateAndStoreMaterial("PlaneMaterial");
+        std::shared_ptr<Material> shPlaneMat = planeMat.lock();
+        shPlaneMat->SetPipeline(unlit);
+        shPlaneMat->Vec4Data.emplace("ConstantColor", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
+        shPlaneMat->ScalarData.emplace("Metallic", 0.0f);
+        shPlaneMat->ScalarData.emplace("Roughness", 0.1f);
 
         // load models
         std::weak_ptr<Model> bunny = AssetSystem::GetInstance()->LoadAndStoreModel("Assets/Models/bunny.glb", "Bunny");
-        //std::shared_ptr<Model> plane = AssetsManager::LoadAndStoreModel("GaladHen/Assets/Models/plane.glb", "Plane");
+        std::weak_ptr<Model> plane = AssetSystem::GetInstance()->LoadAndStoreModel("Assets/Models/plane.glb", "Plane");
 
         // bvh
         /*bunny->GetMeshes()[0].BVH.BuildBVH(bunny->GetMeshes()[0], AABBSplitMethod::PlaneCandidates);
@@ -109,10 +111,10 @@ namespace GaladHen
         bunnyObj.Transform.SetYaw(50.0f);
         Scene.SceneObjects.emplace_back(bunnyObj);
 
-        //SceneObject planeObj{ plane };
-        //planeObj.SetMeshMaterialLink(0, planeMat);
-        //planeObj.Transform.SetScale(glm::vec3(5.0f, 1.0f, 5.0f));
-        ////Scene.SceneObjects.emplace_back(planeObj);
+        SceneObject planeObj{ plane };
+        planeObj.SetMeshMaterialLink(0, planeMat);
+        planeObj.Transform.SetScale(glm::vec3(10.0f, 1.0f, 10.0f));
+        Scene.SceneObjects.emplace_back(planeObj);
 
         //RayModelHitInfo hit = Math::RayModelIntersection(ray, *bunny, bunny->BVH, bunnyObj.Transform, BVHTraversalMethod::FrontToBack);
         //std::vector<unsigned int> indices = { 0, 1, 2 };

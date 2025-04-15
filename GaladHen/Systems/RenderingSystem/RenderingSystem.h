@@ -30,6 +30,7 @@ namespace GaladHen
     class Texture;
     class PointLight;
     class DirectionalLight;
+    enum class TextureFormat;
 
 	class RenderingSystem : public ISystem, public WeakSingleton<RenderingSystem>
 	{
@@ -41,7 +42,8 @@ namespace GaladHen
 
         // @brief
         // Create a gpu render buffer
-        std::weak_ptr<RenderBuffer> CreateRenderBuffer(unsigned int width, unsigned int height);
+        // @param writeDepth: specifies whether writing on a depth buffer is enabled when using the render buffer or not
+        std::weak_ptr<RenderBuffer> CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth = true);
 
         // @brief
         // Get default front render buffer
@@ -127,6 +129,8 @@ namespace GaladHen
             // TODO: RenderScene -> collection of models and theirs Bounding Volumes + spatial partitioning structure containing all the models (for frustum culling)
 
             RenderContext(RenderingSystem& renderingSys, unsigned int width, unsigned int height, RenderContextType renderContextType);
+
+            RenderContext(std::weak_ptr<RenderBuffer> renderBuffer);
 
             RenderContextType GetRenderContextType();
 

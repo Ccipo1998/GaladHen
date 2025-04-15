@@ -4,10 +4,9 @@
 
 namespace GaladHen
 {
-	Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int numberOfChannels, unsigned int numberOfMipMaps, TextureFormat format)
+	Texture::Texture(unsigned char* data, unsigned int width, unsigned int height, unsigned int numberOfMipMaps, TextureFormat format)
 		: Width(width)
 		, Height(height)
-		, NumberOfChannels(numberOfChannels)
 		, NumberOfMipMaps(numberOfMipMaps)
 		, Format(format)
 		, Filtering(TextureFiltering::Linear)
@@ -24,11 +23,6 @@ namespace GaladHen
 	{
 		outSize.x = Width;
 		outSize.y = Height;
-	}
-
-	unsigned int Texture::GetNumberOfChannels() const
-	{
-		return NumberOfChannels;
 	}
 
 	unsigned int Texture::GetNumberOfMipMaps() const
