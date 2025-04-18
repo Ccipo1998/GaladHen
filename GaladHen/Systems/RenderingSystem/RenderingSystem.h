@@ -138,6 +138,8 @@ namespace GaladHen
 
             std::weak_ptr<RenderBuffer> GetBackBuffer() const;
 
+            std::weak_ptr<RenderBuffer> GetShadowDepthBuffer() const;
+
             void SwapBuffers();
 
             Camera RenderingCamera;
@@ -148,6 +150,8 @@ namespace GaladHen
             // RenderBuffer(s) -> two in case of multiple buffering
             std::shared_ptr<RenderBuffer> FrontBuffer;
             std::shared_ptr<RenderBuffer> BackBuffer;
+
+            std::shared_ptr<RenderBuffer> ShadowDepthBuffer;
 
         };
 
@@ -164,6 +168,7 @@ namespace GaladHen
         std::unordered_set<unsigned int> LoadedBuffersCache; // cache of already loaded buffers -> for reloading, it requires that a buffer knows when it has been modified
         std::unordered_set<unsigned int> CompiledShadersCache; // cache of already compiled shaders -> for reloading, it requires that a shader knows when it has been modified
         std::vector<std::shared_ptr<RenderBuffer>> RenderBuffers; // list of created render buffers
+        Material ShadowDepthMaterial; // material to render shadow depth maps
 
         // Buffers
         FixedBuffer<CameraBufferData, 1> CameraBuffer;
@@ -178,8 +183,8 @@ namespace GaladHen
         // INTERNAL FUNCTIONALITIES ---------------------------------------------------------
 
         RenderContext& GetDefaultRenderContext();
-        void BeforeDraw(const RenderContext& renderContext);
-        void AfterDraw(RenderContext& renderContext);
+        void BeforeDraw(const RenderBuffer& renderBuffer);
+        void AfterDraw(const RenderBuffer& renderBuffer);
         bool IsMeshCached(unsigned int meshID);
         void CacheMesh(unsigned int meshID);
         void UncacheMesh(unsigned int meshID);
@@ -219,5 +224,7 @@ namespace GaladHen
         void UnsetRenderBufferTarget(const RenderBuffer& renderBuffer);
         void SwapMainWindowBuffers();
         void BeforeDrawUI();
+        void SetupShadowDepthMaterial();
+        std::weak_ptr<RenderBuffer> CreateRenderBuffer_Internal(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth = true, bool clampDepthToBorder = false);
 	};
 }

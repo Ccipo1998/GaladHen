@@ -10,6 +10,8 @@
 
 namespace GaladHen
 {
+	class RenderBuffer;
+
 	template <class T>
 	class CommandBuffer : public std::vector<T>
 	{
@@ -25,7 +27,9 @@ namespace GaladHen
 		// unsigned int InstanceCount; TODO: instanced rendering
 		unsigned int ShaderSourceID;
 		Material* Material;
+		std::unordered_map<std::string, glm::mat4> AdditionalMat4Data; // Temp, consider using a MaterialData struct, such that can be used here in a variable named AdditionalMaterialData
 		std::unordered_map<std::string, IBuffer*> AdditionalBufferData; // Like buffers managed by renderer (camera data, transform data, ...)
+		std::unordered_map<std::string, RenderBuffer*> AdditionalRenderBufferData; // Like render buffers managed by renderer (shadow maps, ...)
 	};
 
 	enum class MemoryTargetType

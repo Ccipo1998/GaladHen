@@ -30,7 +30,7 @@ namespace GaladHen
 
 		virtual void InitUI() override;
 
-		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth) override;
+		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth, bool clampDepthToBorder) override;
 
 		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) override;
 
@@ -114,7 +114,7 @@ namespace GaladHen
 		{
 			GLuint FrameBufferID;
 			unsigned int ColorTextureID;
-			unsigned int DepthStencilTextureID; // zero if it is not attached
+			unsigned int DepthTextureID; // zero if it is not attached
 		};
 
 		// https://registry.khronos.org/OpenGL-Refpages/gl4/html/glBufferData.xhtml
@@ -134,7 +134,7 @@ namespace GaladHen
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
 
 		unsigned int CreateTexture(const Texture& texture, TextureAllocationType allocationType = TextureAllocationType::Constant);
-		unsigned int CreateDepthStencilTexture(unsigned int width, unsigned int height);
+		unsigned int CreateDepthTexture(unsigned int width, unsigned int height, bool clampToBorder = false);
 		void FreeTexture(unsigned int textureID);
 		void LoadTexture(unsigned int textureID, const Texture& texture, TextureAllocationType allocationType = TextureAllocationType::Constant);
 

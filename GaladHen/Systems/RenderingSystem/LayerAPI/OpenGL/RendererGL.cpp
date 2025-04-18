@@ -15,6 +15,7 @@
 #include <Systems/RenderingSystem/Entities/Texture.h>
 #include <Systems/RenderingSystem/Entities/Mesh.h>
 #include <Systems/RenderingSystem/Entities/Buffer.hpp>
+#include <Systems/RenderingSystem/Entities/RenderBuffer.h>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -197,7 +198,7 @@ namespace GaladHen
 		}
 	}
 
-	unsigned int RendererGL::CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth)
+	unsigned int RendererGL::CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth, bool clampDepthToBorder)
 	{
 		unsigned int id = RenderBuffers.AddWithId();
 		RenderBufferGL& rb = RenderBuffers.GetObjectWithId(id);
@@ -214,13 +215,13 @@ namespace GaladHen
 		// Create and attach depth buffer, if requested
 		if (enableDepth)
 		{
-			rb.DepthStencilTextureID = CreateDepthStencilTexture(width, height);
-			TextureGL& depthStencilTexture = Textures.GetObjectWithId(rb.DepthStencilTextureID);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, depthStencilTexture.TextureID, 0);
+			rb.DepthTextureID = CreateDepthTexture(width, height, clampDepthToBorder);
+			TextureGL& depthTexture = Textures.GetObjectWithId(rb.DepthTextureID);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture.TextureID, 0);
 		}
 		else
 		{
-			rb.DepthStencilTextureID = 0;
+			rb.DepthTextureID = 0;
 		}
 
 		// Check status
@@ -300,10 +301,25 @@ namespace GaladHen
 				glProgramUniform4f(program, glGetUniformLocation(program, vec4.first.data()), vec4.second.x, vec4.second.y, vec4.second.z, vec4.second.w);
 			}
 
+			for (auto& mat3 : rc.Material->Mat4Data)
+			{
+				glProgramUniformMatrix3fv(program, glGetUniformLocation(program, mat3.first.data()), 1, GL_FALSE, (GLfloat*)&mat3.second);
+			}
+
+			for (auto& mat4 : rc.Material->Mat4Data)
+			{
+				glProgramUniformMatrix4fv(program, glGetUniformLocation(program, mat4.first.data()), 1, GL_FALSE, (GLfloat*)&mat4.second);
+			}
+
 			//for (ShaderIntegerData& data : rc.ShaderData.IntegerData)
 			//{
 			//	glProgramUniform1i(program, glGetUniformLocation(program, data.DataName.data()), data.Integer);
 			//}
+
+			for (auto& mat4Data : rc.AdditionalMat4Data)
+			{
+				glProgramUniformMatrix4fv(program, glGetUniformLocation(program, mat4Data.first.data()), 1, GL_FALSE, (GLfloat*)&mat4Data.second);
+			}
 
 			unsigned int unit = 0;
 			for (auto& texture : rc.Material->TextureData)
@@ -326,6 +342,25 @@ namespace GaladHen
 				glBindTexture(GL_TEXTURE_2D, textureGL.TextureID);
 				// create uniform sampler
 				int loc = glGetUniformLocation(program, texture.first.data());
+				glUniform1i(loc, unit);
+
+				++unit;
+			}
+			for (auto& renderBufferData : rc.AdditionalRenderBufferData)
+			{
+				if (renderBufferData.second == nullptr)
+				{
+					// render buffer not valid
+					continue;
+				}
+
+				unsigned int renderBufferID = GPUResourceInspector::GetResourceID(renderBufferData.second);
+				RenderBufferGL& renderBufferGL = RenderBuffers.GetObjectWithId(renderBufferID);
+				TextureGL& textureGL = Textures.GetObjectWithId(renderBufferGL.DepthTextureID);
+				glActiveTexture(TextureUnits[unit]);
+				glBindTexture(GL_TEXTURE_2D, textureGL.TextureID);
+				// create uniform sampler
+				int loc = glGetUniformLocation(program, renderBufferData.first.data());
 				glUniform1i(loc, unit);
 
 				++unit;
@@ -593,16 +628,26 @@ namespace GaladHen
 		return id;
 	}
 
-	unsigned int RendererGL::CreateDepthStencilTexture(unsigned int width, unsigned int height)
+	unsigned int RendererGL::CreateDepthTexture(unsigned int width, unsigned int height, bool clampToBorder)
 	{
 		unsigned int id = Textures.AddWithId();
 		TextureGL& texture = Textures.GetObjectWithId(id);
 
 		glGenTextures(1, &texture.TextureID);
 		glBindTexture(GL_TEXTURE_2D, texture.TextureID);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		if (clampToBorder)
+		{
+			// Clamp the border and manually set maximum depth (1.0) on the border itself
+			// This way we can avoid some shadow specific problems
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+		}
 
 		return id;
 	}

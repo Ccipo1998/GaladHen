@@ -1,6 +1,7 @@
 
 #include "RenderingSystem.h"
 
+#include <Systems/AssetSystem/AssetSystem.h>
 #include <Utils/log.h>
 #include "LayerAPI/OpenGL/RendererGL.h"
 #include "GPUResourceInspector.h"
@@ -21,6 +22,8 @@
 #define GH_LIGHTING_DATA_BUFFER_NAME "LightingData"
 #define GH_POINTLIGHT_DATA_BUFFER_NAME "PointLightBuffer"
 #define GH_DIRLIGHT_DATA_BUFFER_NAME "DirectionalLightBuffer"
+#define GH_SHADOW_MAP_SAMPLER_NAME "ShadowMap"
+#define GH_LIGHTSPACEMATRIX_UNIFORM_NAME "LightSpaceMatrix"
 
 namespace GaladHen
 {
@@ -38,16 +41,7 @@ namespace GaladHen
 
     std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth)
     {
-        // Create object
-        std::shared_ptr<RenderBuffer> renderBuffer = std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height, format, enableDepth } };
-        RenderBuffers.emplace_back(renderBuffer); // rendering system ownership
-
-        // Create render buffer at api level and assing id
-        unsigned int id = RendererAPI->CreateRenderBuffer(width, height, format, enableDepth);
-        GPUResourceInspector::SetResourceID(renderBuffer.get(), id);
-        GPUResourceInspector::ValidateResource(renderBuffer.get());
-
-        return renderBuffer;
+        return CreateRenderBuffer_Internal(width, height, format, enableDepth);
     }
 
     std::weak_ptr<RenderBuffer> RenderingSystem::GetFrontRenderBuffer()
@@ -67,10 +61,68 @@ namespace GaladHen
 
     void RenderingSystem::Draw(const Scene& scene)
     {
-        BeforeDraw(GetDefaultRenderContext());
+        RenderContext& DefaultRenderContext = GetDefaultRenderContext();
+        std::shared_ptr<RenderBuffer> shadowBuffer = DefaultRenderContext.GetShadowDepthBuffer().lock();
+        std::shared_ptr<RenderBuffer> backBuffer = DefaultRenderContext.GetBackBuffer().lock();
+
+        if (!shadowBuffer || !backBuffer)
+            return;
+
+        // common operations
 
         std::unordered_set<unsigned int> loadedMeshesIDs;
         LoadModels(scene, loadedMeshesIDs);
+
+        // Draw shadow map
+
+        // Use light orientation as camera to render shadow depth
+        Camera shadowCamera{};
+        // Take first directional light to start
+        shadowCamera.Transform = (scene.DirectionalLights[0].Transform);
+        shadowCamera.Transform.SetPosition(shadowCamera.Transform.GetPosition() - shadowCamera.Transform.GetFront() * 10.0f);
+        LoadCameraData(shadowCamera);
+
+        BeforeDraw(*shadowBuffer);
+
+        // TODO: instanced draw
+
+        for (const SceneObject& sceneObject : scene.SceneObjects)
+        {
+            CommandBuffer<RenderCommand> renderCommandBuffer;
+
+            std::weak_ptr<Model> model = sceneObject.GetSceneObjectModel();
+            std::shared_ptr<Model> shModel = model.lock();
+            if (!shModel)
+                continue;
+
+            unsigned int index = 0;
+            for (Mesh& mesh : shModel->Meshes)
+            {
+                RenderCommand command;
+                command.DataSourceID = GPUResourceInspector::GetResourceID(&mesh);
+                command.Material = &ShadowDepthMaterial; // Use shadow depth material to render scene objects
+                command.ShaderSourceID = GPUResourceInspector::GetResourceID(command.Material->GetPipeline().lock().get());
+
+                // Add scene depth rendering data
+                command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, &CameraBuffer);
+                LoadTransformData(sceneObject.Transform);
+                command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, &TransformBuffer);
+
+                renderCommandBuffer.emplace_back(command);
+            }
+
+            RendererAPI->Draw(renderCommandBuffer);
+            // A single Render Command at time because at the moment we use a TransformDataBuffer that invalidates itself when changing data ->
+            // passing the same TransformDataBuffer inside the AdditionalBufferData means using the same buffer but also the latest same data stored inside it
+            // (we should have instead a different buffer for each Render Command)
+        }
+
+        AfterDraw(*shadowBuffer);
+
+        // Draw scene
+
+        BeforeDraw(*backBuffer);
+
         CompileShaders(scene);
         std::unordered_set<unsigned int> loadedTexturesIDs, loadedBuffersIDs;
         LoadMaterialsData(scene, loadedTexturesIDs, loadedBuffersIDs);
@@ -106,6 +158,8 @@ namespace GaladHen
                 command.AdditionalBufferData.emplace(GH_LIGHTING_DATA_BUFFER_NAME, &LightingBuffer);
                 command.AdditionalBufferData.emplace(GH_POINTLIGHT_DATA_BUFFER_NAME, &PointLightBuffer);
                 command.AdditionalBufferData.emplace(GH_DIRLIGHT_DATA_BUFFER_NAME, &DirLightBuffer);
+                command.AdditionalRenderBufferData.emplace(GH_SHADOW_MAP_SAMPLER_NAME, shadowBuffer.get());
+                command.AdditionalMat4Data.emplace(GH_LIGHTSPACEMATRIX_UNIFORM_NAME, shadowCamera.GetProjectionMatrix() * shadowCamera.GetViewMatrix());
 
                 renderCommandBuffer.emplace_back(command);
             }
@@ -121,7 +175,11 @@ namespace GaladHen
         FreeUnusedTextures(loadedTexturesIDs);
         FreeUnusedBuffers(loadedBuffersIDs);
 
-        AfterDraw(GetDefaultRenderContext());
+        AfterDraw(*backBuffer);
+
+        // Swap buffers
+        DefaultRenderContext.SwapBuffers();
+        SwapMainWindowBuffers();
     }
 
     void RenderingSystem::DrawUI()
@@ -265,6 +323,9 @@ namespace GaladHen
         LoadCameraData(Camera{});
         LoadTransformData(Transform{});
 
+        // Load, compile and setup shadow maps material
+        SetupShadowDepthMaterial();
+
         Initialized = true;
     }
 
@@ -278,13 +339,14 @@ namespace GaladHen
     }
 
     RenderingSystem::RenderContext::RenderContext(RenderingSystem& renderingSys, unsigned int width, unsigned int height, RenderingSystem::RenderContextType renderContextType)
-        : FrontBuffer(renderingSys.CreateRenderBuffer(width, height, TextureFormat::RGB8))
+        : FrontBuffer(renderingSys.CreateRenderBuffer_Internal(width, height, TextureFormat::RGB8))
         , BackBuffer(std::shared_ptr<RenderBuffer>{})
         , RenderContextType(renderContextType)
+        , ShadowDepthBuffer(renderingSys.CreateRenderBuffer_Internal(width, height, TextureFormat::RGB8, true, true)) // TODO: aggiungere selezione risoluzione shadow depth
     {
         if (RenderContextType == RenderContextType::DoubleBuffering)
         {
-            BackBuffer = renderingSys.CreateRenderBuffer(width, height, TextureFormat::RGB8).lock();
+            BackBuffer = renderingSys.CreateRenderBuffer_Internal(width, height, TextureFormat::RGB8).lock();
         }
         else
         {
@@ -313,6 +375,11 @@ namespace GaladHen
         return BackBuffer;
     }
 
+    std::weak_ptr<RenderBuffer> RenderingSystem::RenderContext::GetShadowDepthBuffer() const
+    {
+        return ShadowDepthBuffer;
+    }
+
     void RenderingSystem::RenderContext::SwapBuffers()
     {
         if (RenderContextType == RenderContextType::DoubleBuffering)
@@ -325,39 +392,26 @@ namespace GaladHen
         return RenderContexts.GetObjectWithId(1);
     }
 
-    void RenderingSystem::BeforeDraw(const RenderContext& renderContext)
+    void RenderingSystem::BeforeDraw(const RenderBuffer& renderBuffer)
     {
-        // Operations needed before drawing
+        // Operations needed before drawing to a render buffer
 
-        std::weak_ptr<RenderBuffer> backBuffer = renderContext.GetBackBuffer();
-        if (std::shared_ptr<RenderBuffer> shBackBuffer = backBuffer.lock())
-        {
-            // Clear back render buffer
-            ClearRenderBuffer(*shBackBuffer);
+        // Clear back render buffer
+        ClearRenderBuffer(renderBuffer);
 
-            // Set render context's back buffer as target for next draw calls
-            SetRenderBufferTarget(*shBackBuffer);
+        // Set render context's back buffer as target for next draw calls
+        SetRenderBufferTarget(renderBuffer);
 
-            // Set viewport basing on render buffer resolution
-            RendererAPI->SetViewport(glm::uvec2(0, 0), shBackBuffer->GetSize());
-        }
+        // Set viewport basing on render buffer resolution
+        RendererAPI->SetViewport(glm::uvec2(0, 0), renderBuffer.GetSize());
     }
 
-    void RenderingSystem::AfterDraw(RenderContext& renderContext)
+    void RenderingSystem::AfterDraw(const RenderBuffer& renderBuffer)
     {
-        // Operations needed after drawing
+        // Operations needed after drawing to a render buffer
 
-        // Unbind render context's back buffer as target
-        std::weak_ptr<RenderBuffer> backBuffer = renderContext.GetBackBuffer();
-        if (std::shared_ptr<RenderBuffer> shBackBuffer = backBuffer.lock())
-        {
-            UnsetRenderBufferTarget(*shBackBuffer);
-
-            // Swap buffers
-            renderContext.SwapBuffers();
-
-            SwapMainWindowBuffers();
-        }
+        // Unbind render buffer as target for next draw calls
+        UnsetRenderBufferTarget(renderBuffer);
     }
 
     bool RenderingSystem::IsMeshCached(unsigned int meshID)
@@ -800,5 +854,32 @@ namespace GaladHen
     void RenderingSystem::BeforeDrawUI()
     {
         RendererAPI->BeforeDrawUI();
+    }
+
+    void RenderingSystem::SetupShadowDepthMaterial()
+    {
+        // Load shader pipeline
+        std::weak_ptr<ShaderPipeline> shadowDepthPipeline = AssetSystem::GetInstance()->LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/ShadowDepth/ShadowDepth.vert", "", "", "", "GaladHen/Shaders/ShadingModels/ShadowDepth/ShadowDepth.frag", "", "ShadowDepth");
+        std::shared_ptr<ShaderPipeline> shShadowDepthPipeline = shadowDepthPipeline.lock();
+
+        // Compile shader pipeline
+        CompileShader(*shShadowDepthPipeline);
+
+        // Setup material
+        ShadowDepthMaterial.SetPipeline(shadowDepthPipeline);
+    }
+
+    std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer_Internal(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth, bool clampDepthToBorder)
+    {
+        // Create object
+        std::shared_ptr<RenderBuffer> renderBuffer = std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height, format, enableDepth } };
+        RenderBuffers.emplace_back(renderBuffer); // rendering system ownership
+
+        // Create render buffer at api level and assing id
+        unsigned int id = RendererAPI->CreateRenderBuffer(width, height, format, enableDepth, clampDepthToBorder);
+        GPUResourceInspector::SetResourceID(renderBuffer.get(), id);
+        GPUResourceInspector::ValidateResource(renderBuffer.get());
+
+        return renderBuffer;
     }
 }

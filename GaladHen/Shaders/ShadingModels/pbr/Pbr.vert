@@ -29,7 +29,10 @@ out VS_OUT
     out vec3 WViewDirection;
     out vec2 TexCoord;
     out mat3 TBN;
+    out vec4 LightSpaceFragPos;
 } vs_out;
+
+uniform mat4 LightSpaceMatrix;
 
 void main()
 {
@@ -52,6 +55,9 @@ void main()
     // TBN matrix for normal mapping
     vec3 adjTangent = normalize(Tangent - dot(Tangent, transNormal) * transNormal); // re-orthogonalize tangent with respect to normal to ensure tangents are orthogonal when calculated (possible smoothing)
     vs_out.TBN = mat3(adjTangent, normalize(cross(transNormal, adjTangent)), transNormal);
+
+    // transform vertex to light space
+    vs_out.LightSpaceFragPos = LightSpaceMatrix * ModelMatrix * vec4(Position, 1.0);
 
     // transformed vertex position
     gl_Position = ProjectionMatrix * vec4(ViewPosition, 1.0);

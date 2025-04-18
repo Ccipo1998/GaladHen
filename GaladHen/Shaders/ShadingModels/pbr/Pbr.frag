@@ -13,6 +13,7 @@ in VS_OUT
     in vec3 WViewDirection;
     in vec2 TexCoord;
     in mat3 TBN;
+    in vec4 LightSpaceFragPos;
 } vs_out;
 
 // structs
@@ -66,6 +67,9 @@ const vec4 dielectricsF0 = vec4(0.04, 0.04, 0.04, 1.0);
 
 // Color space operations
 #include "GaladHen/Shaders/Common/ColorSpace.glsl"
+
+// Shadow mapping
+#include "GaladHen/Shaders/Common/ShadowMapping.glsl"
 
 float WindowedInverseSquareFalloff(float intensity, float lightRadius, float falloffDistance, float distanceFromLightSource)
 {
@@ -136,6 +140,7 @@ vec4 PhysicallyBasedShadingModel(vec3 wNormal, vec4 diffuseColor, float metallic
     vec3 wHalfDir = vec3(0.0);
 
     float lightIntensity = 0.0;
+    float shadowTest = 0.0;
 
     // point lights
     for (uint i = 0; i < PointLightNumber; ++i)
@@ -157,7 +162,8 @@ vec4 PhysicallyBasedShadingModel(vec3 wNormal, vec4 diffuseColor, float metallic
         wLightDir = -DirectionalLights[i].Direction;
         wHalfDir = normalize(wLightDir + vs_out.WViewDirection);
         specular = SpecularBRDF(wNormal, wLightDir, vs_out.WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
-        outgoing += DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
+        shadowTest = ShadowTest(vs_out.LightSpaceFragPos);
+        outgoing += (1.0 - shadowTest) * DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
     }
 
     return outgoing * pi;

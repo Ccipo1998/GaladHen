@@ -78,10 +78,20 @@ namespace GaladHen
 
         std::weak_ptr<Material> planeMat = AssetSystem::GetInstance()->CreateAndStoreMaterial("PlaneMaterial");
         std::shared_ptr<Material> shPlaneMat = planeMat.lock();
-        shPlaneMat->SetPipeline(unlit);
+
+        std::weak_ptr<ShaderPipeline> pbrPlane = AssetSystem::GetInstance()->LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Pbr/Pbr.vert", "", "", "", "GaladHen/Shaders/Materials/Plane.frag", "", "Plane");
+        shPlaneMat->SetPipeline(pbrPlane);
+        shPlaneMat->Vec4Data.emplace("DiffuseConstant", 1.0f);
+        shPlaneMat->ScalarData.emplace("Metallic", 0.0f);
+        shPlaneMat->ScalarData.emplace("Roughness", 1.0f);
+
+       /* std::weak_ptr<ShaderPipeline> debugShadowDepth = AssetSystem::GetInstance()->LoadAndStoreShaderPipeline("GaladHen/Shaders/ShadingModels/Unlit/Unlit.vert", "", "", "", "GaladHen/Shaders/Materials/DebugShadowDepth.frag", "", "DebugShadowDepth");
+        shPlaneMat->SetPipeline(debugShadowDepth);*/
+
+        /*shPlaneMat->SetPipeline(unlit);
         shPlaneMat->Vec4Data.emplace("ConstantColor", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));
         shPlaneMat->ScalarData.emplace("Metallic", 0.0f);
-        shPlaneMat->ScalarData.emplace("Roughness", 0.1f);
+        shPlaneMat->ScalarData.emplace("Roughness", 0.1f);*/
 
         // load models
         std::weak_ptr<Model> bunny = AssetSystem::GetInstance()->LoadAndStoreModel("Assets/Models/bunny.glb", "Bunny");
@@ -113,7 +123,7 @@ namespace GaladHen
 
         SceneObject planeObj{ plane };
         planeObj.SetMeshMaterialLink(0, planeMat);
-        planeObj.Transform.SetScale(glm::vec3(10.0f, 1.0f, 10.0f));
+        planeObj.Transform.SetScale(glm::vec3(50.0f, 1.0f, 50.0f));
         Scene.SceneObjects.emplace_back(planeObj);
 
         //RayModelHitInfo hit = Math::RayModelIntersection(ray, *bunny, bunny->BVH, bunnyObj.Transform, BVHTraversalMethod::FrontToBack);
