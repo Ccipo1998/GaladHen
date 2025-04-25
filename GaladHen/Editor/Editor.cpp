@@ -117,7 +117,7 @@ namespace GaladHen
         // load into scene
         SceneObject bunnyObj{ bunny };
         bunnyObj.SetMeshMaterialLink(0, bunnyMat);
-        bunnyObj.Transform.SetPosition(glm::vec3(0.0f, 1.5f, 0.0f));
+        bunnyObj.Transform.SetPosition(glm::vec3(0.0f, 0.85f, 0.0f));
         bunnyObj.Transform.SetYaw(50.0f);
         Scene.SceneObjects.emplace_back(bunnyObj);
 

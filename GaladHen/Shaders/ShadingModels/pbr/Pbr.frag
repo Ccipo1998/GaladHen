@@ -162,7 +162,7 @@ vec4 PhysicallyBasedShadingModel(vec3 wNormal, vec4 diffuseColor, float metallic
         wLightDir = -DirectionalLights[i].Direction;
         wHalfDir = normalize(wLightDir + vs_out.WViewDirection);
         specular = SpecularBRDF(wNormal, wLightDir, vs_out.WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
-        shadowTest = ShadowTest(vs_out.LightSpaceFragPos);
+        shadowTest = ShadowTest(vs_out.LightSpaceFragPos, wNormal, wLightDir);
         outgoing += (1.0 - shadowTest) * DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
     }
 
