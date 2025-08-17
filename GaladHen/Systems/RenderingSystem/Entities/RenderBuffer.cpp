@@ -3,11 +3,11 @@
 
 namespace GaladHen
 {
-	RenderBuffer::RenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth)
+	RenderBuffer::RenderBuffer(unsigned int width, unsigned int height, TextureFormat format, RenderBufferType renderBufferType)
 		: Size(glm::uvec2(width, height))
 		, ClearColor(GH_DEFAULT_RENDER_CLEAR_COLOR)
 		, Format(format)
-		, DepthBufferAttached(enableDepth)
+		, Type(renderBufferType)
 	{}
 
 	glm::uvec2 RenderBuffer::GetSize() const
@@ -22,9 +22,9 @@ namespace GaladHen
 		InvalidateResource();
 	}
 
-	bool RenderBuffer::IsDepthBufferAttached() const
+	RenderBufferType RenderBuffer::GetRenderBufferType() const
 	{
-		return DepthBufferAttached;
+		return Type;
 	}
 
 	TextureFormat RenderBuffer::GetFormat() const

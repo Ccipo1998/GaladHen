@@ -22,6 +22,7 @@ namespace GaladHen
 	class Camera;
 	class TransformQuat;
 	class RenderBuffer;
+	enum class RenderBufferType;
 	enum class TextureFormat;
 
 	class IRendererAPI
@@ -32,13 +33,21 @@ namespace GaladHen
 
 		virtual void InitUI() = 0;
 
-		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth, bool clampDepthToBorder = false) = 0;
+		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, RenderBufferType renderBufferType, bool clampDepthToBorder = false) = 0;
+
+		virtual unsigned int CreateRenderBufferArray(unsigned int width, unsigned int height, unsigned int depth, TextureFormat format, RenderBufferType renderBufferType, bool clampDepthToBorder = false) = 0;
 
 		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) = 0;
 
+		virtual void ClearRenderBufferArrayLayer(unsigned int renderBufferID, glm::vec4 clearColor, unsigned int width, unsigned int height, unsigned int layer) = 0;
+
 		virtual void BindRenderBuffer(unsigned int renderBufferID) = 0;
 
+		virtual void BindRenderBufferArrayLayer(unsigned int renderBufferID, unsigned int layer) = 0;
+
 		virtual void UnbindActiveRenderBuffer() = 0;
+
+		virtual void FreeRenderBuffer(unsigned int renderBufferID) = 0;
 
 		virtual void Draw(CommandBuffer<RenderCommand>& renderCommandBuffer) = 0;
 

@@ -13,7 +13,7 @@ in VS_OUT
     in vec3 WViewDirection;
     in vec2 TexCoord;
     in mat3 TBN;
-    in vec4 LightSpaceFragPos;
+    in vec4 DirLightSpacePositions[10];
 } vs_out;
 
 // structs
@@ -28,6 +28,7 @@ struct PointLight
 
 struct DirectionalLight
 {
+    mat4 LightSpaceMatrix;
     vec4 Color;
     vec3 Position;
     float Intensity;
@@ -162,7 +163,7 @@ vec4 PhysicallyBasedShadingModel(vec3 wNormal, vec4 diffuseColor, float metallic
         wLightDir = -DirectionalLights[i].Direction;
         wHalfDir = normalize(wLightDir + vs_out.WViewDirection);
         specular = SpecularBRDF(wNormal, wLightDir, vs_out.WViewDirection, wHalfDir, diffuseColor, metallic, roughness);
-        shadowTest = ShadowTest(vs_out.LightSpaceFragPos, wNormal, wLightDir);
+        shadowTest = DirectionalShadowTest(vs_out.DirLightSpacePositions[i], wNormal, wLightDir, i);
         outgoing += (1.0 - shadowTest) * DirectionalLights[i].Intensity * (diffuse + specular) * max(dot(wNormal, wLightDir), 0.0);
     }
 

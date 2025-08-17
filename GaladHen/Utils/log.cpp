@@ -1,8 +1,6 @@
 
 #include "Log.h"
 
-#include <iostream>
-
 void Log::Error(const char* source, const char* message)
 {
     std::cout << "[ERROR from " << source << "] " << message << std::endl;

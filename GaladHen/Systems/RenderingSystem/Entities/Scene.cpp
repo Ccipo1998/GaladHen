@@ -13,6 +13,9 @@ namespace GaladHen
         DirectionalLight dLight{};
         dLight.SetLightDirection(glm::vec3(-0.5f, -0.5f, -0.5f));
         DirectionalLights.emplace_back(dLight);
+		DirectionalLight dLight1{};
+		dLight1.SetLightDirection(glm::vec3(0.5f, -0.5f, -0.5f));
+		DirectionalLights.emplace_back(dLight1);
 
         /*PointLight pLight{};
         pLight.Transform.SetPosition(glm::vec3(0.0f, 0.0f, 2.0f));

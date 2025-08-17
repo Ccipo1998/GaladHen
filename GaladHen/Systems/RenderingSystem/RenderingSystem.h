@@ -23,11 +23,13 @@
 namespace GaladHen
 {
     class RenderBuffer;
+    class RenderBufferArray;
     class ShaderPipeline;
     class Scene;
     class Mesh;
     class Material;
     class Texture;
+    class TextureArray;
     class PointLight;
     class DirectionalLight;
     enum class TextureFormat;
@@ -43,7 +45,7 @@ namespace GaladHen
         // @brief
         // Create a gpu render buffer
         // @param writeDepth: specifies whether writing on a depth buffer is enabled when using the render buffer or not
-        std::weak_ptr<RenderBuffer> CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth = true);
+        std::weak_ptr<RenderBuffer> CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, RenderBufferType renderBufferType);
 
         // @brief
         // Get default front render buffer
@@ -54,8 +56,12 @@ namespace GaladHen
         unsigned int GetRenderBufferColorApiID(const RenderBuffer& renderBuffer);
 
         // @brief
-        // Clear a render buffer with a specific color
+        // Clear a render buffer with render buffer' clear color
         void ClearRenderBuffer(const RenderBuffer& renderBuffer);
+
+		// @brief
+		// Clear a layer of a render buffer with render buffer's clear color
+		void ClearRenderBufferArrayLayer(const RenderBuffer& renderBuffer, unsigned int layer);
 
         // @brief
         // Draw request for a full scene. Using scene's camera, models and default render buffer
@@ -128,31 +134,22 @@ namespace GaladHen
         public:
             // TODO: RenderScene -> collection of models and theirs Bounding Volumes + spatial partitioning structure containing all the models (for frustum culling)
 
-            RenderContext(RenderingSystem& renderingSys, unsigned int width, unsigned int height, RenderContextType renderContextType);
+			RenderContext(RenderingSystem& renderingSys, unsigned int width, unsigned int height, RenderContextType renderContextType);
 
-            RenderContext(std::weak_ptr<RenderBuffer> renderBuffer);
+			RenderContext(std::weak_ptr<RenderBuffer> renderBuffer);
 
-            RenderContextType GetRenderContextType();
+			void SwapBuffers();
 
-            std::weak_ptr<RenderBuffer> GetFrontBuffer() const;
-
-            std::weak_ptr<RenderBuffer> GetBackBuffer() const;
-
-            std::weak_ptr<RenderBuffer> GetShadowDepthBuffer() const;
-
-            void SwapBuffers();
+            void SetupDirectionalShadowBuffer(RenderingSystem& renderingSys, unsigned int width, unsigned height, unsigned int numberOfDirectionalLights);
 
             Camera RenderingCamera;
-
-        private:
 
             RenderContextType RenderContextType;
             // RenderBuffer(s) -> two in case of multiple buffering
             std::shared_ptr<RenderBuffer> FrontBuffer;
             std::shared_ptr<RenderBuffer> BackBuffer;
 
-            std::shared_ptr<RenderBuffer> ShadowDepthBuffer;
-
+            std::shared_ptr<RenderBufferArray> DirectionalShadowBuffer;
         };
 
 		// RENDERER DATA --------------------------------------------------------------------
@@ -184,6 +181,7 @@ namespace GaladHen
 
         RenderContext& GetDefaultRenderContext();
         void BeforeDraw(const RenderBuffer& renderBuffer);
+        void BeforeDraw(const RenderBufferArray& renderBufferArray, unsigned int targetLayer);
         void AfterDraw(const RenderBuffer& renderBuffer);
         bool IsMeshCached(unsigned int meshID);
         void CacheMesh(unsigned int meshID);
@@ -197,9 +195,14 @@ namespace GaladHen
         bool IsBufferCached(unsigned int bufferID);
         void CacheBuffer(unsigned int bufferID);
         void UncacheBuffer(unsigned int bufferID);
+
+        // -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // NOTE:
+        // We need Load and LoadAndCache function separated, because the rendering system can use mesh, texture and buffer that are not threated like cached mesh, texture and buffers,
+        // that are cached from the current rendered Scene. For such objects, like transform or light buffers, we want them always loaded in memory, so the cache system doesn't consider them
         void LoadModels(const Scene& scene, std::unordered_set<unsigned int>& outLoadedMeshesIDs);
         void LoadMeshAndCache(Mesh& mesh);
-        unsigned int LoadMesh(Mesh& mesh);
+		unsigned int LoadMesh(Mesh& mesh);
         void FreeUnusedMeshes(const std::unordered_set<unsigned int>& usedMeshesIDs);
         void FreeMeshes(const std::unordered_set<unsigned int>& meshesToFree);
         void FreeMesh(unsigned int meshID);
@@ -207,8 +210,14 @@ namespace GaladHen
         void LoadMaterialData(Material& material, std::unordered_set<unsigned int>& outLoadedTextures, std::unordered_set<unsigned int>& outLoadedBuffers);
         void LoadTextureAndCache(Texture& texture);
         unsigned int LoadTexture(Texture& texture);
+        unsigned int LoadTextureArrayAndCache(TextureArray& textureArray);
+        unsigned int LoadTextureArray(TextureArray& textureArray);
         void LoadBufferAndCache(IBuffer* buffer);
         unsigned int LoadBuffer(IBuffer* buffer);
+        void FreeRenderBuffer(const RenderBuffer& renderBuffer);
+        void FreeRenderBuffer(const RenderBufferArray& renderBufferArray);
+        // -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
         void FreeUnusedTextures(const std::unordered_set<unsigned int>& usedTexturesIDs);
         void FreeTextures(const std::unordered_set<unsigned int>& texturesToFree);
         void FreeTexture(unsigned int textureID);
@@ -219,12 +228,14 @@ namespace GaladHen
         void LoadTransformData(const Transform& transform);
         void LoadLightingData(const Scene& scene);
         void LoadPointLightData(const std::vector<PointLight>& pointLights);
-        void LoadDirLightData(const std::vector<DirectionalLight>& dirLights);
+        void LoadDirLightData(const std::vector<DirectionalLight>& dirLights, const std::vector<Camera>& cameraLights);
         void SetRenderBufferTarget(const RenderBuffer& renderBuffer);
+        void SetRenderBufferArrayTarget(const RenderBufferArray& renderBuffer, unsigned int targetLayer);
         void UnsetRenderBufferTarget(const RenderBuffer& renderBuffer);
         void SwapMainWindowBuffers();
         void BeforeDrawUI();
         void SetupShadowDepthMaterial();
-        std::weak_ptr<RenderBuffer> CreateRenderBuffer_Internal(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth = true, bool clampDepthToBorder = false);
+        std::weak_ptr<RenderBuffer> CreateRenderBuffer_Internal(unsigned int width, unsigned int height, TextureFormat format, RenderBufferType RenderBufferType, bool clampDepthToBorder = false);
+        std::weak_ptr<RenderBufferArray> CreateRenderBufferArray_Internal(unsigned int width, unsigned int height, unsigned int depth, TextureFormat format, RenderBufferType RenderBufferType, bool clampDepthToBorder = false);
 	};
 }

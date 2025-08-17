@@ -7,6 +7,7 @@ namespace GaladHen
 {
 	struct DirLightBufferData
 	{
+		glm::mat4 LightSpaceMatrix; // 128 byte
 		glm::vec4 Color; // 32 byte
 		glm::vec3 Position; // 24 byte
 		float Intensity; // 8 byte

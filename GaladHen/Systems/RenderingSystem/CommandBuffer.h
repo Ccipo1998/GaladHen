@@ -36,7 +36,8 @@ namespace GaladHen
 	{
 		Mesh,
 		Buffer,
-		Texture
+		Texture,
+		TextureArray
 	};
 
 	enum class MemoryTransferType

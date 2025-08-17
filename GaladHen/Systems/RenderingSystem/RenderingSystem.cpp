@@ -10,19 +10,24 @@
 #include "ShaderPreprocessor/ShaderPreprocessor.h"
 #include <Utils/FileLoader.h>
 #include "Entities/RenderBuffer.h"
+#include "Entities/RenderBufferArray.h"
 #include "Entities/Scene.h"
 #include "Entities/Model.h"
 #include "Entities/ShaderPipeline.h"
 #include "Entities/Texture.h"
+#include "Entities/TextureArray.h"
 
 #define GH_DEFAULT_RENDER_BUFFER_WIDTH 1920
 #define GH_DEFAULT_RENDER_BUFFER_HEIGHT 1080
+#define GH_DEFAULT_DIRECTIONAL_SHADOW_BUFFER_WIDTH 1920
+#define GH_DEFAULT_DIRECTIONAL_SHADOW_BUFFER_HEIGHT 1080
 #define GH_CAMERA_DATA_BUFFER_NAME "CameraData"
 #define GH_TRANSFORM_DATA_BUFFER_NAME "TransformData"
 #define GH_LIGHTING_DATA_BUFFER_NAME "LightingData"
 #define GH_POINTLIGHT_DATA_BUFFER_NAME "PointLightBuffer"
 #define GH_DIRLIGHT_DATA_BUFFER_NAME "DirectionalLightBuffer"
 #define GH_SHADOW_MAP_SAMPLER_NAME "ShadowMap"
+#define GH_DIR_SHADOW_MAP_SAMPLER_NAME "DirectionalShadowMaps"
 #define GH_LIGHTSPACEMATRIX_UNIFORM_NAME "LightSpaceMatrix"
 
 namespace GaladHen
@@ -39,14 +44,14 @@ namespace GaladHen
         , DirLightBuffer(DynamicBuffer<DirLightBufferData>{ BufferType::ShaderStorage, BufferAccessType::StaticRead }) // TODO: populate buffer basing on API (to match shader data structure)
     {}
 
-    std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth)
+    std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, RenderBufferType renderBufferType)
     {
-        return CreateRenderBuffer_Internal(width, height, format, enableDepth);
+        return CreateRenderBuffer_Internal(width, height, format, renderBufferType);
     }
 
     std::weak_ptr<RenderBuffer> RenderingSystem::GetFrontRenderBuffer()
     {
-        return GetDefaultRenderContext().GetFrontBuffer();
+        return GetDefaultRenderContext().FrontBuffer;
     }
 
     unsigned int RenderingSystem::GetRenderBufferColorApiID(const RenderBuffer& renderBuffer)
@@ -59,13 +64,16 @@ namespace GaladHen
         RendererAPI->ClearRenderBuffer(GPUResourceInspector::GetResourceID(&renderBuffer), renderBuffer.ClearColor);
     }
 
-    void RenderingSystem::Draw(const Scene& scene)
+	void RenderingSystem::ClearRenderBufferArrayLayer(const RenderBuffer& renderBuffer, unsigned int layer)
+	{
+        RendererAPI->ClearRenderBufferArrayLayer(GPUResourceInspector::GetResourceID(&renderBuffer), renderBuffer.ClearColor, renderBuffer.GetSize().x, renderBuffer.GetSize().y, layer);
+	}
+
+	void RenderingSystem::Draw(const Scene& scene)
     {
         RenderContext& DefaultRenderContext = GetDefaultRenderContext();
-        std::shared_ptr<RenderBuffer> shadowBuffer = DefaultRenderContext.GetShadowDepthBuffer().lock();
-        std::shared_ptr<RenderBuffer> backBuffer = DefaultRenderContext.GetBackBuffer().lock();
 
-        if (!shadowBuffer || !backBuffer)
+        if (!DefaultRenderContext.DirectionalShadowBuffer || !DefaultRenderContext.BackBuffer)
             return;
 
         // common operations
@@ -73,55 +81,64 @@ namespace GaladHen
         std::unordered_set<unsigned int> loadedMeshesIDs;
         LoadModels(scene, loadedMeshesIDs);
 
-        // Draw shadow map
+        // Draw shadow maps
 
         // Use light orientation as camera to render shadow depth
-        Camera shadowCamera{};
-        // Take first directional light to start
-        shadowCamera.Transform = (scene.DirectionalLights[0].Transform);
-        shadowCamera.Transform.SetPosition(shadowCamera.Transform.GetPosition() - shadowCamera.Transform.GetFront() * 10.0f);
-        LoadCameraData(shadowCamera);
 
-        BeforeDraw(*shadowBuffer);
-
-        // TODO: instanced draw
-
-        for (const SceneObject& sceneObject : scene.SceneObjects)
+        // Directional lights
+        DefaultRenderContext.SetupDirectionalShadowBuffer(*this, GH_DEFAULT_DIRECTIONAL_SHADOW_BUFFER_WIDTH, GH_DEFAULT_DIRECTIONAL_SHADOW_BUFFER_HEIGHT, scene.DirectionalLights.size());
+        std::vector<Camera> dirShadowCameras;
+        for (unsigned int i = 0; i < scene.DirectionalLights.size(); ++i)
         {
-            CommandBuffer<RenderCommand> renderCommandBuffer;
+            const DirectionalLight& dirLight = scene.DirectionalLights[i];
 
-            std::weak_ptr<Model> model = sceneObject.GetSceneObjectModel();
-            std::shared_ptr<Model> shModel = model.lock();
-            if (!shModel)
-                continue;
+            Camera dirShadowCamera{};
+            dirShadowCamera.Transform = (dirLight.Transform);
+            dirShadowCamera.Transform.SetPosition(dirShadowCamera.Transform.GetPosition() - dirShadowCamera.Transform.GetFront() * 10.0f);
+            dirShadowCameras.emplace_back(dirShadowCamera);
+            LoadCameraData(dirShadowCamera);
 
-            unsigned int index = 0;
-            for (Mesh& mesh : shModel->Meshes)
-            {
-                RenderCommand command;
-                command.DataSourceID = GPUResourceInspector::GetResourceID(&mesh);
-                command.Material = &ShadowDepthMaterial; // Use shadow depth material to render scene objects
-                command.ShaderSourceID = GPUResourceInspector::GetResourceID(command.Material->GetPipeline().lock().get());
+            BeforeDraw(*DefaultRenderContext.DirectionalShadowBuffer, i);
 
-                // Add scene depth rendering data
-                command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, &CameraBuffer);
-                LoadTransformData(sceneObject.Transform);
-                command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, &TransformBuffer);
+			// TODO: instanced draw
 
-                renderCommandBuffer.emplace_back(command);
-            }
+			for (const SceneObject& sceneObject : scene.SceneObjects)
+			{
+				CommandBuffer<RenderCommand> renderCommandBuffer;
 
-            RendererAPI->Draw(renderCommandBuffer);
-            // A single Render Command at time because at the moment we use a TransformDataBuffer that invalidates itself when changing data ->
-            // passing the same TransformDataBuffer inside the AdditionalBufferData means using the same buffer but also the latest same data stored inside it
-            // (we should have instead a different buffer for each Render Command)
+				std::weak_ptr<Model> model = sceneObject.GetSceneObjectModel();
+				std::shared_ptr<Model> shModel = model.lock();
+				if (!shModel)
+					continue;
+
+				unsigned int index = 0;
+				for (Mesh& mesh : shModel->Meshes)
+				{
+					RenderCommand command;
+					command.DataSourceID = GPUResourceInspector::GetResourceID(&mesh);
+					command.Material = &ShadowDepthMaterial; // Use shadow depth material to render scene objects
+					command.ShaderSourceID = GPUResourceInspector::GetResourceID(command.Material->GetPipeline().lock().get());
+
+					// Add scene depth rendering data
+					command.AdditionalBufferData.emplace(GH_CAMERA_DATA_BUFFER_NAME, &CameraBuffer);
+					LoadTransformData(sceneObject.Transform);
+					command.AdditionalBufferData.emplace(GH_TRANSFORM_DATA_BUFFER_NAME, &TransformBuffer);
+
+					renderCommandBuffer.emplace_back(command);
+				}
+
+				RendererAPI->Draw(renderCommandBuffer);
+				// A single Render Command at time because at the moment we use a TransformDataBuffer that invalidates itself when changing data ->
+				// passing the same TransformDataBuffer inside the AdditionalBufferData means using the same buffer but also the latest same data stored inside it
+				// (we should have instead a different buffer for each Render Command)
+			}
+
+			AfterDraw(*DefaultRenderContext.DirectionalShadowBuffer);
         }
-
-        AfterDraw(*shadowBuffer);
 
         // Draw scene
 
-        BeforeDraw(*backBuffer);
+        BeforeDraw(*DefaultRenderContext.BackBuffer);
 
         CompileShaders(scene);
         std::unordered_set<unsigned int> loadedTexturesIDs, loadedBuffersIDs;
@@ -130,7 +147,7 @@ namespace GaladHen
 
         LoadLightingData(scene);
         LoadPointLightData(scene.PointLights);
-        LoadDirLightData(scene.DirectionalLights);
+        LoadDirLightData(scene.DirectionalLights, dirShadowCameras);
 
         // TODO: instanced draw
 
@@ -158,8 +175,8 @@ namespace GaladHen
                 command.AdditionalBufferData.emplace(GH_LIGHTING_DATA_BUFFER_NAME, &LightingBuffer);
                 command.AdditionalBufferData.emplace(GH_POINTLIGHT_DATA_BUFFER_NAME, &PointLightBuffer);
                 command.AdditionalBufferData.emplace(GH_DIRLIGHT_DATA_BUFFER_NAME, &DirLightBuffer);
-                command.AdditionalRenderBufferData.emplace(GH_SHADOW_MAP_SAMPLER_NAME, shadowBuffer.get());
-                command.AdditionalMat4Data.emplace(GH_LIGHTSPACEMATRIX_UNIFORM_NAME, shadowCamera.GetProjectionMatrix() * shadowCamera.GetViewMatrix());
+                command.AdditionalRenderBufferData.emplace(GH_DIR_SHADOW_MAP_SAMPLER_NAME, DefaultRenderContext.DirectionalShadowBuffer.get());
+                //command.AdditionalMat4Data.emplace(GH_LIGHTSPACEMATRIX_UNIFORM_NAME, shadowCameras[0].GetProjectionMatrix() * shadowCameras[0].GetViewMatrix());
 
                 renderCommandBuffer.emplace_back(command);
             }
@@ -175,7 +192,7 @@ namespace GaladHen
         FreeUnusedTextures(loadedTexturesIDs);
         FreeUnusedBuffers(loadedBuffersIDs);
 
-        AfterDraw(*backBuffer);
+        AfterDraw(*DefaultRenderContext.BackBuffer);
 
         // Swap buffers
         DefaultRenderContext.SwapBuffers();
@@ -339,14 +356,14 @@ namespace GaladHen
     }
 
     RenderingSystem::RenderContext::RenderContext(RenderingSystem& renderingSys, unsigned int width, unsigned int height, RenderingSystem::RenderContextType renderContextType)
-        : FrontBuffer(renderingSys.CreateRenderBuffer_Internal(width, height, TextureFormat::RGB8))
+        : FrontBuffer(renderingSys.CreateRenderBuffer_Internal(width, height, TextureFormat::RGB8, RenderBufferType::ColorAndDepth))
         , BackBuffer(std::shared_ptr<RenderBuffer>{})
         , RenderContextType(renderContextType)
-        , ShadowDepthBuffer(renderingSys.CreateRenderBuffer_Internal(width, height, TextureFormat::RGB8, true, true)) // TODO: aggiungere selezione risoluzione shadow depth
+        , DirectionalShadowBuffer(renderingSys.CreateRenderBufferArray_Internal(width, height, 1, TextureFormat::RGB8, RenderBufferType::DepthOnly, true)) // TODO: aggiungere selezione risoluzione shadow depth
     {
         if (RenderContextType == RenderContextType::DoubleBuffering)
         {
-            BackBuffer = renderingSys.CreateRenderBuffer_Internal(width, height, TextureFormat::RGB8).lock();
+            BackBuffer = renderingSys.CreateRenderBuffer_Internal(width, height, TextureFormat::RGB8, RenderBufferType::ColorAndDepth).lock();
         }
         else
         {
@@ -360,26 +377,6 @@ namespace GaladHen
         , RenderContextType(RenderContextType::SingleBuffering)
     {}
 
-    RenderingSystem::RenderContextType RenderingSystem::RenderContext::GetRenderContextType()
-    {
-        return RenderContextType;
-    }
-
-    std::weak_ptr<RenderBuffer> RenderingSystem::RenderContext::GetFrontBuffer() const
-    {
-        return FrontBuffer;
-    }
-
-    std::weak_ptr<RenderBuffer> RenderingSystem::RenderContext::GetBackBuffer() const
-    {
-        return BackBuffer;
-    }
-
-    std::weak_ptr<RenderBuffer> RenderingSystem::RenderContext::GetShadowDepthBuffer() const
-    {
-        return ShadowDepthBuffer;
-    }
-
     void RenderingSystem::RenderContext::SwapBuffers()
     {
         if (RenderContextType == RenderContextType::DoubleBuffering)
@@ -387,7 +384,17 @@ namespace GaladHen
     }
 
 
-    RenderingSystem::RenderContext& RenderingSystem::GetDefaultRenderContext()
+	void RenderingSystem::RenderContext::SetupDirectionalShadowBuffer(RenderingSystem& renderingSys, unsigned int width, unsigned int height, unsigned int numberOfDirectionalLights)
+	{
+        // Check if directional shadow buffer needs update
+        if (DirectionalShadowBuffer->GetSize().x != width || DirectionalShadowBuffer->GetSize().y != height || DirectionalShadowBuffer->GetNumberOfLayers() != numberOfDirectionalLights)
+        {
+            renderingSys.FreeRenderBuffer(*DirectionalShadowBuffer.get());
+            DirectionalShadowBuffer = renderingSys.CreateRenderBufferArray_Internal(width, height, numberOfDirectionalLights, TextureFormat::RGB8, RenderBufferType::DepthOnly, true).lock();
+        }
+	}
+
+	RenderingSystem::RenderContext& RenderingSystem::GetDefaultRenderContext()
     {
         return RenderContexts.GetObjectWithId(1);
     }
@@ -406,7 +413,21 @@ namespace GaladHen
         RendererAPI->SetViewport(glm::uvec2(0, 0), renderBuffer.GetSize());
     }
 
-    void RenderingSystem::AfterDraw(const RenderBuffer& renderBuffer)
+	void RenderingSystem::BeforeDraw(const RenderBufferArray& renderBufferArray, unsigned int targetLayer)
+	{
+		// Operations needed before drawing to a render buffer
+
+		// Clear back render buffer
+		ClearRenderBufferArrayLayer(renderBufferArray, targetLayer);
+
+		// Set render context's back buffer as target for next draw calls
+		SetRenderBufferArrayTarget(renderBufferArray, targetLayer);
+
+		// Set viewport basing on render buffer resolution
+		RendererAPI->SetViewport(glm::uvec2(0, 0), renderBufferArray.GetSize());
+	}
+
+	void RenderingSystem::AfterDraw(const RenderBuffer& renderBuffer)
     {
         // Operations needed after drawing to a render buffer
 
@@ -513,7 +534,7 @@ namespace GaladHen
     }
 
     void RenderingSystem::LoadMeshAndCache(Mesh& mesh)
-    {
+	{
         unsigned int meshID = GPUResourceInspector::GetResourceID(&mesh);
 
         if (IsMeshCached(meshID) && mesh.IsResourceValid())
@@ -523,29 +544,32 @@ namespace GaladHen
 
         unsigned int newId = LoadMesh(mesh);
         CacheMesh(newId);
-    }
+	}
 
     unsigned int RenderingSystem::LoadMesh(Mesh& mesh)
-    {
-        CommandBuffer<MemoryTransferCommand> memoryCommands;
-        memoryCommands.emplace_back(MemoryTransferCommand{});
+	{
+		unsigned int meshId = GPUResourceInspector::GetResourceID(&mesh);
 
-        MemoryTransferCommand& command = memoryCommands[0];
-        command.Data = &mesh;
-        command.MemoryTargetID = GPUResourceInspector::GetResourceID(&mesh);
-        command.TargetType = MemoryTargetType::Mesh;
-        command.TransferType = MemoryTransferType::Load;
+		CommandBuffer<MemoryTransferCommand> memoryCommands;
+		MemoryTransferCommand command{};
+		command.Data = &mesh;
+		command.MemoryTargetID = meshId;
+		command.TargetType = MemoryTargetType::Mesh;
+		command.TransferType = MemoryTransferType::Load;
 
-        // Load and assign id
+		memoryCommands.emplace_back(command);
 
-        RendererAPI->TransferData(memoryCommands);
-        GPUResourceInspector::SetResourceID(&mesh, command.MemoryTargetID);
-        GPUResourceInspector::ValidateResource(&mesh);
+		// Load, assign id and cache as loaded mesh
 
-        return command.MemoryTargetID;
+		RendererAPI->TransferData(memoryCommands);
+
+		GPUResourceInspector::SetResourceID(&mesh, memoryCommands[0].MemoryTargetID);
+		GPUResourceInspector::ValidateResource(&mesh);
+
+		return memoryCommands[0].MemoryTargetID;
     }
 
-    void RenderingSystem::FreeUnusedMeshes(const std::unordered_set<unsigned int>& usedMeshesIDs)
+	void RenderingSystem::FreeUnusedMeshes(const std::unordered_set<unsigned int>& usedMeshesIDs)
     {
         std::unordered_set<unsigned int> meshesToFree;
         for (unsigned int id : LoadedMeshesCache)
@@ -573,12 +597,12 @@ namespace GaladHen
             return;
 
         CommandBuffer<MemoryTransferCommand> memoryCommands;
-        memoryCommands.emplace_back(MemoryTransferCommand{});
 
-        MemoryTransferCommand& command = memoryCommands[0];
+        MemoryTransferCommand command{};
         command.MemoryTargetID = meshID;
         command.TargetType = MemoryTargetType::Mesh;
         command.TransferType = MemoryTransferType::Free;
+        memoryCommands.emplace_back(command);
 
         // Free and remove from cache
         RendererAPI->TransferData(memoryCommands);
@@ -639,58 +663,109 @@ namespace GaladHen
 
     unsigned int RenderingSystem::LoadTexture(Texture& texture)
     {
-        CommandBuffer<MemoryTransferCommand> commandBuffer;
-        commandBuffer.emplace_back(MemoryTransferCommand{});
+		unsigned int textureID = GPUResourceInspector::GetResourceID(&texture);
 
-        MemoryTransferCommand& command = commandBuffer[0];
-        command.Data = (void*)&texture;
-        command.MemoryTargetID = GPUResourceInspector::GetResourceID(&texture);
-        command.TargetType = MemoryTargetType::Texture;
-        command.TransferType = MemoryTransferType::Load;
+		CommandBuffer<MemoryTransferCommand> commandBuffer;
 
-        // Load, assign id and cache
+		MemoryTransferCommand command{};
+		command.Data = (void*)&texture;
+		command.MemoryTargetID = textureID;
+		command.TargetType = MemoryTargetType::Texture;
+		command.TransferType = MemoryTransferType::Load;
 
-        RendererAPI->TransferData(commandBuffer);
-        GPUResourceInspector::SetResourceID(&texture, command.MemoryTargetID);
-        GPUResourceInspector::ValidateResource(&texture);
+		commandBuffer.emplace_back(command);
 
-        return command.MemoryTargetID;
+		// Load, assign id and cache
+
+		RendererAPI->TransferData(commandBuffer);
+		GPUResourceInspector::SetResourceID(&texture, commandBuffer[0].MemoryTargetID);
+		GPUResourceInspector::ValidateResource(&texture);
+
+		return commandBuffer[0].MemoryTargetID;
     }
 
-    void RenderingSystem::LoadBufferAndCache(IBuffer* buffer)
-    {
-        unsigned int bufferID = GPUResourceInspector::GetResourceID(buffer);
+	unsigned int RenderingSystem::LoadTextureArrayAndCache(TextureArray& textureArray)
+	{
+		unsigned int textureID = GPUResourceInspector::GetResourceID(&textureArray);
 
-        if (IsBufferCached(bufferID) && buffer->IsResourceValid())
-        {
-            return;
-        }
+		if (IsTextureCached(textureID) && textureArray.IsResourceValid())
+		{
+			return textureID;
+		}
 
-        unsigned int newId = LoadBuffer(buffer);
-        CacheBuffer(newId);
-    }
+		unsigned int newId = LoadTextureArray(textureArray);
+		CacheTexture(newId);
+	}
+
+	unsigned int RenderingSystem::LoadTextureArray(TextureArray& textureArray)
+	{
+		unsigned int textureID = GPUResourceInspector::GetResourceID(&textureArray);
+
+		CommandBuffer<MemoryTransferCommand> commandBuffer;
+
+        MemoryTransferCommand command{};
+		command.Data = (void*)&textureArray;
+		command.MemoryTargetID = textureID;
+		command.TargetType = MemoryTargetType::TextureArray;
+		command.TransferType = MemoryTransferType::Load;
+
+        commandBuffer.emplace_back(command);
+
+		// Load, assign id and cache
+
+		RendererAPI->TransferData(commandBuffer);
+		GPUResourceInspector::SetResourceID(&textureArray, commandBuffer[0].MemoryTargetID);
+		GPUResourceInspector::ValidateResource(&textureArray);
+
+		return commandBuffer[0].MemoryTargetID;
+	}
+
+	void RenderingSystem::LoadBufferAndCache(IBuffer* buffer)
+	{
+		unsigned int bufferID = GPUResourceInspector::GetResourceID(buffer);
+
+		if (IsBufferCached(bufferID) && buffer->IsResourceValid())
+		{
+			return;
+		}
+
+		unsigned int newId = LoadBuffer(buffer);
+		CacheBuffer(newId);
+	}
 
     unsigned int RenderingSystem::LoadBuffer(IBuffer* buffer)
     {
-        CommandBuffer<MemoryTransferCommand> commandBuffer;
-        commandBuffer.emplace_back(MemoryTransferCommand{});
+        unsigned int bufferID = GPUResourceInspector::GetResourceID(buffer);
 
-        MemoryTransferCommand& command = commandBuffer[0];
+        CommandBuffer<MemoryTransferCommand> commandBuffer;
+
+        MemoryTransferCommand command{};
         command.Data = buffer;
-        command.MemoryTargetID = GPUResourceInspector::GetResourceID(buffer);
+        command.MemoryTargetID = bufferID;
         command.TargetType = MemoryTargetType::Buffer;
         command.TransferType = MemoryTransferType::Load;
+        commandBuffer.emplace_back(command);
 
         // Load and assign id
 
         RendererAPI->TransferData(commandBuffer);
-        GPUResourceInspector::SetResourceID(buffer, command.MemoryTargetID);
+        GPUResourceInspector::SetResourceID(buffer, commandBuffer[0].MemoryTargetID);
         GPUResourceInspector::ValidateResource(buffer);
 
-        return command.MemoryTargetID;
+        return commandBuffer[0].MemoryTargetID;
     }
 
-    void RenderingSystem::FreeUnusedTextures(const std::unordered_set<unsigned int>& usedTexturesIDs)
+	void RenderingSystem::FreeRenderBuffer(const RenderBuffer& renderBuffer)
+	{
+        RendererAPI->FreeRenderBuffer(GPUResourceInspector::GetResourceID(&renderBuffer));
+	}
+
+	void RenderingSystem::FreeRenderBuffer(const RenderBufferArray& renderBufferArray)
+	{
+        RendererAPI->FreeRenderBuffer(GPUResourceInspector::GetResourceID(&renderBufferArray));
+	}
+
+	void RenderingSystem::FreeUnusedTextures(const std::unordered_set<unsigned int>& usedTexturesIDs)
     {
         std::unordered_set<unsigned int> texturesToFree;
         for (unsigned int id : LoadedTexturesCache)
@@ -818,17 +893,20 @@ namespace GaladHen
         LoadBuffer(&PointLightBuffer);
     }
 
-    void RenderingSystem::LoadDirLightData(const std::vector<DirectionalLight>& dirLights)
+    void RenderingSystem::LoadDirLightData(const std::vector<DirectionalLight>& dirLights, const std::vector<Camera>& cameraLights)
     {
+        assert(dirLights.size() == cameraLights.size());
+
         DirLightBuffer.ClearData();
 
-        for (const DirectionalLight& light : dirLights)
+        for (unsigned int i = 0; i < dirLights.size(); ++i)
         {
             DirLightBufferData data{};
-            data.Color = light.Color;
-            data.Position = light.Transform.GetPosition();
-            data.Intensity = light.Intensity;
-            data.Direction = light.GetLightDirection();
+            data.LightSpaceMatrix = cameraLights[i].GetProjectionMatrix() * cameraLights[i].GetViewMatrix();
+            data.Color = dirLights[i].Color;
+            data.Position = dirLights[i].Transform.GetPosition();
+            data.Intensity = dirLights[i].Intensity;
+            data.Direction = dirLights[i].GetLightDirection();
 
             DirLightBuffer.AddData(data);
         }
@@ -841,7 +919,12 @@ namespace GaladHen
         RendererAPI->BindRenderBuffer(GPUResourceInspector::GetResourceID(&renderBuffer));
     }
 
-    void RenderingSystem::UnsetRenderBufferTarget(const RenderBuffer& renderBuffer)
+	void RenderingSystem::SetRenderBufferArrayTarget(const RenderBufferArray& renderBuffer, unsigned int targetLayer)
+	{
+        RendererAPI->BindRenderBufferArrayLayer(GPUResourceInspector::GetResourceID(&renderBuffer), targetLayer);
+	}
+
+	void RenderingSystem::UnsetRenderBufferTarget(const RenderBuffer& renderBuffer)
     {
         RendererAPI->UnbindActiveRenderBuffer();
     }
@@ -869,17 +952,31 @@ namespace GaladHen
         ShadowDepthMaterial.SetPipeline(shadowDepthPipeline);
     }
 
-    std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer_Internal(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth, bool clampDepthToBorder)
+    std::weak_ptr<RenderBuffer> RenderingSystem::CreateRenderBuffer_Internal(unsigned int width, unsigned int height, TextureFormat format, RenderBufferType RenderBufferType, bool clampDepthToBorder)
     {
         // Create object
-        std::shared_ptr<RenderBuffer> renderBuffer = std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height, format, enableDepth } };
+        std::shared_ptr<RenderBuffer> renderBuffer = std::shared_ptr<RenderBuffer>{ new RenderBuffer{ width, height, format, RenderBufferType } };
         RenderBuffers.emplace_back(renderBuffer); // rendering system ownership
 
         // Create render buffer at api level and assing id
-        unsigned int id = RendererAPI->CreateRenderBuffer(width, height, format, enableDepth, clampDepthToBorder);
+        unsigned int id = RendererAPI->CreateRenderBuffer(width, height, format, RenderBufferType, clampDepthToBorder);
         GPUResourceInspector::SetResourceID(renderBuffer.get(), id);
         GPUResourceInspector::ValidateResource(renderBuffer.get());
 
         return renderBuffer;
     }
+
+	std::weak_ptr<RenderBufferArray> RenderingSystem::CreateRenderBufferArray_Internal(unsigned int width, unsigned int height, unsigned int depth, TextureFormat format, RenderBufferType RenderBufferType, bool clampDepthToBorder /*= false*/)
+	{
+		// Create object
+		std::shared_ptr<RenderBufferArray> renderBufferArray = std::shared_ptr<RenderBufferArray>{ new RenderBufferArray{ width, height, depth, format, RenderBufferType } };
+		RenderBuffers.emplace_back(renderBufferArray); // rendering system ownership
+
+		// Create render buffer at api level and assing id
+		unsigned int id = RendererAPI->CreateRenderBufferArray(width, height, depth, format, RenderBufferType, clampDepthToBorder);
+		GPUResourceInspector::SetResourceID(renderBufferArray.get(), id);
+		GPUResourceInspector::ValidateResource(renderBufferArray.get());
+
+		return renderBufferArray;
+	}
 }

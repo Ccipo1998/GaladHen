@@ -19,6 +19,40 @@ layout (std140, binding = 1) uniform TransformData
     uniform mat4 ModelMatrix;
     uniform mat4 NormalMatrix;
 };
+layout (std140, binding = 2) uniform LightingData
+{
+    int PointLightNumber;
+    int DirLightNumber;
+};
+
+// structs
+struct PointLight
+{
+    vec4 Color;
+    vec3 Position;
+    float Intensity;
+    float BulbSize;
+    float Radius;
+};
+
+struct DirectionalLight
+{
+    mat4 LightSpaceMatrix;
+    vec4 Color;
+    vec3 Position;
+    float Intensity;
+    vec3 Direction;
+};
+
+// buffers
+layout(std140, binding = 0) buffer PointLightBuffer
+{
+    PointLight PointLights[];
+};
+layout(std140, binding = 1) buffer DirectionalLightBuffer
+{
+    DirectionalLight DirectionalLights[];
+};
 
 // output
 out VS_OUT
@@ -29,10 +63,10 @@ out VS_OUT
     out vec3 WViewDirection;
     out vec2 TexCoord;
     out mat3 TBN;
-    out vec4 LightSpaceFragPos;
+    out vec4 DirLightSpacePositions[10]; // 10 would be the temp maximum number of dir light supported
 } vs_out;
 
-uniform mat4 LightSpaceMatrix;
+//uniform mat4 LightSpaceMatrix;
 
 void main()
 {
@@ -56,8 +90,11 @@ void main()
     vec3 adjTangent = normalize(Tangent - dot(Tangent, transNormal) * transNormal); // re-orthogonalize tangent with respect to normal to ensure tangents are orthogonal when calculated (possible smoothing)
     vs_out.TBN = mat3(adjTangent, normalize(cross(transNormal, adjTangent)), transNormal);
 
-    // transform vertex to light space
-    vs_out.LightSpaceFragPos = LightSpaceMatrix * ModelMatrix * vec4(Position, 1.0);
+    // transform vertex to directional light spaces
+    for (uint i = 0; i < DirLightNumber; ++i)
+    {
+        vs_out.DirLightSpacePositions[i] = DirectionalLights[i].LightSpaceMatrix * ModelMatrix * vec4(Position, 1.0);
+    }
 
     // transformed vertex position
     gl_Position = ProjectionMatrix * vec4(ViewPosition, 1.0);

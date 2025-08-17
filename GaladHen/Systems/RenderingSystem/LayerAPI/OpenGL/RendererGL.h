@@ -16,9 +16,11 @@ class ImGuiContext;
 namespace GaladHen
 {
 	class Texture;
+	class TextureArray;
 	class Mesh;
 	class IBuffer;
 	enum class TextureFormat;
+	enum class RenderBufferType;
 
 	class RendererGL : public IRendererAPI
 	{
@@ -30,13 +32,21 @@ namespace GaladHen
 
 		virtual void InitUI() override;
 
-		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, bool enableDepth, bool clampDepthToBorder) override;
+		virtual unsigned int CreateRenderBuffer(unsigned int width, unsigned int height, TextureFormat format, RenderBufferType renderBufferType, bool clampDepthToBorder) override;
+
+		virtual unsigned int CreateRenderBufferArray(unsigned int width, unsigned int height, unsigned int depth, TextureFormat format, RenderBufferType renderBufferType, bool clampDepthToBorder = false) override;
 
 		virtual void ClearRenderBuffer(unsigned int renderBufferID, glm::vec4 clearColor) override;
 
+		virtual void ClearRenderBufferArrayLayer(unsigned int renderBufferID, glm::vec4 clearColor, unsigned int width, unsigned int height, unsigned int layer) override;
+
 		virtual void BindRenderBuffer(unsigned int renderBufferID) override;
 
+		virtual void BindRenderBufferArrayLayer(unsigned int renderBufferID, unsigned int layer) override;
+
 		virtual void UnbindActiveRenderBuffer() override;
+
+		virtual void FreeRenderBuffer(unsigned int renderBufferID) override;
 
 		virtual void Draw(CommandBuffer<RenderCommand>& renderCommandBuffer) override;
 
@@ -100,6 +110,7 @@ namespace GaladHen
 		struct TextureGL // TODO: This struct should contain only opengl-specific data. All other data exists on high level classes
 		{
 			GLuint TextureID;
+			GLenum Target; // To distinguish between GL_TEXTURE_2D, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_3D
 			TextureAllocationType AllocationType;
 			GLenum TextureFormat;
 			GLenum TextureChannels;
@@ -133,10 +144,34 @@ namespace GaladHen
 
 		// OPENGL -----------------------------------------------------------------------------------------------------------------------------------------
 
+		// To check for errors when calling opengl functions
+		template <class GLFunction>
+		bool GLCall(GLFunction&& glFunction, const char* additionalLogMessage = "")
+		{
+			glFunction();
+			GLenum error = glGetError();
+			if (error != GL_NO_ERROR)
+			{
+				std::string logError = "Error while calling opengl function. ";
+				logError = logError.append(additionalLogMessage);
+				
+				Log::Error("RendererGL", logError);
+				Log::Error("RendererGL", "Opengl error code: 0x%X", error);
+
+				return false;
+			}
+
+			return true;
+		}
+
 		unsigned int CreateTexture(const Texture& texture, TextureAllocationType allocationType = TextureAllocationType::Constant);
+		unsigned int CreateTextureArray(const TextureArray& textureArray, TextureAllocationType allocationType = TextureAllocationType::Constant);
 		unsigned int CreateDepthTexture(unsigned int width, unsigned int height, bool clampToBorder = false);
+		unsigned int CreateDepthTextureArray(const TextureArray& textureArray, bool clampToBorder = false);
 		void FreeTexture(unsigned int textureID);
 		void LoadTexture(unsigned int textureID, const Texture& texture, TextureAllocationType allocationType = TextureAllocationType::Constant);
+		void LoadTextureArray(unsigned int textureID, const TextureArray& textureArray, TextureAllocationType allocationType = TextureAllocationType::Constant);
+
 
 		unsigned int CreateMesh(const Mesh& mesh);
 		void LoadMesh(unsigned int meshID, const Mesh& mesh);

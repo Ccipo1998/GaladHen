@@ -4,12 +4,12 @@ const float MaxShadowBias = 0.00005;
 
 const int ShadowSamples = 3;
 
-uniform sampler2D ShadowMap;
+uniform sampler2DArray DirectionalShadowMaps;
 
-float ShadowTest(vec4 lightSpaceFragPos, vec3 wNormal, vec3 wLightDir)
+float DirectionalShadowTest(vec4 lightSpaceFragPos, vec3 wNormal, vec3 wLightDir, uint dirLightIndex)
 {
 	float shadow = 0.0;
-	vec2 texelSize = 1.0 / textureSize(ShadowMap, 0); // the texel size is (1 / texture resolution) because uv mapping is in [0,1], so the division give us texel size
+	vec3 texelSize = 1.0 / textureSize(DirectionalShadowMaps, 0); // the texel size is (1 / texture resolution) because uv mapping is in [0,1], so the division give us texel size
 
 	// Perspective division -> opengl do that automatically to gl_Position, we need to do that manually
 	// From clip space to NDC ([-1,1])
@@ -36,7 +36,7 @@ float ShadowTest(vec4 lightSpaceFragPos, vec3 wNormal, vec3 wLightDir)
 		for (int y = -sampleRange; y <= sampleRange; ++y)
 		{
 			// Sample shadow map and check its depth value (shadow caster depth) to fragment actual depth in light space (z component)
-			float shadowSampleDepth = texture(ShadowMap, projectedLightSpaceFragPos.xy + vec2(x, y) * texelSize).r;
+			float shadowSampleDepth = texture(DirectionalShadowMaps, vec3(projectedLightSpaceFragPos.xy + vec2(x, y) * texelSize.xy, dirLightIndex)).r;
 			if (fragmentLightSpaceDepth > shadowSampleDepth + shadowBias)
 			{
 				shadow += 1.0;

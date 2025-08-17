@@ -62,7 +62,11 @@ add_library(Systems STATIC
     AssetSystem/AssetSystem.h
     AssetSystem/AssetSystem.cpp
     TimeSystem/TimeSystem.h
-    TimeSystem/TimeSystem.cpp)
+    TimeSystem/TimeSystem.cpp
+    RenderingSystem/Entities/TextureArray.h
+    RenderingSystem/Entities/TextureArray.cpp
+    RenderingSystem/Entities/RenderBufferArray.h
+    RenderingSystem/Entities/RenderBufferArray.cpp)
 
 target_include_directories(Systems PRIVATE
     ${CMAKE_SOURCE_DIR}/
